@@ -31,7 +31,7 @@ Scene_DoEnter() {
     .colorMode = 1,
     .tileSetIndex = 0,
     .tileMapIndex = 8,
-    .priority = 3,
+    .priority = 2,
   };
 
   GBA_TileMapRef target;
@@ -39,6 +39,30 @@ Scene_DoEnter() {
 
   extern const GBA_TileMapRef backgroundTileMap;
   GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
+
+  GBA_Sprite_ResetAll();
+
+  static const GBA_Sprite base = {
+    .colorMode = 0,
+    .paletteBank = 0,
+    .shape = 0,
+    .size = 1,
+    .tileId = 0,
+    .gfxMode = 0,
+    .objMode = 0,
+    .priority = 1,
+  };
+
+  GBA_Sprite *sprite = GBA_Sprite_Allocate();
+  sprite->attr0 = base.attr0;
+  sprite->attr1 = base.attr1;
+  sprite->attr2 = base.attr2;
+
+  GBA_Affine *affine = GBA_Affine_Allocate();
+  GBA_Sprite_SetAffine(sprite, affine);
+
+  GBA_Sprite_SetPosition(sprite, 20, 30);
+  GBA_Sprite_SetRotation(sprite, 64);
 }
 
 static void
