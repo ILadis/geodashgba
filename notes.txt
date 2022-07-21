@@ -1,9 +1,77 @@
 2d collision detection:
-https://noonat.github.io/intersect/
+- https://noonat.github.io/intersect/
+- https://dyn4j.org/2010/01/sat/
 
 geometry dash physics:
-https://gdforum.freeforums.net/thread/48749/p1kachu-presents-physics-geometry-dash
+- https://gdforum.freeforums.net/thread/48749/p1kachu-presents-physics-geometry-dash
 
-sprites:
-https://www.spriters-resource.com/mobile/geometrydash/
+sprite resources:
+- https://www.spriters-resource.com/mobile/geometrydash/
 
+
+
+camera.follow(cube)
+
+while {
+
+  input = GBA_PollInput()
+
+  // read input and change/do:
+  // - cube jump
+  // - camera move
+  // - pause game
+  controller.update(input)
+
+  state = level.checkHits(cube)
+  // may be: airbone, grounded, collided
+  // including touched/collided object or NULL
+
+  cube.update(state)
+
+  // if following, snap to target
+  camera.update()
+
+  // vsync
+
+  level.draw(camera) // detect next column
+  cube.draw(camera)
+  // stats.draw [progress, coins]
+  // background.draw [parllax effect]
+}
+
+cube {
+  shape
+  position
+  velocity
+  acceleration
+}
+
+level { // rename: course
+  width, height
+  columns[]
+}
+
+column {
+  objects[]
+  tiles[]
+}
+
+shape { //union
+  type
+  vertices
+  ...
+}
+
+level.checkHits(cube) {
+  // must check left and right most edge/columns
+  position = cube.getPosition()
+  objects = ribbon.objectsAt(x = position) // at columb
+
+  foreach (object in objects) {
+    shape1 = cube.getShape()
+    shape2 = cube.getShape()
+
+    hit = shape1.checkCollision(shape2)
+    // may be touches, intersects, none
+  }
+}
