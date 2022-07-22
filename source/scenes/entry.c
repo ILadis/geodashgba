@@ -6,6 +6,10 @@
 #include <assets/graphics/tiles.h>
 #include <assets/graphics/sprites.h>
 
+#include <game/camera.h>
+#include <game/cube.h>
+#include <game/course.h>
+
 static void
 Scene_DoEnter() {
   GBA_Sprite_ResetAll();
@@ -34,35 +38,16 @@ Scene_DoEnter() {
     .priority = 2,
   };
 
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 0);
-
-  extern const GBA_TileMapRef backgroundTileMap;
-  GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
-
   GBA_Sprite_ResetAll();
 
-  static const GBA_Sprite base = {
-    .colorMode = 0,
-    .paletteBank = 0,
-    .shape = 0,
-    .size = 1,
-    .tileId = 0,
-    .gfxMode = 0,
-    .objMode = 0,
-    .priority = 1,
-  };
+  Cube *cube = Cube_GetInstance();
+  Cube_Reset(cube);
 
-  GBA_Sprite *sprite = GBA_Sprite_Allocate();
-  sprite->attr0 = base.attr0;
-  sprite->attr1 = base.attr1;
-  sprite->attr2 = base.attr2;
+  Camera *camera = Camera_GetInstance();
+  Camera_Reset(camera);
 
-  GBA_Affine *affine = GBA_Affine_Allocate();
-  GBA_Sprite_SetAffine(sprite, affine);
-
-  GBA_Sprite_SetPosition(sprite, 20, 30);
-  GBA_Sprite_SetRotation(sprite, 64);
+  Course *course = Course_GetInstance();
+  Course_Reset(course);
 }
 
 static void
@@ -72,7 +57,29 @@ Scene_DoPlay() {
 
   GBA_Input_PollStates(input);
 
+  Cube *cube = Cube_GetInstance();
+  Camera *camera = Camera_GetInstance();
+  Course *course = Course_GetInstance();
+
+  Cube_Update(cube);
+  Hit hit = Course_CheckHits(course, cube);
+
+  Cube_TakeHit(cube, &hit);
+
+  if (GBA_Input_IsHit(input, GBA_KEY_A)) {
+    Cube_Jump(cube);
+  }
+
+  if (GBA_Input_IsHeld(input, GBA_KEY_LEFT)) {
+    Cube_Accelerate(cube, DIRECTION_LEFT);
+  } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
+    Cube_Accelerate(cube, DIRECTION_RIGHT);
+  }
+
   GBA_VSync();
+
+  Cube_Draw(cube, camera);
+  Course_Draw(course, camera);
 
 /*
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {

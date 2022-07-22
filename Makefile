@@ -42,7 +42,7 @@ assets:
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' levels/background.tmx assets/background.c
 
-tests: gba_test math_test scene_test vector_test
+tests: gba_test math_test prefab_test scene_test vector_test
 
 %_test: test/%.c
 	@gcc $< $(TFILES) -o $@.elf -g -I. -Iinclude -DNOGBA

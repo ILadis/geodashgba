@@ -34,14 +34,4 @@ Vector_GetLength(const Vector *vector);
 const Vector*
 Vector_FromDirection(Direction direction);
 
-typedef struct Bounds {
-  Vector center;
-  Vector size;
-} Bounds;
-
-bool
-Bounds_Intersects(
-    const Bounds *bounds,
-    const Bounds *other);
-
 #endif

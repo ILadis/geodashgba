@@ -5,6 +5,12 @@ int
 Math_abs(int num);
 
 int
+Math_min(int num1, int num2);
+
+int
+Math_max(int num1, int num2);
+
+int
 Math_signum(int num);
 
 int

@@ -44,25 +44,3 @@ bool
 Direction_IsHorizontal(Direction direction) {
   return direction <= DIRECTION_RIGHT;
 }
-
-bool
-Bounds_Intersects(
-    const Bounds *bounds,
-    const Bounds *other)
-{
-  int dx = other->center.x - bounds->center.x;
-  int px = (other->size.x + bounds->size.x) - Math_abs(dx);
-
-  if (px <= 0) {
-    return false;
-  }
-
-  int dy = other->center.y - bounds->center.y;
-  int py = (other->size.y + bounds->size.y) - Math_abs(dy);
-
-  if (py <= 0) {
-    return false;
-  }
-
-  return true;
-}

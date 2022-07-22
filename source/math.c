@@ -9,6 +9,16 @@ Math_abs(int num) {
 }
 
 int
+Math_min(int num1, int num2) {
+  return num1 < num2 ? num1 : num2;
+}
+
+int
+Math_max(int num1, int num2) {
+  return num1 > num2 ? num1 : num2;
+}
+
+int
 Math_signum(int num) {
   return num < 0 ? -1 : num > 0 ? +1 : 0;
 }
