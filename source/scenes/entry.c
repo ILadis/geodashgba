@@ -9,6 +9,7 @@
 #include <game/camera.h>
 #include <game/cube.h>
 #include <game/course.h>
+#include <game/object.h>
 
 static void
 Scene_DoEnter() {
@@ -36,6 +37,33 @@ Scene_DoEnter() {
 
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
+
+  Object_CreateBlockWithPole(&course->objects[0]);
+  Object_SetPosition(&course->objects[0], &Vector_Of(14, 12));
+
+  Object_CreateBox(&course->objects[1]);
+  Object_SetPosition(&course->objects[1], &Vector_Of(20, 15));
+
+  Object_CreateBlockWithPole(&course->objects[2]);
+  Object_SetPosition(&course->objects[2], &Vector_Of(20, 10));
+
+  Object_CreateBox(&course->objects[3]);
+  Object_SetPosition(&course->objects[3], &Vector_Of(26, 15));
+
+  Object_CreateBox(&course->objects[4]);
+  Object_SetPosition(&course->objects[4], &Vector_Of(26, 13));
+
+  Object_CreateBlockWithPole(&course->objects[5]);
+  Object_SetPosition(&course->objects[5], &Vector_Of(26, 8));
+
+  Object_CreateBlockWithPole(&course->objects[6]);
+  Object_SetPosition(&course->objects[6], &Vector_Of(38, 12));
+
+  Object_CreateBox(&course->objects[7]);
+  Object_SetPosition(&course->objects[7], &Vector_Of(29, 15));
+
+  Object_CreateBlockWithPole(&course->objects[8]);
+  Object_SetPosition(&course->objects[8], &Vector_Of(29, 10));
 }
 
 static void

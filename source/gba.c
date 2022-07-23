@@ -110,6 +110,12 @@ GBA_TileMapRef_GetTileIndex(
     GBA_TileMapRef *tileMap,
     int tx, int ty)
 {
+  int ymask = (tileMap->height - 1);
+  int xmask = (tileMap->width - 1);
+
+  ty &= ymask;
+  tx &= xmask;
+
   int index = (ty/32) * (tileMap->width/32) + (tx/32);
   return index * 1024 + (ty%32) * 32 + tx%32;
 }
@@ -117,14 +123,11 @@ GBA_TileMapRef_GetTileIndex(
 void
 GBA_TileMapRef_BlitTile(
     GBA_TileMapRef *target,
-    const GBA_Tile *source)
+    int tx, int ty,
+    const GBA_Tile *tile)
 {
-  for (int y = 0; y < target->height; y++) {
-    for (int x = 0; x < target->width ; x++) {
-      int index = GBA_TileMapRef_GetTileIndex(target, x, y);
-      target->tiles[index].value = source->value;
-    }
-  }
+  int index = GBA_TileMapRef_GetTileIndex(target, tx, ty);
+  target->tiles[index].value = tile->value;
 }
 
 void
@@ -133,8 +136,8 @@ GBA_TileMapRef_Blit(
     int tx, int ty,
     const GBA_TileMapRef *source)
 {
-  int endY = ty + source->height;
-  int endX = tx + source->width;
+  int endY = (ty + source->height);
+  int endX = (tx + source->width);
 
   int i = 0;
   for (int y = ty; y < endY; y++) {

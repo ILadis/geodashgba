@@ -7,7 +7,7 @@
 #include <math.h>
 
 typedef struct Camera {
-  Vector position;
+  Vector position, delta;
   Bounds frame;
   Vector *target;
 } Camera;
@@ -21,6 +21,11 @@ Camera_Reset(Camera *camera);
 static inline Vector*
 Camera_GetPosition(Camera *camera) {
   return &camera->position;
+}
+
+static inline Vector*
+Camera_GetDelta(Camera *camera) {
+  return &camera->delta;
 }
 
 static inline void

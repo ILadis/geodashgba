@@ -351,7 +351,8 @@ GBA_TileMapRef_FromBackgroundLayer(
 void
 GBA_TileMapRef_BlitTile(
     GBA_TileMapRef *target,
-    const GBA_Tile *source);
+    int tx, int ty,
+    const GBA_Tile *tile);
 
 void
 GBA_TileMapRef_Blit(

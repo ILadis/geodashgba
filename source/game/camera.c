@@ -10,12 +10,25 @@ Camera_GetInstance() {
 void
 Camera_Reset(Camera *camera) {
   camera->position = Vector_Of(0, 0);
+  camera->delta = Vector_Of(0, 0);
   camera->frame = Bounds_Of(54, 96, 22, 40);
   camera->target = NULL;
 }
 
+static inline void
+Camera_MoveBy(
+  Camera *camera,
+  Vector *delta)
+{
+  camera->frame.center.x += delta->x;
+  camera->frame.center.y += delta->y;
+
+  camera->position.x += delta->x;
+  camera->position.y += delta->y;
+}
+
 static inline Vector
-Camera_TargetInFrame(Camera *camera) {
+Camera_GetTargetDelta(Camera *camera) {
   Vector *target = camera->target;
   Bounds *frame = &camera->frame;
 
@@ -40,19 +53,28 @@ Camera_TargetInFrame(Camera *camera) {
   return delta;
 }
 
+static inline void
+Camera_SetDelta(
+    Camera *camera,
+    Vector *delta)
+{
+  int dx = (camera->position.x % 8) + delta->x;
+  int dy = (camera->position.y % 8) + delta->y;
+
+  camera->delta.x = dx < 0 ? -1 : (dx >= 8 ? +1 : 0);
+  camera->delta.y = dy < 0 ? -1 : (dy >= 8 ? +1 : 0);
+}
+
 void
 Camera_Update(Camera *camera) {
   Vector *target = camera->target;
 
   if (target != NULL) {
-    Vector delta = Camera_TargetInFrame(camera);
+    Vector delta = Camera_GetTargetDelta(camera);
 
-    camera->frame.center.x += delta.x;
-    camera->frame.center.y += delta.y;
+    Camera_SetDelta(camera, &delta);
+    Camera_MoveBy(camera, &delta);
 
-    camera->position.x += delta.x;
-    camera->position.y += delta.y;
-
-    // TODO keep camera in bounds?
+    // TODO keep camera in bounds
   }
 }
