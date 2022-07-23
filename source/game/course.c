@@ -22,6 +22,10 @@ Course_Reset(Course *course) {
     .center = Vector_Of(168, 120),
     .size = Vector_Of(8, 17),
   };
+  course->boxes[2] = (Bounds) {
+    .center = Vector_Of(216, 112),
+    .size = Vector_Of(8, 25),
+  };
 }
 
 Hit
@@ -34,7 +38,7 @@ Course_CheckHits(
   Hit hit = Bounds_Intersects(&course->floor, hitbox);
   if (Hit_IsHit(&hit)) return hit;
 
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 3; i++) {
     hit = Bounds_Intersects(&course->boxes[i], hitbox);
     if (Hit_IsHit(&hit)) return hit;
   }
@@ -52,12 +56,13 @@ Course_Draw(
 
   if (course->redraw) {
     GBA_EnableBackgroundLayer(0, (GBA_BackgroundControl) {
-      .size = 0, // should be 1 (blitting does not work, must be drawn in 32x32 chucks)
+      .size = 1,
       .colorMode = 1,
       .tileSetIndex = 0,
       .tileMapIndex = 8,
       .priority = 3,
     });
+
 
     GBA_EnableBackgroundLayer(1, (GBA_BackgroundControl) {
       .size = 0,

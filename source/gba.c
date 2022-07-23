@@ -71,13 +71,13 @@ GBA_EnableBackgroundLayer(
 void
 GBA_OffsetBackgroundLayer(
     int layer,
-    int x, int y)
+    int px, int py)
 {
   GBA_System *system = GBA_GetSystem();
 
   system->backgroundOffsets[layer] = (GBA_BackgroundOffset) {
-    .hOffset = x,
-    .vOffset = y,
+    .hOffset = px,
+    .vOffset = py,
   };
 }
 
@@ -105,22 +105,13 @@ GBA_TileMapRef_FromBackgroundLayer(
   tileMap->bitmaps = bitmaps;
 }
 
-void
-GBA_TileMapRef_Blit(
-    GBA_TileMapRef *target,
-    int targetX, int targetY,
-    const GBA_TileMapRef *source)
+static inline int
+GBA_TileMapRef_GetTileIndex(
+    GBA_TileMapRef *tileMap,
+    int tx, int ty)
 {
-  int endY = targetY + source->height;
-  int endX = targetX + source->width;
-
-  int j = 0;
-  for (int y = targetY; y < endY; y++) {
-    int i = y * target->width + targetX;
-    for (int x = targetX; x < endX; x++) {
-      target->tiles[i++].value = source->tiles[j++].value;
-    }
-  }
+  int index = (ty/32) * (tileMap->width/32) + (tx/32);
+  return index * 1024 + (ty%32) * 32 + tx%32;
 }
 
 void
@@ -128,10 +119,28 @@ GBA_TileMapRef_BlitTile(
     GBA_TileMapRef *target,
     const GBA_Tile *source)
 {
-  int i = 0;
   for (int y = 0; y < target->height; y++) {
     for (int x = 0; x < target->width ; x++) {
-      target->tiles[i++].value = source->value;
+      int index = GBA_TileMapRef_GetTileIndex(target, x, y);
+      target->tiles[index].value = source->value;
+    }
+  }
+}
+
+void
+GBA_TileMapRef_Blit(
+    GBA_TileMapRef *target,
+    int tx, int ty,
+    const GBA_TileMapRef *source)
+{
+  int endY = ty + source->height;
+  int endX = tx + source->width;
+
+  int i = 0;
+  for (int y = ty; y < endY; y++) {
+    for (int x = tx; x < endX; x++) {
+      int index = GBA_TileMapRef_GetTileIndex(target, x, y);
+      target->tiles[index].value = source->tiles[i++].value;
     }
   }
 }
@@ -139,20 +148,23 @@ GBA_TileMapRef_BlitTile(
 void
 GBA_TileMapRef_SetPixel(
     GBA_TileMapRef *tileMap,
-    int x, int y, int color)
+    int px, int py, int color)
 {
-  int tileIndex = (y >> 3) * tileMap->width + (x >> 3);
+  int tx = px/8;
+  int ty = py/8;
+
+  int tileIndex = GBA_TileMapRef_GetTileIndex(tileMap, tx, ty);
   GBA_Tile *tile = &tileMap->tiles[tileIndex];
 
   int tileId = tile->tileId;
 
   GBA_Bitmap8 *bitmap = &tileMap->bitmaps[tileId];
-  int mapIndex = (y & 7) * 2 + ((x & 7) >> 2);
+  int mapIndex = (py & 0b0111)*2 + (px & 0b0111)/4;
 
   u32 data = bitmap->data[mapIndex];
   u8 *pixels = (u8 *) &data;
 
-  int index = x & 3;
+  int index = px & 0b011;
   pixels[index] = color;
 
   bitmap->data[mapIndex] = data;
@@ -306,13 +318,13 @@ GBA_Sprite_SetObjMode(
 void
 GBA_Sprite_SetPosition(
     GBA_Sprite *sprite,
-    int x, int y)
+    int px, int py)
 {
   u16 attr0 = sprite->attr0 & 0xFF00;
-  attr0 += y &  0xFF;
+  attr0 += py &  0xFF;
 
   u16 attr1 = sprite->attr1 & 0xFE00;
-  attr1 += x & 0x1FF;
+  attr1 += px & 0x1FF;
 
   sprite->attr0 = attr0;
   sprite->attr1 = attr1;

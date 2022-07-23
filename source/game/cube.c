@@ -9,13 +9,12 @@ Cube_GetInstance() {
 
 void
 Cube_Reset(Cube *cube) {
-  cube->position = Vector_Of(0, 0);
   cube->velocity = Vector_Of(0, 0);
   cube->acceleration = Vector_Of(0, 0);
   cube->gravity = Vector_Of(0, 90);
   cube->friction = Vector_Of(60, 0);
-  cube->hitbox.center = Vector_Of(8, 8);
-  cube->hitbox.size = Vector_Of(8, 8);
+  cube->position = Vector_Of(50 << 8, 20 << 8);
+  cube->hitbox = Bounds_Of(50, 20, 8, 8);
   cube->state = STATE_UNKNOWN;
 }
 

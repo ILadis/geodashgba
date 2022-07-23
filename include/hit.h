@@ -14,6 +14,8 @@ typedef struct Bounds {
   Vector size;
 } Bounds;
 
+#define Bounds_Of(x, y, w, h) ((Bounds) {{ x, y }, { w, h }})
+
 static inline bool
 Hit_IsHit(Hit *hit) {
   return hit->delta.x != 0 || hit->delta.y != 0;

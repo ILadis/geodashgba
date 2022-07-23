@@ -3,10 +3,12 @@
 
 #include <gba.h>
 #include <vector.h>
+#include <hit.h>
 #include <math.h>
 
 typedef struct Camera {
-  Vector position, offset;
+  Vector position;
+  Bounds frame;
   Vector *target;
 } Camera;
 

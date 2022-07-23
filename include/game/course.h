@@ -8,11 +8,34 @@
 #include <game/cube.h>
 #include <game/camera.h>
 
+/*
+typedef struct Object {
+  Bounds hitbox;
+  GBA_TileMapRef tiles;
+} Object;
+
+static const Object block1x2 = {
+  .hitbox = ...
+  .tiles = ...
+};
+
+static const Object spike = {
+  .hitbox = ...
+  .tiles = ...
+};
+*/
+
 typedef struct Course {
   Bounds floor;
-  Bounds boxes[2];
+  Bounds boxes[3];
   Vector scroll;
   bool redraw;
+
+/*
+  int width, height;
+  const Object *objects;
+  const GBA_Tile *frames[]; // width many frames, each containing height tiles
+*/
 } Course;
 
 Course*

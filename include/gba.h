@@ -341,7 +341,7 @@ GBA_EnableBackgroundLayer(
 void
 GBA_OffsetBackgroundLayer(
     int layer,
-    int x, int y);
+    int px, int py);
 
 void
 GBA_TileMapRef_FromBackgroundLayer(
@@ -349,20 +349,20 @@ GBA_TileMapRef_FromBackgroundLayer(
     int layer);
 
 void
-GBA_TileMapRef_Blit(
-    GBA_TileMapRef *target,
-    int targetX, int targetY,
-    const GBA_TileMapRef *source);
-
-void
 GBA_TileMapRef_BlitTile(
     GBA_TileMapRef *target,
     const GBA_Tile *source);
 
 void
+GBA_TileMapRef_Blit(
+    GBA_TileMapRef *target,
+    int tx, int ty,
+    const GBA_TileMapRef *source);
+
+void
 GBA_TileMapRef_SetPixel(
     GBA_TileMapRef *tileMap,
-    int x, int y, int color);
+    int px, int py, int color);
 
 void
 GBA_VSync();
@@ -396,7 +396,7 @@ GBA_Sprite_SetObjMode(
 void
 GBA_Sprite_SetPosition(
     GBA_Sprite *sprite,
-    int x, int y);
+    int px, int py);
 
 void
 GBA_Sprite_SetRotation(

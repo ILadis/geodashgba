@@ -10,22 +10,49 @@ Camera_GetInstance() {
 void
 Camera_Reset(Camera *camera) {
   camera->position = Vector_Of(0, 0);
-  camera->offset = Vector_Of(56, 128);
+  camera->frame = Bounds_Of(54, 96, 22, 40);
   camera->target = NULL;
+}
+
+static inline Vector
+Camera_TargetInFrame(Camera *camera) {
+  Vector *target = camera->target;
+  Bounds *frame = &camera->frame;
+
+  int dx = target->x - frame->center.x;
+  int dy = target->y - frame->center.y;
+
+  Vector delta = Vector_Of(0, 0);
+
+  int px = Math_abs(dx) - frame->size.x;
+  int py = Math_abs(dy) - frame->size.y;
+
+  if (px > 0) {
+    int sx = Math_signum(dx);
+    delta.x = sx * px;
+  }
+
+  if (py > 0) {
+    int sy = Math_signum(dy);
+    delta.y = sy * py;
+  }
+
+  return delta;
 }
 
 void
 Camera_Update(Camera *camera) {
-  const Vector *target = camera->target;
+  Vector *target = camera->target;
 
   if (target != NULL) {
-    int x = target->x - camera->offset.x;
-    int y = target->y - camera->offset.y;
+    Vector delta = Camera_TargetInFrame(camera);
 
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
+    camera->frame.center.x += delta.x;
+    camera->frame.center.y += delta.y;
 
-    camera->position.x = x;
-    camera->position.y = y;
+    camera->position.x += delta.x;
+    camera->position.y += delta.y;
+
+    // TODO keep camera in bounds?
   }
 }

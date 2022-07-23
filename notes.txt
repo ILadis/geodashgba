@@ -48,12 +48,9 @@ cube {
 
 level { // rename: course
   width, height
-  columns[]
-}
 
-column {
-  objects[]
-  tiles[]
+  frames[] // tiles at pos x
+  objects[] // objects at pos x (one object may span multiple frames)
 }
 
 shape { //union
@@ -65,7 +62,7 @@ shape { //union
 level.checkHits(cube) {
   // must check left and right most edge/columns
   position = cube.getPosition()
-  objects = ribbon.objectsAt(x = position) // at columb
+  objects = level.objectsAt(x = position) // at column
 
   foreach (object in objects) {
     shape1 = cube.getShape()
