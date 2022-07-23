@@ -31,6 +31,11 @@ Cube_GetHitbox(Cube *cube) {
   return &cube->hitbox;
 }
 
+static inline Vector*
+Cube_GetPosition(Cube *cube) {
+  return &cube->hitbox.center;
+}
+
 void
 Cube_Reset(Cube *cube);
 

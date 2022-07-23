@@ -48,12 +48,39 @@ Course_Draw(
     Camera *camera)
 {
   static GBA_TileMapRef target;
-  extern const GBA_TileMapRef backgroundTileMap;
+  extern const GBA_TileMapRef backgroundTileMap, course1TileMap;
 
   if (course->redraw) {
+    GBA_EnableBackgroundLayer(0, (GBA_BackgroundControl) {
+      .size = 0, // should be 1 (blitting does not work, must be drawn in 32x32 chucks)
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 8,
+      .priority = 3,
+    });
+
+    GBA_EnableBackgroundLayer(1, (GBA_BackgroundControl) {
+      .size = 0,
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 14,
+      .priority = 2,
+    });
+
     GBA_TileMapRef_FromBackgroundLayer(&target, 0);
     GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
 
+    GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+    GBA_TileMapRef_Blit(&target, 0, 0, &course1TileMap);
+
     course->redraw = false;
   }
+
+  Vector *position = Camera_GetPosition(camera);
+
+  course->scroll.x = position->x;
+  course->scroll.y = position->y;
+
+  GBA_OffsetBackgroundLayer(0, course->scroll.x, course->scroll.y);
+  GBA_OffsetBackgroundLayer(1, course->scroll.x, course->scroll.y);
 }

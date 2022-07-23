@@ -100,7 +100,7 @@ Cube_LoadSprite(Cube *cube) {
     .tileId = 0,
     .gfxMode = 0,
     .objMode = 0,
-    .priority = 1,
+    .priority = 0,
   };
 
   GBA_Sprite *sprite = cube->sprite;
@@ -127,7 +127,12 @@ Cube_Draw(
     Camera *camera)
 {
   GBA_Sprite *sprite = Cube_LoadSprite(cube);
-  Vector *position = &cube->position;
 
-  GBA_Sprite_SetPosition(sprite, (position->x >> 8), (position->y >> 8));
+  Vector position = {
+    .x = cube->hitbox.center.x - 8,
+    .y = cube->hitbox.center.y - 8,
+  };
+
+  Camera_RelativeTo(camera, &position);
+  GBA_Sprite_SetPosition(sprite, position.x, position.y);
 }

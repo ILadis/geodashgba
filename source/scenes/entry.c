@@ -13,6 +13,8 @@
 static void
 Scene_DoEnter() {
   GBA_Sprite_ResetAll();
+  GBA_EnableSprites();
+
   GBA_System *system = GBA_GetSystem();
 
   // used for tilemaps
@@ -23,23 +25,6 @@ Scene_DoEnter() {
   GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
   GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
 
-  // setup backgrounds
-  system->displayControl[0] = (GBA_DisplayControl) {
-    .mode = 0,
-    .enableBG0 = 1,
-    .enableOBJ = 1,
-    .sprite1DMapping = 1,
-  };
-
-  system->backgroundControls[0] = (GBA_BackgroundControl) {
-    .colorMode = 1,
-    .tileSetIndex = 0,
-    .tileMapIndex = 8,
-    .priority = 2,
-  };
-
-  GBA_Sprite_ResetAll();
-
   Cube *cube = Cube_GetInstance();
   Cube_Reset(cube);
 
@@ -48,12 +33,14 @@ Scene_DoEnter() {
 
   Course *course = Course_GetInstance();
   Course_Reset(course);
+
+  Vector *position = Cube_GetPosition(cube);
+  Camera_FollowTarget(camera, position);
 }
 
 static void
 Scene_DoPlay() {
-  GBA_System *system = GBA_GetSystem();
-  GBA_Input *input = &system->input;
+  GBA_Input *input = GBA_GetInput();
 
   GBA_Input_PollStates(input);
 
@@ -65,6 +52,7 @@ Scene_DoPlay() {
   Hit hit = Course_CheckHits(course, cube);
 
   Cube_TakeHit(cube, &hit);
+  Camera_Update(camera);
 
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
     Cube_Jump(cube);

@@ -11,6 +11,7 @@
 typedef struct Course {
   Bounds floor;
   Bounds boxes[2];
+  Vector scroll;
   bool redraw;
 } Course;
 

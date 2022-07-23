@@ -3,10 +3,11 @@
 
 #include <gba.h>
 #include <vector.h>
+#include <math.h>
 
 typedef struct Camera {
-  Vector position;
-  const Vector *target;
+  Vector position, offset;
+  Vector *target;
 } Camera;
 
 Camera*
@@ -14,6 +15,11 @@ Camera_GetInstance();
 
 void
 Camera_Reset(Camera *camera);
+
+static inline Vector*
+Camera_GetPosition(Camera *camera) {
+  return &camera->position;
+}
 
 static inline void
 Camera_RelativeTo(
@@ -27,7 +33,7 @@ Camera_RelativeTo(
 static inline void
 Camera_FollowTarget(
     Camera *camera,
-    const Vector *position)
+    Vector *position)
 {
   camera->target = position;
 }

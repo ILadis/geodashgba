@@ -47,6 +47,40 @@ GBA_GetSystem() {
   return &system;
 }
 
+GBA_Input*
+GBA_GetInput() {
+  GBA_System *system = GBA_GetSystem();
+  return &system->input;
+}
+
+void
+GBA_EnableBackgroundLayer(
+    int layer,
+    GBA_BackgroundControl control)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  u16 value = system->displayControl->value;
+  value |= 1 << (8 + layer);
+  value &= 0b1111111101111111; // unset force blank
+
+  system->displayControl->value = value;
+  system->backgroundControls[layer] = control;
+}
+
+void
+GBA_OffsetBackgroundLayer(
+    int layer,
+    int x, int y)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  system->backgroundOffsets[layer] = (GBA_BackgroundOffset) {
+    .hOffset = x,
+    .vOffset = y,
+  };
+}
+
 void
 GBA_TileMapRef_FromBackgroundLayer(
     GBA_TileMapRef *tileMap,
@@ -147,6 +181,17 @@ GBA_Memcpy(void *dst, const void *src, int size) {
   dma3->dst = copy.dst;
   dma3->src = copy.src;
   dma3->cnt = copy.cnt;
+}
+
+void
+GBA_EnableSprites() {
+  GBA_System *system = GBA_GetSystem();
+
+  u16 value = system->displayControl->value;
+  value |= 1 << 6; // 1D mapping
+  value |= 1 << 12; // enable sprites
+
+  system->displayControl->value = value;
 }
 
 static inline void

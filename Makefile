@@ -41,6 +41,7 @@ assets:
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' levels/background.tmx assets/background.c
+	@tiled --export-map 'GBA Tilemap C-Source file' levels/course1.tmx assets/course1.c
 
 tests: gba_test math_test prefab_test scene_test vector_test
 

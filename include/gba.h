@@ -330,6 +330,19 @@ typedef struct GBA_System {
 GBA_System*
 GBA_GetSystem();
 
+GBA_Input*
+GBA_GetInput();
+
+void
+GBA_EnableBackgroundLayer(
+    int layer,
+    GBA_BackgroundControl control);
+
+void
+GBA_OffsetBackgroundLayer(
+    int layer,
+    int x, int y);
+
 void
 GBA_TileMapRef_FromBackgroundLayer(
     GBA_TileMapRef *tileMap,
@@ -356,6 +369,9 @@ GBA_VSync();
 
 void
 GBA_Memcpy(void *dst, const void *src, int size);
+
+void
+GBA_EnableSprites();
 
 void
 GBA_Sprite_ResetAll();
