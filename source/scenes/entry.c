@@ -103,6 +103,10 @@ Scene_DoEnter() {
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
   Object_SetPosition(object, &Vector_Of(38, 12));
+
+  object = Course_AddObject(course);
+  Object_CreateLowPlatform(object);
+  Object_SetPosition(object, &Vector_Of(45, 14));
 }
 
 static void

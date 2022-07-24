@@ -1,6 +1,24 @@
 
 #include <game/object.h>
 
+static const GBA_TileMapRef box = (GBA_TileMapRef) {
+  .width = 2,
+  .height = 2,
+  .tiles = (GBA_Tile[]) {
+    {.tileId = 19, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 19, .vFlip = 0, .hFlip = 1 },
+    {.tileId = 27, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 27, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
+void
+Object_CreateBox(Object *object) {
+  object->hitbox = Bounds_Of(8, 8, 8, 9);
+  object->viewport = Bounds_Of(8, 8, 10,10);
+  object->tiles = &box;
+}
+
 static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
   .width = 2,
   .height = 5,
@@ -11,21 +29,10 @@ static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
     {.tileId = 46, .vFlip = 0, .hFlip = 0 },
     {.tileId = 53, .vFlip = 0, .hFlip = 0 },
     {.tileId = 54, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 19, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 20, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 27, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 28, .vFlip = 0, .hFlip = 0 },
-  }
-};
-
-static const GBA_TileMapRef box = (GBA_TileMapRef) {
-  .width = 2,
-  .height = 2,
-  .tiles = (GBA_Tile[]) {
-    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 22, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
-    {.tileId = 30, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 18, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 18, .vFlip = 0, .hFlip = 1 },
+    {.tileId = 26, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 26, .vFlip = 0, .hFlip = 1 },
   }
 };
 
@@ -36,11 +43,48 @@ Object_CreateBlockWithPole(Object *object) {
   object->tiles = &blockWpole;
 }
 
+static const GBA_TileMapRef platform = (GBA_TileMapRef) {
+  .width = 10,
+  .height = 3,
+  .tiles = (GBA_Tile[]) {
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 24, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 19, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 20, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 21, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 20, .vFlip = 0, .hFlip = 1 },
+    {.tileId = 19, .vFlip = 0, .hFlip = 1 },
+    {.tileId = 27, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 28, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 29, .vFlip = 0, .hFlip = 0 },
+    {.tileId = 28, .vFlip = 0, .hFlip = 1 },
+    {.tileId = 27, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
 void
-Object_CreateBox(Object *object) {
-  object->hitbox = Bounds_Of(8, 8, 8, 9);
-  object->viewport = Bounds_Of(8, 8, 10,10);
-  object->tiles = &box;
+Object_CreateLowPlatform(Object *object) {
+  object->hitbox = Bounds_Of(40, 16, 40, 9);
+  object->viewport = Bounds_Of(40, 16, 42, 10);
+  object->tiles = &platform;
 }
 
 void

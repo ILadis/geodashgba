@@ -21,6 +21,9 @@ void
 Object_CreateBlockWithPole(Object *object);
 
 void
+Object_CreateLowPlatform(Object *object);
+
+void
 Object_CreateBox(Object *object);
 
 void
