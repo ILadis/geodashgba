@@ -101,3 +101,11 @@ Object_DrawColumn(
     GBA_TileMapRef_BlitTile(&target, x, object->position.y + y, tile);
   }
 }
+
+void
+Object_DrawRow(
+    Object *object,
+    int y)
+{
+  
+}

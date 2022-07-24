@@ -42,4 +42,9 @@ Object_DrawColumn(
     Object *object,
     int x);
 
+void
+Object_DrawRow(
+    Object *object,
+    int y);
+
 #endif

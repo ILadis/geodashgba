@@ -48,7 +48,7 @@ Cube_Update(Cube *cube) {
   if (x < 0) {
     x += Math_min(-x, cube->friction.x);
   } else if (x > 0) {
-    x -= Math_min(x, cube->friction.x);
+    x -= Math_min(+x, cube->friction.x);
   }
 
   // set new positions

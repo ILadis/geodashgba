@@ -11,8 +11,9 @@
 
 typedef struct Course {
   Vector offset;
-  Bounds floor;
-  Object objects[9];
+  int floor;
+  int count;
+  Object objects[30];
   bool redraw;
 } Course;
 
@@ -21,6 +22,9 @@ Course_GetInstance();
 
 void
 Course_Reset(Course *course);
+
+Object*
+Course_AddObject(Course *course);
 
 Hit
 Course_CheckHits(
