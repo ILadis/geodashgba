@@ -119,7 +119,6 @@ Scene_DoPlay() {
   Hit hit = Course_CheckHits(course, cube);
 
   Cube_TakeHit(cube, &hit);
-  Camera_Update(camera);
 
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
     Cube_Jump(cube);
@@ -130,6 +129,8 @@ Scene_DoPlay() {
   } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
     Cube_Accelerate(cube, DIRECTION_RIGHT);
   }
+
+  Camera_Update(camera);
 
   GBA_VSync();
 

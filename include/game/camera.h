@@ -8,7 +8,7 @@
 
 typedef struct Camera {
   Vector position, delta;
-  Bounds frame;
+  Bounds viewport, frame;
   Vector *target;
 } Camera;
 
@@ -26,6 +26,15 @@ Camera_GetPosition(Camera *camera) {
 static inline Vector*
 Camera_GetDelta(Camera *camera) {
   return &camera->delta;
+}
+
+static inline bool
+Camera_InViewport(
+    Camera *camera,
+    Bounds *bounds)
+{
+  Hit hit = Bounds_Intersects(&camera->viewport, bounds);
+  return Hit_IsHit(&hit);
 }
 
 static inline void

@@ -11,8 +11,7 @@
 
 typedef struct Course {
   Vector offset;
-  int floor;
-  int count;
+  int floor, count;
   Object objects[30];
   bool redraw;
 } Course;

@@ -116,8 +116,8 @@ GBA_TileMapRef_GetTileIndex(
   ty &= ymask;
   tx &= xmask;
 
-  int index = (ty/32) * (tileMap->width/32) + (tx/32);
-  return index * 1024 + (ty%32) * 32 + tx%32;
+  int index = (ty >> 5) * (tileMap->width >> 5) + (tx >> 5);
+  return index*1024 + (ty & 0b011111)*32 + (tx & 0b011111);
 }
 
 void
@@ -153,8 +153,8 @@ GBA_TileMapRef_SetPixel(
     GBA_TileMapRef *tileMap,
     int px, int py, int color)
 {
-  int tx = px/8;
-  int ty = py/8;
+  int tx = px >> 3;
+  int ty = py >> 3;
 
   int tileIndex = GBA_TileMapRef_GetTileIndex(tileMap, tx, ty);
   GBA_Tile *tile = &tileMap->tiles[tileIndex];
@@ -162,7 +162,7 @@ GBA_TileMapRef_SetPixel(
   int tileId = tile->tileId;
 
   GBA_Bitmap8 *bitmap = &tileMap->bitmaps[tileId];
-  int mapIndex = (py & 0b0111)*2 + (px & 0b0111)/4;
+  int mapIndex = ((py & 0b0111) << 1) + ((px & 0b0111) >> 2);
 
   u32 data = bitmap->data[mapIndex];
   u8 *pixels = (u8 *) &data;
