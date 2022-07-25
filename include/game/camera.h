@@ -57,4 +57,11 @@ Camera_FollowTarget(
 void
 Camera_Update(Camera *camera);
 
+void
+Camera_DrawTile(
+    Camera *camera,
+    GBA_TileMapRef *target,
+    int x, int y,
+    GBA_Tile *tile);
+
 #endif

@@ -62,7 +62,6 @@ Camera_SetDelta(
     Camera *camera,
     Vector *delta)
 {
-
   int dx = ((camera->position.x & 0b0111) + delta->x) >> 3;
   int dy = ((camera->position.y & 0b0111) + delta->y) >> 3;
 
@@ -82,4 +81,23 @@ Camera_Update(Camera *camera) {
 
     // TODO keep camera in bounds
   }
+}
+
+void
+Camera_DrawTile(
+    Camera *camera,
+    GBA_TileMapRef *target,
+    int x, int y,
+    GBA_Tile *tile)
+{
+  // TODO find better place for this
+  int cx = camera->position.x >> 3;
+  if (x < cx-1) return;
+  if (x > cx+30) return;
+
+  int cy = camera->position.y >> 3;
+  if (y < cy-1) return;
+  if (y > cy+20) return;
+
+  GBA_TileMapRef_BlitTile(target, x, y, tile);
 }

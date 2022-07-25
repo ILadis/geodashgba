@@ -136,7 +136,7 @@ Course_Redraw(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_DrawColumn(object, camera, x);
+      Object_Draw(object, camera);
     }
   }
 }
@@ -157,7 +157,7 @@ Course_DrawColumn(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_DrawColumn(object, camera, x);
+      Object_Draw(object, camera);
     }
   }
 }
@@ -178,7 +178,7 @@ Course_DrawRow(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_DrawRow(object, camera, y);
+      Object_Draw(object, camera);
     }
   }
 }

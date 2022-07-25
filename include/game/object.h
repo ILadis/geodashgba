@@ -54,4 +54,9 @@ Object_DrawRow(
     Camera *camera,
     int y);
 
+void
+Object_Draw(
+    Object *object,
+    Camera *camera);
+
 #endif

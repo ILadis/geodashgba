@@ -1,6 +1,21 @@
 
 #include <game/object.h>
 
+static inline Bounds
+Object_ViewportFromTiles(const GBA_TileMapRef *tileMap) {
+  Bounds viewport = {0};
+
+  int width = tileMap->width << 2;
+  int height = tileMap->height << 2;
+
+  viewport.center.x = width;
+  viewport.center.y = height;
+  viewport.size.x   = width + 2;
+  viewport.size.y   = height + 2;
+
+  return viewport;
+}
+
 static const GBA_TileMapRef box = (GBA_TileMapRef) {
   .width = 2,
   .height = 2,
@@ -15,7 +30,7 @@ static const GBA_TileMapRef box = (GBA_TileMapRef) {
 void
 Object_CreateBox(Object *object) {
   object->hitbox = Bounds_Of(8, 8, 8, 9);
-  object->viewport = Bounds_Of(8, 8, 10,10);
+  object->viewport = Object_ViewportFromTiles(&box);
   object->tiles = &box;
 }
 
@@ -39,7 +54,7 @@ static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
 void
 Object_CreateBlockWithPole(Object *object) {
   object->hitbox = Bounds_Of(8, 32, 8, 9);
-  object->viewport = Bounds_Of(8, 20, 10, 22);
+  object->viewport = Object_ViewportFromTiles(&blockWpole);
   object->tiles = &blockWpole;
 }
 
@@ -83,7 +98,7 @@ static const GBA_TileMapRef platform = (GBA_TileMapRef) {
 void
 Object_CreateLowPlatform(Object *object) {
   object->hitbox = Bounds_Of(40, 16, 40, 9);
-  object->viewport = Bounds_Of(40, 16, 42, 10);
+  object->viewport = Object_ViewportFromTiles(&platform);
   object->tiles = &platform;
 }
 
@@ -110,6 +125,7 @@ Object_DrawColumn(
   for (int y = 0; y < height; y++) {
     int i = y * width + dx;
 
+    // FIXME does not check whether y is in frame of camera
     GBA_Tile *tile = &tileMap->tiles[i];
     GBA_TileMapRef_BlitTile(&target, x, object->position.y + y, tile);
   }
@@ -138,7 +154,31 @@ Object_DrawRow(
   for (int x = 0; x < width; x++) {
     int i = dy * width + x;
 
+    // FIXME does not check whether x is in frame of camera
     GBA_Tile *tile = &tileMap->tiles[i];
     GBA_TileMapRef_BlitTile(&target, object->position.x + x, y, tile);
+  }
+}
+
+void
+Object_Draw(
+    Object *object,
+    Camera *camera)
+{
+  if (!Camera_InViewport(camera, &object->viewport)) return;
+
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  const GBA_TileMapRef *tileMap = object->tiles;
+  GBA_Tile *tiles = tileMap->tiles;
+
+  int width = tileMap->width;
+  int height = tileMap->height;
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      Camera_DrawTile(camera, &target, object->position.x + x, object->position.y + y, tiles++);
+    }
   }
 }
