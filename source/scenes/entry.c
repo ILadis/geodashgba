@@ -120,11 +120,6 @@ Scene_DoPlay() {
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
 
-  Cube_Update(cube);
-  Hit hit = Course_CheckHits(course, cube);
-
-  Cube_TakeHit(cube, &hit);
-
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
     Cube_Jump(cube);
   }
@@ -134,6 +129,11 @@ Scene_DoPlay() {
   } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
     Cube_Accelerate(cube, DIRECTION_RIGHT);
   }
+
+  Cube_Update(cube);
+  Hit hit = Course_CheckHits(course, cube);
+
+  Cube_TakeHit(cube, &hit);
 
   Camera_Update(camera);
 

@@ -12,6 +12,7 @@ typedef struct Object {
   // TODO should be predefined and referenced here
   Bounds hitbox;
   const GBA_TileMapRef *tiles;
+  // TODO consider adding action function (when cube hits this object)?
 } Object;
 
 void
@@ -36,8 +37,8 @@ Object_SetPosition(
 {
   object->position.x = position->x;
   object->position.y = position->y;
-  object->hitbox.center.x   = (position->x * 8) + object->hitbox.center.x;
-  object->hitbox.center.y   = (position->y * 8) + object->hitbox.center.y;
+  object->hitbox.center.x = (position->x * 8) + object->hitbox.center.x;
+  object->hitbox.center.y = (position->y * 8) + object->hitbox.center.y;
 }
 
 void
