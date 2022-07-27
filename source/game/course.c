@@ -136,7 +136,7 @@ Course_Redraw(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_Draw(object, camera);
+      Object_DrawColumn(object, camera, x);
     }
   }
 }
@@ -157,7 +157,7 @@ Course_DrawColumn(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_Draw(object, camera);
+      Object_DrawColumn(object, camera, x);
     }
   }
 }
@@ -178,7 +178,7 @@ Course_DrawRow(
 
     for (int i = 0; i < course->count; i++) {
       Object *object = &course->objects[i];
-      Object_Draw(object, camera);
+      Object_DrawRow(object, camera, y);
     }
   }
 }
@@ -202,13 +202,13 @@ Course_Draw(
     Course *course,
     Camera *camera)
 {
+  Course_DrawOffset(course, camera);
+
   if (course->redraw) {
     Course_Redraw(course, camera);
     course->redraw = false;
+  } else {
+    Course_DrawColumn(course, camera);
+    Course_DrawRow(course, camera);
   }
-
-  Course_DrawOffset(course, camera);
-
-  Course_DrawColumn(course, camera);
-  Course_DrawRow(course, camera);
 }

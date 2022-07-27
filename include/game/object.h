@@ -10,7 +10,7 @@
 typedef struct Object {
   Vector position;
   // TODO should be predefined and referenced here
-  Bounds hitbox, viewport;
+  Bounds hitbox;
   const GBA_TileMapRef *tiles;
 } Object;
 
@@ -36,8 +36,6 @@ Object_SetPosition(
 {
   object->position.x = position->x;
   object->position.y = position->y;
-  object->viewport.center.x = (position->x * 8) + object->viewport.center.x;
-  object->viewport.center.y = (position->y * 8) + object->viewport.center.y;
   object->hitbox.center.x   = (position->x * 8) + object->hitbox.center.x;
   object->hitbox.center.y   = (position->y * 8) + object->hitbox.center.y;
 }
@@ -53,10 +51,5 @@ Object_DrawRow(
     Object *object,
     Camera *camera,
     int y);
-
-void
-Object_Draw(
-    Object *object,
-    Camera *camera);
 
 #endif

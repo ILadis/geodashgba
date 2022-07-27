@@ -28,6 +28,7 @@ Camera_GetDelta(Camera *camera) {
   return &camera->delta;
 }
 
+// FIXME currently unused (consider removing camera->viewport as well)
 static inline bool
 Camera_InViewport(
     Camera *camera,
@@ -56,12 +57,5 @@ Camera_FollowTarget(
 
 void
 Camera_Update(Camera *camera);
-
-void
-Camera_DrawTile(
-    Camera *camera,
-    GBA_TileMapRef *target,
-    int x, int y,
-    GBA_Tile *tile);
 
 #endif

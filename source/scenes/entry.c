@@ -37,6 +37,7 @@ Scene_DoEnter() {
 
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
+  Camera_Update(camera);
 
   Object *object = NULL;
 
