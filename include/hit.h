@@ -26,4 +26,30 @@ Bounds_Intersects(
     const Bounds *bounds,
     const Bounds *other);
 
+static inline Vector
+Bounds_Lower(const Bounds *bounds) {
+  return (Vector) {
+    .x = bounds->center.x - bounds->size.x,
+    .y = bounds->center.y - bounds->size.y,
+  };
+}
+
+static inline Vector
+Bounds_Upper(const Bounds *bounds) {
+  return (Vector) {
+    .x = bounds->center.x + bounds->size.x,
+    .y = bounds->center.y + bounds->size.y,
+  };
+}
+
+Bounds
+Bounds_Expand(
+    const Bounds *bounds,
+    const Bounds *other);
+
+Bounds
+Bounds_Embed(
+    const Bounds *bounds,
+    const Bounds *other);
+
 #endif

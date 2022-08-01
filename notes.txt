@@ -1,6 +1,7 @@
 2d collision detection:
 - https://noonat.github.io/intersect/
 - https://dyn4j.org/2010/01/sat/
+- https://box2d.org/files/ErinCatto_DynamicBVH_GDC2019.pdf
 
 geometry dash physics:
 - https://gdforum.freeforums.net/thread/48749/p1kachu-presents-physics-geometry-dash
@@ -9,4 +10,5 @@ sprite resources:
 - https://www.spriters-resource.com/mobile/geometrydash/
 
 todo list:
+- implement grid, possible objects (for drawing/collision detection) are contained in cells of camera vertices
 - draw sprites in aseprite
