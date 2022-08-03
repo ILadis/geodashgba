@@ -103,9 +103,6 @@ Object_DrawColumn(
   int dx = x - ox;
   if (dx < 0 || dx >= width) return;
 
-  // TODO better do something like: Camera_Clamp(camera, viewport)
-  // where viewport is: { x1, y1 (upper left), x2, y2 (lower right) }
-  // maybe doable with bounds? (try with tests) e = Bounds_Embed(b1, b2)
   int sy = Math_max(oy, cy);
   int ey = Math_min(oy + height, cy + 21);
 

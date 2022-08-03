@@ -23,13 +23,19 @@ typedef struct Vector {
 
 #define Vector_Of(x, y) ((Vector) { x, y })
 
-bool
+static inline bool
 Vector_Equals(
-    const Vector* vector,
-    const Vector* other);
+    const Vector *vector,
+    const Vector *other)
+{
+  return vector->x == other->x
+    && vector->y == other->y;
+}
 
-int
-Vector_GetLength(const Vector *vector);
+static inline int
+Vector_GetLength(const Vector *vector) {
+  return vector->x * vector->x + vector->y * vector->y;
+}
 
 const Vector*
 Vector_FromDirection(Direction direction);

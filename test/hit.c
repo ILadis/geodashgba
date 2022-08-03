@@ -80,6 +80,19 @@ test(Intersects_ShouldReturnHitWithDeltaWhenBoundsAreEmbedded) {
   assert(hit.delta.y == 4);
 }
 
+test(Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter) {
+  // arrange
+  Bounds bound1 = Bounds_Of(5, 4, 5, 3);
+  Bounds bound2 = Bounds_Of(5, 4, 2, 2);
+
+  // assert
+  Hit hit = Bounds_Intersects(&bound1, &bound2);
+
+  // assert
+  assert(hit.delta.x == 0);
+  assert(hit.delta.y == 5);
+}
+
 test(Expand_ShouldReturnExpandedBoundsWhenGivenBoundsIntersect) {
   // arrange
   Bounds bound1 = Bounds_Of(5, 4, 4, 2);
@@ -162,6 +175,7 @@ suite(
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnBottomEdge,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnLeftEdge,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsAreEmbedded,
+  Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsIntersect,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsDoNotIntersect,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsContainEachOther,

@@ -43,7 +43,7 @@ assets:
 	@tiled --export-map 'GBA Tilemap C-Source file' levels/background.tmx assets/background.c || true
 	@tiled --export-map 'GBA Tilemap C-Source file' levels/course1.tmx assets/course1.c || true
 
-tests: gba_test hit_test math_test prefab_test scene_test vector_test
+tests: gba_test grid_test hit_test math_test prefab_test scene_test vector_test
 
 %_test: test/%.c
 	@gcc $< $(TFILES) -o $@.elf -g -I. -Iinclude -DNOGBA

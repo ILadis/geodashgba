@@ -42,6 +42,15 @@ Bounds_Upper(const Bounds *bounds) {
   };
 }
 
+static inline bool
+Bounds_Equals(
+    const Bounds *bounds,
+    const Bounds *other)
+{
+  return bounds->center.x == other->center.x && bounds->center.y == other->center.y
+      && bounds->size.x == other->size.x && bounds->size.y == other->size.y;
+}
+
 Bounds
 Bounds_Expand(
     const Bounds *bounds,

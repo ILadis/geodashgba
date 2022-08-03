@@ -23,12 +23,12 @@ Bounds_Intersects(
   }
 
   if (px < py) {
-    int sx = Math_signum(dx);
+    int sx = dx < 0 ? -1 : + 1;
     hit.delta.x = px * sx;
     hit.position.x = bounds->center.x + (bounds->size.x * sx);
     hit.position.y = bounds->center.y;
   } else {
-    int sy = Math_signum(dy);
+    int sy = dy < 0 ? -1 : + 1;
     hit.delta.y = py * sy;
     hit.position.x = other->center.x;
     hit.position.y = bounds->center.y + (bounds->size.y * sy);
