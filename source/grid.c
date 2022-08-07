@@ -103,6 +103,7 @@ Cell_Subdivide(Cell *parent) {
   for (int i = 0; i < 4; i++) {
     Cell *cell = Cell_AllocateNew(parent, i);
     Cell_RelocateUnits(parent, cell);
+    // TODO relocate all units from root to this cell
   }
 
   return parent->cells[0];
@@ -146,6 +147,7 @@ Cell_AddUnit(
     return false;
   }
 
+  // TODO remove all additional insertion attemps once relocation is properly implemented
   if (Cell_IsDivided(cell)) {
     // try add unit to most fitting sub cell
     if (Cell_AddUnit(cell->cells[0], unit)) return true;

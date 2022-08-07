@@ -4,6 +4,7 @@
 #include <gba.h>
 #include <vector.h>
 #include <hit.h>
+//#include <grid.h>
 
 #include <game/cube.h>
 #include <game/object.h>
@@ -13,6 +14,7 @@ typedef struct Course {
   Vector offset;
   int floor, count;
   Object objects[30];
+//Cell grid;
   bool redraw;
 } Course;
 
