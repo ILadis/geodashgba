@@ -1,6 +1,5 @@
 
 #include <grid.h>
-#include <stdio.h>
 
 static Cell*
 Cell_AllocateNew(
@@ -72,28 +71,21 @@ Cell_RelocateUnits(
     Cell *parent,
     Cell *cell)
 {
-  bool Cell_AddUnit(Grid *grid, Unit *unit);
+  bool Cell_AddUnit(Cell *cell, Unit *unit);
 
-  Unit *units = &parent->units[0];
+  Unit *units = parent->units;
   int count = parent->size;
 
-  for (int i = 0; i < count; i++) {
-    Unit *unit = &parent->units[i];
+  for (int i = 0, j = 0; i < count; i++) {
+    Unit *unit = &units[i];
 
-    if (!Cell_AddUnit(cell, unit)) {
-      units->bounds = unit->bounds;
-      units->object = unit->object;
-
-      units++;
-    } else {
+    if (Cell_AddUnit(cell, unit)) {
       parent->size--;
+    } else {
+      units[j].bounds = unit->bounds;
+      units[j++].object = unit->object;
     }
   }
-}
-
-bool
-Cell_IsDivided(Cell *parent) {
-  return parent->cells[0] != NULL;
 }
 
 Cell*
@@ -154,6 +146,14 @@ Cell_AddUnit(
     return false;
   }
 
+  if (Cell_IsDivided(cell)) {
+    // try add unit to most fitting sub cell
+    if (Cell_AddUnit(cell->cells[0], unit)) return true;
+    if (Cell_AddUnit(cell->cells[1], unit)) return true;
+    if (Cell_AddUnit(cell->cells[2], unit)) return true;
+    if (Cell_AddUnit(cell->cells[3], unit)) return true;
+  }
+
   if (Cell_TryAddUnit(cell, unit)) {
     return true;
   }
@@ -182,10 +182,107 @@ Cell_AddUnit(
   return false;
 }
 
-void
-Cell_QueryUnits(
-    Cell *cell,
-    Bounds *bounds)
+static inline int
+Iterator_GetCapacity(Iterator *iterator) {
+  return ARRAY_LENGTH(iterator->stack.cells);
+}
+
+static inline void
+Iterator_PushStack(
+    Iterator *iterator,
+    Cell *cell)
 {
-  // TODO implement this
+  int index = iterator->stack.size;
+  int capacity = Iterator_GetCapacity(iterator);
+
+  if (index < capacity) {
+    iterator->stack.cells[index] = cell;
+    iterator->stack.size++;
+  }
+}
+
+static inline Cell*
+Iterator_PopStack(Iterator *iterator) {
+  int index = iterator->stack.size - 1;
+
+  if (index >= 0) {
+    iterator->stack.size = index;
+    return iterator->stack.cells[index];
+  }
+
+  return NULL;
+}
+
+static bool
+Iterator_CheckNext(
+    Iterator *iterator,
+    Cell *cell)
+{
+  if (cell == NULL) {
+    return false;
+  }
+
+  /* There may be cases where intermediate cells are empty. This would break the
+   * iterator, i.e. not return all units.
+   */
+  int size = cell->size;
+  if (size <= 0) {
+    return false;
+  }
+
+  Hit hit = Bounds_Intersects(iterator->bounds, &cell->bounds);
+  if (!Hit_IsHit(&hit)) {
+    return false;
+  }
+
+  Iterator_PushStack(iterator, cell);
+
+  return true;
+}
+
+Unit*
+Iterator_GetNext(Iterator *iterator) {
+  Cell *cell = iterator->next.cell;
+
+  if (cell == NULL) {
+    return NULL;
+  }
+
+  int index = iterator->next.index++;
+  int size = cell->size;
+
+  Unit *unit = &cell->units[index++];
+
+  if (index >= size) {
+    Iterator_CheckNext(iterator, cell->cells[0]);
+    Iterator_CheckNext(iterator, cell->cells[1]);
+    Iterator_CheckNext(iterator, cell->cells[2]);
+    Iterator_CheckNext(iterator, cell->cells[3]);
+
+    Cell *next = Iterator_PopStack(iterator);
+
+    iterator->next.index = 0;
+    iterator->next.cell = next;
+  }
+
+  return unit;
+}
+
+bool
+Cell_GetUnits(
+    Cell *cell,
+    Bounds *bounds,
+    Iterator *iterator)
+{
+  iterator->bounds = bounds;
+  iterator->stack.size = 0;
+
+  Iterator_CheckNext(iterator, cell);
+
+  Cell *next = Iterator_PopStack(iterator);
+
+  iterator->next.index = 0;
+  iterator->next.cell = next;
+
+  return true;
 }

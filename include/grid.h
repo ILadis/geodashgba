@@ -17,10 +17,33 @@ typedef struct Cell {
   struct Unit units[8];
 } Cell;
 
-typedef struct Cell Grid;
+typedef struct Iterator {
+  Bounds *bounds;
+  struct {
+    int size;
+    Cell *cells[20];
+  } stack;
+  struct {
+    int index;
+    Cell *cell;
+  } next;
+} Iterator;
 
 #define Cell_Of(x, y, w, h) ((Cell) { .bounds = {{ x, y }, { w, h }} })
 #define Unit_Of(bounds, object) ((Unit) { bounds, object })
+
+static inline bool
+Cell_IsDivided(Cell *cell) {
+  return cell->cells[0] != NULL;
+}
+
+static inline int
+Cell_GetSize(Cell *cell) {
+  return cell->size;
+}
+
+Cell*
+Cell_Subdivide(Cell *cell);
 
 bool
 Cell_AddUnit(
@@ -28,14 +51,17 @@ Cell_AddUnit(
     Unit *unit);
 
 bool
-Cell_IsDivided(Cell *cell);
-
-Cell*
-Cell_Subdivide(Cell *cell);
-
-void
-Cell_QueryUnits(
+Cell_GetUnits(
     Cell *cell,
-    Bounds *bounds);
+    Bounds *bounds,
+    Iterator *iterator);
+
+static inline bool
+Iterator_HasNext(Iterator *iterator) {
+  return iterator->next.cell != NULL;
+}
+
+Unit*
+Iterator_GetNext(Iterator *iterator);
 
 #endif
