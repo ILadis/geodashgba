@@ -1,5 +1,6 @@
 *.elf
 *.gba
 *.sav
+.vscode/
 assets/
 tools/sinlut

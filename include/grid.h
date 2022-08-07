@@ -27,6 +27,12 @@ Cell_AddUnit(
     Cell *cell,
     Unit *unit);
 
+bool
+Cell_IsDivided(Cell *cell);
+
+Cell*
+Cell_Subdivide(Cell *cell);
+
 void
 Cell_QueryUnits(
     Cell *cell,

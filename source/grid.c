@@ -21,7 +21,7 @@ Cell_AllocateNew(
     return NULL;
   }
 
-  const Vector *direction = &direction[offset];
+  const Vector *direction = &directions[offset];
 
   int index = count++;
   Cell *cell = &cells[index];
@@ -39,6 +39,21 @@ Cell_AllocateNew(
     .y = bounds->center.y + size.y * direction->y,
   };
 
+  bool oddWidth  = (bounds->size.x & 0x1) == 1;
+  bool oddHeight = (bounds->size.y & 0x1) == 1;
+
+  if (oddWidth) {
+    int adjust = (offset & 0b01) == 0;
+    center.x -=  adjust;
+    size.x   += !adjust;
+  }
+
+  if (oddHeight) {
+    int adjust = (offset & 0b10) == 0;
+    center.y -=  adjust;
+    size.y   += !adjust;
+  }
+
   cell->bounds.size = size;
   cell->bounds.center = center;
 
@@ -50,18 +65,6 @@ Cell_AllocateNew(
 static inline int
 Cell_GetCapacity(Cell *cell) {
   return ARRAY_LENGTH(cell->units);
-}
-
-static inline void
-Cell_SetBounds(
-    Cell *cell)
-{
-    Bounds *bounds = &cell->bounds;
-
-  Vector size = {
-    .x = bounds->size.x >> 1,
-    .y = bounds->size.y >> 1,
-  };
 }
 
 static inline void
@@ -88,11 +91,21 @@ Cell_RelocateUnits(
   }
 }
 
-static inline Cell*
+bool
+Cell_IsDivided(Cell *parent) {
+  return parent->cells[0] != NULL;
+}
+
+Cell*
 Cell_Subdivide(Cell *parent) {
-  Cell *cells = parent->cells[0];
-  if (cells != NULL) {
-    return cells;
+  if (Cell_IsDivided(parent)) {
+    return parent->cells[0];
+  }
+
+  // this cell is to small to divide
+  Vector size = parent->bounds.size;
+  if (size.x <= 1 || size.y <= 1) {
+    return NULL;
   }
 
   for (int i = 0; i < 4; i++) {
@@ -103,17 +116,24 @@ Cell_Subdivide(Cell *parent) {
   return parent->cells[0];
 }
 
-static inline Unit*
-Cell_NextFreeUnit(Cell *cell) {
+static inline bool
+Cell_TryAddUnit(
+    Cell *cell,
+    Unit *unit)
+{
   int capacity = Cell_GetCapacity(cell);
 
-  Unit *unit = NULL;
   if (cell->size < capacity) {
     int index = cell->size++;
-    unit = &cell->units[index];
+    Unit *target = &cell->units[index];
+
+    target->bounds = unit->bounds;
+    target->object = unit->object;
+
+    return true;
   }
 
-  return unit;
+  return false;
 }
 
 static inline bool
@@ -134,19 +154,30 @@ Cell_AddUnit(
     return false;
   }
 
-  Unit *next = Cell_NextFreeUnit(cell);
-  if (next != NULL) {
-    next->bounds = unit->bounds;
-    next->object = unit->object;
+  if (Cell_TryAddUnit(cell, unit)) {
     return true;
   }
 
   Cell *cells = Cell_Subdivide(cell);
+  if (cells == NULL) {
+    return false;
+  }
 
   if (Cell_AddUnit(&cells[0], unit)) return true;
   if (Cell_AddUnit(&cells[1], unit)) return true;
   if (Cell_AddUnit(&cells[2], unit)) return true;
   if (Cell_AddUnit(&cells[3], unit)) return true;
+
+  // there may now be space after relocation
+  if (Cell_TryAddUnit(cell, unit)) {
+    return true;
+  }
+
+  /* If we just divided this cell and could not insert given unit the newly created
+   * sub sells are too small. We can free those sub cells since they are not used anyway.
+   */
+
+  // TODO free unused cells
 
   return false;
 }

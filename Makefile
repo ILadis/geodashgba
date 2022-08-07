@@ -50,6 +50,10 @@ tests: gba_test grid_test hit_test math_test prefab_test scene_test vector_test
 	@./$@.elf
 	@rm $@.elf
 
+debug_%_test: test/%.c
+	@gcc $< $(TFILES) -o test_debug.elf -g -I. -Iinclude -DNOGBA
+	@gdbserver :2345 ./test_debug.elf
+
 %.gba: %.elf
 	@$(OBJCOPY) -v -O binary $< $@
 	@gbafix $@
