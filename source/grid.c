@@ -224,11 +224,21 @@ Iterator_CheckNext(
     return false;
   }
 
-  /* There may be cases where intermediate cells are empty. This would break the
-   * iterator, i.e. not return all units.
+  /* There may be cases where intermediate cells are empty. This should not happen
+   * and would break the iterator, i.e. not return all units, if we do not check
+   * sub cells.
    */
   int size = cell->size;
   if (size <= 0) {
+    bool divided = Cell_IsDivided(cell);
+
+    if (divided) {
+      Iterator_CheckNext(iterator, cell->cells[0]);
+      Iterator_CheckNext(iterator, cell->cells[1]);
+      Iterator_CheckNext(iterator, cell->cells[2]);
+      Iterator_CheckNext(iterator, cell->cells[3]);
+    }
+
     return false;
   }
 

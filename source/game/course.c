@@ -13,7 +13,7 @@ Course_Reset(Course *course) {
   course->count = 0;
   course->floor = 16;
   course->offset = Vector_Of(0, 0);
-//course->grid.bounds = Bounds_Of(0, 0, 800, 800);
+  course->grid.bounds = Bounds_Of(0, 0, 800, 800);
 }
 
 Object*
@@ -22,7 +22,6 @@ Course_AddObject(Course *course) {
   return &course->objects[index];
 }
 
-/*
 static inline void
 Course_FillGrid(Course *course) {
   Cell *grid = &course->grid;
@@ -35,7 +34,6 @@ Course_FillGrid(Course *course) {
     Cell_AddUnit(grid, &unit);
   }
 }
-*/
 
 static inline Hit
 Course_CheckFloorHit(
@@ -62,7 +60,6 @@ Course_CheckHits(
   Hit hit = Course_CheckFloorHit(course, hitbox);
   if (Hit_IsHit(&hit)) return hit;
 
-/*
   Iterator iterator;
   Cell_GetUnits(&course->grid, hitbox, &iterator);
 
@@ -73,12 +70,13 @@ Course_CheckHits(
     Hit hit = Bounds_Intersects(bounds, hitbox);
     if (Hit_IsHit(&hit)) return hit;
   }
-*/
 
+/*
   for (int i = 0; i < course->count; i++) {
     Hit hit = Bounds_Intersects(&course->objects[i].hitbox, hitbox);
     if (Hit_IsHit(&hit)) return hit;
   }
+*/
 
   return hit;
 }
@@ -234,7 +232,8 @@ Course_Draw(
   Course_DrawOffset(course, camera);
 
   if (course->redraw) {
-//  Course_FillGrid(course);
+    // FIXME currently a workaround to fill grid
+    Course_FillGrid(course);
     Course_Redraw(course, camera);
     course->redraw = false;
   } else {
