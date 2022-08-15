@@ -42,6 +42,11 @@ Cell_GetSize(Cell *cell) {
   return cell->size;
 }
 
+static inline int
+Cell_GetCapacity(Cell *cell) {
+  return ARRAY_LENGTH(cell->units);
+}
+
 Cell*
 Cell_Subdivide(Cell *cell);
 

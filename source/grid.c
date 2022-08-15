@@ -27,7 +27,6 @@ Cell_AllocateNew(
 
   Bounds *bounds = &parent->bounds;
 
-  // TODO account for uneven sizes and positions
   Vector size = {
     .x = bounds->size.x >> 1,
     .y = bounds->size.y >> 1,
@@ -59,11 +58,6 @@ Cell_AllocateNew(
   parent->cells[offset] = cell;
 
   return cell;
-}
-
-static inline int
-Cell_GetCapacity(Cell *cell) {
-  return ARRAY_LENGTH(cell->units);
 }
 
 static inline void
@@ -103,7 +97,6 @@ Cell_Subdivide(Cell *parent) {
   for (int i = 0; i < 4; i++) {
     Cell *cell = Cell_AllocateNew(parent, i);
     Cell_RelocateUnits(parent, cell);
-    // TODO relocate all units from root to this cell
   }
 
   return parent->cells[0];
@@ -147,7 +140,6 @@ Cell_AddUnit(
     return false;
   }
 
-  // TODO remove all additional insertion attemps once relocation is properly implemented
   if (Cell_IsDivided(cell)) {
     // try add unit to most fitting sub cell
     if (Cell_AddUnit(cell->cells[0], unit)) return true;
@@ -224,10 +216,7 @@ Iterator_CheckNext(
     return false;
   }
 
-  /* There may be cases where intermediate cells are empty. This should not happen
-   * and would break the iterator, i.e. not return all units, if we do not check
-   * sub cells.
-   */
+  // there may be cases where intermediate cells are empty
   int size = cell->size;
   if (size <= 0) {
     bool divided = Cell_IsDivided(cell);

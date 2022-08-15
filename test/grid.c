@@ -172,7 +172,7 @@ test(AddUnit_ShouldReturnFalseIfThereIsNoCapacityLeftToAddCell) {
   assert(root.cells[3]->cells[3]->cells[0]->cells[0] == NULL);
 }
 
-test(AddUnit_ShouldSubdivideRootCellWhenCapacityIsExceededAndRelocateUnits) {
+test(AddUnit_ShouldSubdivideCellsWhenCapacityIsExceededAndRelocateUnits) {
   // arrange
   Cell root = Cell_Of(10, 10, 6, 6);
 
@@ -188,7 +188,7 @@ test(AddUnit_ShouldSubdivideRootCellWhenCapacityIsExceededAndRelocateUnits) {
   Bounds bounds4 = Bounds_Of(9, 12, 2, 1);
   Unit unit4 = Unit_Of(&bounds4, NULL);
 
-  // assert
+  // act
   Cell_AddUnit(&root, &unit1);
   Cell_AddUnit(&root, &unit2);
   Cell_AddUnit(&root, &unit3);
@@ -228,17 +228,17 @@ test(GetUnits_ShouldReturnQueriedUnitsInInsertionOrder) {
   // arrange
   Cell root = Cell_Of(10, 10, 6, 6);
 
-  int object1 = 0xBEEF;
+  int *object1 = (int *) 0xBEEF;
   Bounds bounds1 = Bounds_Of(13, 13, 1, 1);
-  Unit unit1 = Unit_Of(&bounds1, &object1);
+  Unit unit1 = Unit_Of(&bounds1, object1);
 
-  int object2 = 0xCAFE;
+  int *object2 = (int *) 0xCAFE;
   Bounds bounds2 = Bounds_Of(8, 8, 2, 2);
-  Unit unit2 = Unit_Of(&bounds2, &object2);
+  Unit unit2 = Unit_Of(&bounds2, object2);
 
-  int object3 = 0xDEAD;
+  int *object3 = (int *) 0xDEAD;
   Bounds bounds3 = Bounds_Of(13, 7, 2, 1);
-  Unit unit3 = Unit_Of(&bounds3, &object3);
+  Unit unit3 = Unit_Of(&bounds3, object3);
 
   Cell_AddUnit(&root, &unit1);
   Cell_AddUnit(&root, &unit2);
@@ -253,13 +253,79 @@ test(GetUnits_ShouldReturnQueriedUnitsInInsertionOrder) {
 
   // assert
   next = Iterator_GetNext(&iterator);
-  assert(next->object == &object1);
+  assert(next->object == object1);
 
   next = Iterator_GetNext(&iterator);
-  assert(next->object == &object2);
+  assert(next->object == object2);
 
   next = Iterator_GetNext(&iterator);
-  assert(next->object == &object3);
+  assert(next->object == object3);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next == NULL);
+}
+
+test(GetUnits_ShouldReturnUnitsOfAllQueriedCells) {
+  // arrange
+  Cell root = Cell_Of(10, 10, 8, 8);
+  Cell_Subdivide(Cell_Subdivide(Cell_Subdivide(&root)));
+
+  int *object1 = (int *) 1;
+  Bounds bounds1 = Bounds_Of(5, 5, 1, 1);
+  Unit unit1 = Unit_Of(&bounds1, object1);
+
+  int *object2 = (int *) 2;
+  Bounds bounds2 = Bounds_Of(4, 4, 1, 1);
+  Unit unit2 = Unit_Of(&bounds2, object2);
+
+  int *object3 = (int *) 3;
+  Bounds bounds3 = Bounds_Of(8, 4, 1, 1);
+  Unit unit3 = Unit_Of(&bounds3, object3);
+
+  int *object4 = (int *) 4;
+  Bounds bounds4 = Bounds_Of(4, 8, 1, 1);
+  Unit unit4 = Unit_Of(&bounds4, object4);
+
+  int *object5 = (int *) 5;
+  Bounds bounds5 = Bounds_Of(8, 8, 1, 1);
+  Unit unit5 = Unit_Of(&bounds5, object5);
+
+  int *object6 = (int *) 6;
+  Bounds bounds6 = Bounds_Of(10, 10, 1, 1);
+  Unit unit6 = Unit_Of(&bounds6, object6);
+
+  Cell_AddUnit(&root, &unit1);
+  Cell_AddUnit(&root, &unit2);
+  Cell_AddUnit(&root, &unit3);
+  Cell_AddUnit(&root, &unit4);
+  Cell_AddUnit(&root, &unit5);
+  Cell_AddUnit(&root, &unit6);
+
+  Unit *next = NULL;
+  Bounds query = Bounds_Of(7, 7, 3, 2);
+
+  // act
+  Iterator iterator;
+  Cell_GetUnits(&root, &query, &iterator);
+
+  // assert
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object6);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object5);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object4);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object3);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object2);
+
+  next = Iterator_GetNext(&iterator);
+  assert(next->object == object1);
 
   next = Iterator_GetNext(&iterator);
   assert(next == NULL);
@@ -273,5 +339,6 @@ suite(
   AddUnit_ShouldAddUnitsToRootCellIfCapacityIsNotExceeded,
   AddUnit_ShouldAddUnitToMostFittingSubcell,
   AddUnit_ShouldReturnFalseIfThereIsNoCapacityLeftToAddCell,
-  AddUnit_ShouldSubdivideRootCellWhenCapacityIsExceededAndRelocateUnits,
-  GetUnits_ShouldReturnQueriedUnitsInInsertionOrder);
+  AddUnit_ShouldSubdivideCellsWhenCapacityIsExceededAndRelocateUnits,
+  GetUnits_ShouldReturnQueriedUnitsInInsertionOrder,
+  GetUnits_ShouldReturnUnitsOfAllQueriedCells);
