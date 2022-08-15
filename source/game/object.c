@@ -1,6 +1,21 @@
 
 #include <game/object.h>
 
+static inline void
+Object_SetViewboxFromTiles(Object *object) {
+  const GBA_TileMapRef *tiles = object->tiles;
+
+  int x = (tiles->width  >> 1) * 8;
+  int y = (tiles->width  >> 1) * 8;
+
+  int width =  x + 4;
+  int height = y + 4;
+
+  Bounds viewbox = Bounds_Of(x, y, width, height);
+
+  object->viewbox = viewbox;
+}
+
 static const GBA_TileMapRef box = (GBA_TileMapRef) {
   .width = 2,
   .height = 2,
@@ -16,6 +31,7 @@ void
 Object_CreateBox(Object *object) {
   object->hitbox = Bounds_Of(8, 8, 8, 9);
   object->tiles = &box;
+  Object_SetViewboxFromTiles(object);
 }
 
 static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
@@ -39,6 +55,7 @@ void
 Object_CreateBlockWithPole(Object *object) {
   object->hitbox = Bounds_Of(8, 32, 8, 9);
   object->tiles = &blockWpole;
+  Object_SetViewboxFromTiles(object);
 }
 
 static const GBA_TileMapRef platform = (GBA_TileMapRef) {
@@ -82,6 +99,7 @@ void
 Object_CreateLowPlatform(Object *object) {
   object->hitbox = Bounds_Of(40, 16, 40, 9);
   object->tiles = &platform;
+  Object_SetViewboxFromTiles(object);
 }
 
 void

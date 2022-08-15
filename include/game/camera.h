@@ -23,6 +23,11 @@ Camera_GetPosition(Camera *camera) {
   return &camera->position;
 }
 
+static inline Bounds*
+Camera_GetViewport(Camera *camera) {
+  return &camera->viewport;
+}
+
 static inline Vector*
 Camera_GetDelta(Camera *camera) {
   return &camera->delta;

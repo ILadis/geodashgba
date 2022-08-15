@@ -27,9 +27,9 @@ Course_FillGrid(Course *course) {
   Cell *grid = &course->grid;
   for (int i = 0; i < course->count; i++) {
     Object *object = &course->objects[i];
-    Bounds *hitbox = &object->hitbox;
+    Bounds *viewbox = &object->viewbox;
 
-    Unit unit = Unit_Of(hitbox, object);
+    Unit unit = Unit_Of(viewbox, object);
 
     Cell_AddUnit(grid, &unit);
   }
@@ -65,18 +65,13 @@ Course_CheckHits(
 
   while (Iterator_HasNext(&iterator)) {
     Unit *unit = Iterator_GetNext(&iterator);
-    Bounds *bounds = unit->bounds;
+    Object *object = unit->object;
+
+    Bounds *bounds = &object->hitbox;
 
     Hit hit = Bounds_Intersects(bounds, hitbox);
     if (Hit_IsHit(&hit)) return hit;
   }
-
-/*
-  for (int i = 0; i < course->count; i++) {
-    Hit hit = Bounds_Intersects(&course->objects[i].hitbox, hitbox);
-    if (Hit_IsHit(&hit)) return hit;
-  }
-*/
 
   return hit;
 }
@@ -182,8 +177,14 @@ Course_DrawColumn(
 
     Course_ClearColumn(course, x, y);
 
-    for (int i = 0; i < course->count; i++) {
-      Object *object = &course->objects[i];
+    Iterator iterator;
+    Bounds *viewport = Camera_GetViewport(camera);
+    Cell_GetUnits(&course->grid, viewport, &iterator);
+
+    while (Iterator_HasNext(&iterator)) {
+      Unit *unit = Iterator_GetNext(&iterator);
+      Object *object = unit->object;
+
       Object_DrawColumn(object, camera, x);
     }
   }
@@ -203,8 +204,14 @@ Course_DrawRow(
 
     Course_ClearRow(course, x, y);
 
-    for (int i = 0; i < course->count; i++) {
-      Object *object = &course->objects[i];
+    Iterator iterator;
+    Bounds *viewport = Camera_GetViewport(camera);
+    Cell_GetUnits(&course->grid, viewport, &iterator);
+
+    while (Iterator_HasNext(&iterator)) {
+      Unit *unit = Iterator_GetNext(&iterator);
+      Object *object = unit->object;
+
       Object_DrawRow(object, camera, y);
     }
   }
