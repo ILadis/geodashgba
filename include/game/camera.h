@@ -63,4 +63,16 @@ Camera_FollowTarget(
 void
 Camera_Update(Camera *camera);
 
+void
+Camera_DrawDelta(
+    Camera *camera,
+    const Vector *position,
+    const GBA_TileMapRef *tileMap);
+
+void
+Camera_Draw(
+    Camera *camera,
+    const Vector *position,
+    const GBA_TileMapRef *tileMap);
+
 #endif

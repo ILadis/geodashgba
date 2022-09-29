@@ -42,16 +42,4 @@ Object_SetPosition(
   object->viewbox.center.y += position->y * 8;
 }
 
-void
-Object_DrawColumn(
-    Object *object,
-    Camera *camera,
-    int x);
-
-void
-Object_DrawRow(
-    Object *object,
-    Camera *camera,
-    int y);
-
 #endif

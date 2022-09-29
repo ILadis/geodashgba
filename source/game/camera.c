@@ -80,3 +80,89 @@ Camera_Update(Camera *camera) {
     Camera_MoveBy(camera, &delta);
   }
 }
+
+static inline void
+Camera_DrawTiles(
+    Camera *camera,
+    const Vector *position,
+    const GBA_TileMapRef *tileMap,
+    const Vector from, const Vector to)
+{
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  for (int y = from.y; y < to.y; y++) {
+    for (int x = from.x; x < to.x; x++) {
+      int i = (y - position->y) * tileMap->width + (x - position->x);
+
+      GBA_Tile *tile = &tileMap->tiles[i];
+      GBA_TileMapRef_BlitTile(&target, x, y, tile);
+    }
+  }
+}
+
+void
+Camera_DrawDelta(
+    Camera *camera,
+    const Vector *position,
+    const GBA_TileMapRef *tileMap)
+{
+  int height = tileMap->height;
+  int width = tileMap->width;
+
+  int cx = camera->position.x >> 3;
+  int cy = camera->position.y >> 3;
+
+  int oy = position->y;
+  int ox = position->x;
+
+  int dx = camera->delta.x;
+  if (dx != 0) {
+    int tx = cx + (dx > 0 ? 30 : 0); // right/left most edge (not visible yet)
+
+    int sx = Math_max(ox, tx);
+    int ex = Math_min(ox + width, tx + 1);
+
+    int sy = Math_max(oy, cy);
+    int ey = Math_min(oy + height, cy + 21);
+
+    Camera_DrawTiles(camera, position, tileMap, Vector_Of(sx, sy), Vector_Of(ex, ey));
+  }
+
+  int dy = camera->delta.y;
+  if (dy != 0) {
+    int ty = cy + (dy > 0 ? 20 : 0); // top/bottom most edge (not visible yet)
+
+    int sx = Math_max(ox, cx);
+    int ex = Math_min(ox + width, cx + 31);
+
+    int sy = Math_max(oy, ty);
+    int ey = Math_min(oy + height, ty + 1);
+
+    Camera_DrawTiles(camera, position, tileMap, Vector_Of(sx, sy), Vector_Of(ex, ey));
+  }
+}
+
+void
+Camera_Draw(
+    Camera *camera,
+    const Vector *position,
+    const GBA_TileMapRef *tileMap)
+{
+  int width = tileMap->width;
+  int height = tileMap->height;
+
+  int cx = camera->position.x >> 3;
+  int cy = camera->position.y >> 3;
+
+  int oy = position->y;
+  int ox = position->x;
+
+  int sx = Math_max(ox, cx);
+  int ex = Math_min(ox + width, cx + 31);
+
+  int sy = Math_max(oy, cy);
+  int ey = Math_min(oy + height, cy + 21);
+
+  Camera_DrawTiles(camera, position, tileMap, Vector_Of(sx, sy), Vector_Of(ex, ey));
+}

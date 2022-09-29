@@ -153,67 +153,15 @@ Course_Redraw(
   GBA_TileMapRef_FromBackgroundLayer(&target, 0);
   GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
 
-  for (int x = 0; x < 32; x++) {
-    Course_ClearColumn(course, x, 0);
+  Iterator iterator;
+  Bounds *viewport = Camera_GetViewport(camera);
+  Cell_GetUnits(&course->grid, viewport, &iterator);
 
-    for (int i = 0; i < course->count; i++) {
-      Object *object = &course->objects[i];
-      Object_DrawColumn(object, camera, x);
-    }
-  }
-}
+  while (Iterator_HasNext(&iterator)) {
+    Unit *unit = Iterator_GetNext(&iterator);
+    Object *object = unit->object;
 
-static inline void
-Course_DrawColumn(
-    Course *course,
-    Camera *camera)
-{
-  Vector *position = Camera_GetPosition(camera);
-  Vector *delta = Camera_GetDelta(camera);
-
-  if (delta->x != 0) {
-    int x = (position->x >> 3) + (delta->x > 0 ? 30 : 0); // right/left most edge (not visible yet)
-    int y = (position->y >> 3);
-
-    Course_ClearColumn(course, x, y);
-
-    Iterator iterator;
-    Bounds *viewport = Camera_GetViewport(camera);
-    Cell_GetUnits(&course->grid, viewport, &iterator);
-
-    while (Iterator_HasNext(&iterator)) {
-      Unit *unit = Iterator_GetNext(&iterator);
-      Object *object = unit->object;
-
-      Object_DrawColumn(object, camera, x);
-    }
-  }
-}
-
-static inline void
-Course_DrawRow(
-    Course *course,
-    Camera *camera)
-{
-  Vector *position = Camera_GetPosition(camera);
-  Vector *delta = Camera_GetDelta(camera);
-
-  if (delta->y != 0) {
-    int y = (position->y >> 3) + (delta->y > 0 ? 20 : 0); // top/bottom most edge (not visible yet)
-    int x = (position->x >> 3);
-
-    Course_ClearRow(course, x, y);
-
-    Iterator iterator;
-    Bounds *viewport = Camera_GetViewport(camera);
-    Cell_GetUnits(&course->grid, viewport, &iterator);
-
-    while (Iterator_HasNext(&iterator)) {
-      Unit *unit = Iterator_GetNext(&iterator);
-      Object *object = unit->object;
-
-      Object_DrawRow(object, camera, y);
-    }
+    Camera_Draw(camera, &object->position, object->tiles);
   }
 }
 
@@ -231,6 +179,49 @@ Course_DrawOffset(
   GBA_OffsetBackgroundLayer(1, course->offset.x, course->offset.y);
 }
 
+static inline void
+Course_DrawFloor(
+    Course *course,
+    Camera *camera)
+{
+  // TODO clearing should be done in camera
+  Vector *position = Camera_GetPosition(camera);
+  Vector *delta = Camera_GetDelta(camera);
+
+  if (delta->x != 0) {
+    int x = (position->x >> 3) + (delta->x > 0 ? 30 : 0); // right/left most edge (not visible yet)
+    int y = (position->y >> 3);
+
+    Course_ClearColumn(course, x, y);
+  }
+
+  if (delta->y != 0) {
+    int y = (position->y >> 3) + (delta->y > 0 ? 20 : 0); // top/bottom most edge (not visible yet)
+    int x = (position->x >> 3);
+
+    Course_ClearRow(course, x, y);
+  }
+}
+
+static inline void
+Course_DrawObjects(
+    Course *course,
+    Camera *camera)
+{
+  Course_DrawFloor(course, camera);
+
+  Iterator iterator;
+  Bounds *viewport = Camera_GetViewport(camera);
+  Cell_GetUnits(&course->grid, viewport, &iterator);
+
+  while (Iterator_HasNext(&iterator)) {
+    Unit *unit = Iterator_GetNext(&iterator);
+    Object *object = unit->object;
+
+    Camera_DrawDelta(camera, &object->position, object->tiles);
+  }
+}
+
 void
 Course_Draw(
     Course *course,
@@ -244,7 +235,6 @@ Course_Draw(
     Course_Redraw(course, camera);
     course->redraw = false;
   } else {
-    Course_DrawColumn(course, camera);
-    Course_DrawRow(course, camera);
+    Course_DrawObjects(course, camera);
   }
 }
