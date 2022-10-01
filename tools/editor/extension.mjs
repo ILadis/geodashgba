@@ -8,12 +8,12 @@ function TileMapExporter() {
 }
 
 TileMapExporter.prototype.write = function(map, filePath) {
-  let file = new TextFile(filePath, TextFile.WriteOnly);;
+  let file = new TextFile(filePath, TextFile.WriteOnly);
   let writer = new Writers.TileMapWriter(file);
 
-  let layers = TileMap.fromMap(map);
-  for (let [name, tiles] of layers) {
-    writer.write(name, tiles);
+  let tileMaps = TileMap.fromMap(map);
+  for (let tileMap of tileMaps) {
+    writer.write(tileMap);
   }
 
   file.commit();

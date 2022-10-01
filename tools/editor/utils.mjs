@@ -9,38 +9,105 @@ export const Assets = {
   }
 };
 
-export function TileMap(layer) {
-  this.layer = layer;
+export function TileMap(name, x, y, width, height, tiles) {
+  this.name = name;
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+  this.at = tiles;
 }
 
-TileMap.fromMap = function(map) {
-  let tiles = new Map();
-
+TileMap.fromMap = function*(map) {
   for (let layer of Assets.iterate(map, 'layer')) {
     if (!layer.isTileLayer) continue;
-    tiles.set(layer.name, new TileMap(layer));
+    let { name, width, height } = layer;
+    yield new TileMap(name, 0, 0, width, height, tiles.bind(layer));
   }
 
-  return tiles;
+  function tiles(x, y) {
+    let tile = this.tileAt(x, y);
+    let cell = this.cellAt(x, y);
+
+    if (!tile) return null;
+
+    let id    = tile.id;
+    let vFlip = cell.flippedVertically || cell.flippedAntiDiagonally ? 1 : 0;
+    let hFlip = cell.flippedHorizontally || cell.flippedAntiDiagonally ? 1 : 0;
+
+    return { id, vFlip, hFlip };
+  };
 };
 
-TileMap.prototype.width = function() {
-  return this.layer.width;
+TileMap.fromArray = function(array) {
+  let width = array[0].length;
+  let height = array.length;
+
+  let tiles = (x, y) => {
+    let id = array[y] ? array[y][x] : null;
+    return id ? { id, vFlip: 0, hFlip: 0 } : null;
+  };
+
+  return new TileMap('', 0, 0, width, height, tiles);
 };
 
-TileMap.prototype.height = function() {
-  return this.layer.height;
+TileMap.prototype.contains = function(x, y) {
+  return x >= this.x && x < this.x + this.width
+    && y >= this.y && y < this.y + this.height;
 };
 
-TileMap.prototype.at = function(x, y) {
-  let tile = this.layer.tileAt(x, y);
-  let cell = this.layer.cellAt(x, y);
+TileMap.prototype.slice = function(x, y, width, height) {
+  let tiles = (dx, dy) => this.at(x + dx, y + dy);
+  return new TileMap(this.name, x, y, width, height, tiles);
+};
 
-  if (!tile) return null;
+export function TileMapSlicer(tileMap) {
+  this.tileMap = tileMap;
+}
 
-  let id    = tile.id;
-  let vFlip = cell.flippedVertically || cell.flippedAntiDiagonally ? 1 : 0;
-  let hFlip = cell.flippedHorizontally || cell.flippedAntiDiagonally ? 1 : 0;
+TileMapSlicer.prototype.sliceAt = function(x, y) {
+  let width = 0, height = 0;
+  while (this.tileMap.at(x + width, y)) {
+    width++;
+  }
 
-  return { id, vFlip, hFlip };
+  if (width == 0) {
+    return null;
+  }
+
+  do {
+    var length = 0;
+
+    height++;
+    while (this.tileMap.at(x + length, y + height)) {
+      length++;
+    }
+  } while (length == width);
+
+  return this.tileMap.slice(x, y, width, height);
+};
+
+TileMapSlicer.prototype.sliceAll = function() {
+  let slices = new Array();
+
+  let width = this.tileMap.width;
+  let height = this.tileMap.height;
+
+  for (let y = 0; y < height; y++) {
+    next: for (let x = 0; x < width; x++) {
+
+      for (let slice of slices) {
+        if (slice.contains(x, y)) {
+          continue next;
+        }
+      }
+
+      let slice = this.sliceAt(x, y);
+      if (slice) {
+        slices.push(slice);
+      }
+    }
+  }
+
+  return slices;
 };
