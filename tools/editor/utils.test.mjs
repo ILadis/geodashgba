@@ -15,8 +15,8 @@ test('TileMap.slice should return expected slice', () => {
   let slice = tileMap.slice(2, 0, 2, 2);
 
   // assert
-  assert(2, slice.x);
-  assert(0, slice.y);
+  assert(2, slice.position.x);
+  assert(0, slice.position.y);
   assert(2, slice.width);
   assert(2, slice.height);
 
@@ -43,14 +43,14 @@ test('TileMapSlicer.sliceAll should return expected slices', () => {
   assert(2, tileMaps.length);
 
   let tileMap1 = tileMaps.shift();
-  assert(2, tileMap1.x);
-  assert(0, tileMap1.y);
+  assert(2, tileMap1.position.x);
+  assert(0, tileMap1.position.y);
   assert(2, tileMap1.width);
   assert(2, tileMap1.height);
 
   let tileMap2 = tileMaps.shift();
-  assert(3, tileMap2.x);
-  assert(2, tileMap2.y);
+  assert(3, tileMap2.position.x);
+  assert(2, tileMap2.position.y);
   assert(2, tileMap2.width);
   assert(1, tileMap2.height);
 });
