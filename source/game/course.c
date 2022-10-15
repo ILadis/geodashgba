@@ -76,56 +76,6 @@ Course_CheckHits(
   return hit;
 }
 
-static inline const GBA_Tile*
-Course_ClearTile(
-    Course *course,
-    int y)
-{
-  static const GBA_Tile empty = {0};
-  static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
-
-  int dy = y - course->floor;
-
-  if (dy < 0) {
-    return &empty;
-  } else if (dy == 0) {
-    return &floor[0];
-  } else if (dy < 3) {
-    return &floor[1];
-  } else {
-    return &empty;
-  }
-}
-
-static inline void
-Course_ClearColumn(
-    Course *course,
-    int x, int y)
-{
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
-  for (int row = 0; row < 32; row++, y++) {
-    const GBA_Tile *tile = Course_ClearTile(course, y);
-    GBA_TileMapRef_BlitTile(&target, x, y, tile);
-  }
-}
-
-static inline void
-Course_ClearRow(
-    Course *course,
-    int x, int y)
-{
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
-  const GBA_Tile *tile = Course_ClearTile(course, y);
-
-  for (int col = 0; col < 32; col++, x++) {
-    GBA_TileMapRef_BlitTile(&target, x, y, tile);
-  }
-}
-
 static inline void
 Course_Redraw(
     Course *course,
@@ -179,6 +129,27 @@ Course_DrawOffset(
   GBA_OffsetBackgroundLayer(1, course->offset.x, course->offset.y);
 }
 
+static inline const GBA_Tile*
+Course_FloorTile(
+    Course *course,
+    int y)
+{
+  static const GBA_Tile empty = {0};
+  static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
+
+  int dy = y - course->floor;
+
+  if (dy < 0) {
+    return &empty;
+  } else if (dy == 0) {
+    return &floor[0];
+  } else if (dy < 3) {
+    return &floor[1];
+  } else {
+    return &empty;
+  }
+}
+
 static inline void
 Course_DrawFloor(
     Course *course,
@@ -188,18 +159,27 @@ Course_DrawFloor(
   Vector *position = Camera_GetPosition(camera);
   Vector *delta = Camera_GetDelta(camera);
 
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
   if (delta->x != 0) {
     int x = (position->x >> 3) + (delta->x > 0 ? 30 : 0); // right/left most edge (not visible yet)
     int y = (position->y >> 3);
 
-    Course_ClearColumn(course, x, y);
+    for (int row = 0; row < 32; row++, y++) {
+      const GBA_Tile *tile = Course_FloorTile(course, y);
+      GBA_TileMapRef_BlitTile(&target, x, y, tile);
+    }
   }
 
   if (delta->y != 0) {
     int y = (position->y >> 3) + (delta->y > 0 ? 20 : 0); // top/bottom most edge (not visible yet)
     int x = (position->x >> 3);
 
-    Course_ClearRow(course, x, y);
+    const GBA_Tile *tile = Course_FloorTile(course, y);
+    for (int col = 0; col < 32; col++, x++) {
+      GBA_TileMapRef_BlitTile(&target, x, y, tile);
+    }
   }
 }
 

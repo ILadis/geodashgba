@@ -7,6 +7,7 @@
 #include <hit.h>
 
 #include <game/camera.h>
+#include <game/move.h>
 
 typedef enum State {
   STATE_UNKNOWN,
@@ -15,9 +16,7 @@ typedef enum State {
 } State;
 
 typedef struct Cube {
-  Vector position;
-  Vector velocity, acceleration;
-  Vector gravity, friction;
+  Movement movement;
   Bounds hitbox;
   State state;
   GBA_Sprite *sprite;

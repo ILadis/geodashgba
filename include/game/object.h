@@ -32,14 +32,14 @@ Object_CreatePole(Object *object);
 static inline void
 Object_SetPosition(
     Object *object,
-    Vector *position)
+    int x, int y)
 {
-  object->position.x = position->x;
-  object->position.y = position->y;
-  object->hitbox.center.x  += position->x * 8;
-  object->hitbox.center.y  += position->y * 8;
-  object->viewbox.center.x += position->x * 8;
-  object->viewbox.center.y += position->y * 8;
+  object->position.x = x;
+  object->position.y = y;
+  object->hitbox.center.x  += x * 8;
+  object->hitbox.center.y  += y * 8;
+  object->viewbox.center.x += x * 8;
+  object->viewbox.center.y += y * 8;
 }
 
 #endif

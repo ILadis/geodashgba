@@ -9,12 +9,19 @@ Cube_GetInstance() {
 
 void
 Cube_Reset(Cube *cube) {
-  cube->velocity = Vector_Of(0, 0);
-  cube->acceleration = Vector_Of(0, 0);
-  cube->gravity = Vector_Of(0, 90);
-  cube->friction = Vector_Of(60, 0);
-  cube->position = Vector_Of(50 << 8, 20 << 8);
-  cube->hitbox = Bounds_Of(50, 20, 8, 8);
+  Movement *movement = &cube->movement;
+
+  // initial position
+  const int x = 50;
+  const int y = 20;
+
+  // movement is using 8w fixed-point integer
+  Movement_SetVelocityLimit(movement, 600, 1300);
+  Movement_SetGravity(movement, 90);
+  Movement_SetFriction(movement, 60);
+  Movement_SetPosition(movement, x << 8, y << 8);
+
+  cube->hitbox = Bounds_Of(x, y, 8, 8);
   cube->state = STATE_UNKNOWN;
 }
 
@@ -22,8 +29,8 @@ void
 Cube_Jump(Cube *cube) {
   // maybe course should decide whether jumping/accelerating is allowed or not? (if we have different modes/sections)
   if (cube->state == STATE_GROUNDED) {
-    cube->velocity.y = -1500;
-    cube->acceleration.y = 0;
+    cube->movement.velocity.current.y = -1500;
+    cube->movement.acceleration.y = 0;
     cube->state = STATE_JUMPING;
   }
 }
@@ -35,37 +42,23 @@ Cube_Accelerate(
 {
   if (Direction_IsHorizontal(direction)) {
     int ax = (direction == DIRECTION_LEFT) ? -160 : 160;
-    cube->acceleration.x = ax;
+    cube->movement.acceleration.x = ax;
   }
 }
 
 void
 Cube_Update(Cube *cube) {
-  int x = cube->velocity.x + cube->acceleration.x + cube->gravity.x;
-  int y = cube->velocity.y + cube->acceleration.y + cube->gravity.y;
+  Movement *movement = &cube->movement;
+  Bounds *hitbox = &cube->hitbox;
 
-  // apply friction
-  if (x < 0) {
-    x += Math_min(-x, cube->friction.x);
-  } else if (x > 0) {
-    x -= Math_min(+x, cube->friction.x);
-  }
+  Movement_Update(movement);
+  Vector *position = Movement_GetPosition(movement);
 
-  // set new positions
-  cube->position.x += x;
-  cube->position.y += y;
-  cube->hitbox.center.x = (cube->position.x >> 8) + 8;
-  cube->hitbox.center.y = (cube->position.y >> 8) + 8;
+  // revert 8w fixed-point integer
+  hitbox->center.x = (position->x >> 8) + 8;
+  hitbox->center.y = (position->y >> 8) + 8;
 
-  cube->acceleration.x = 0; // better set somwhere else
-
-  // max speeds
-  x = Math_clamp(x, -600, +600);
-  y = Math_clamp(y, -1300, +1300);
-
-  // set new velocity
-  cube->velocity.x = x;
-  cube->velocity.y = y;
+  movement->acceleration.x = 0; // better set somwhere else
 }
 
 void
@@ -73,19 +66,22 @@ Cube_TakeHit(
     Cube *cube,
     Hit *hit)
 {
-  if (hit->delta.y < 0) {
-    cube->velocity.y = 0;
-    cube->acceleration.y = 0;
-    cube->hitbox.center.y += hit->delta.y;
-    cube->position.y = (cube->hitbox.center.y - 8) << 8;
-    cube->state = STATE_GROUNDED;
+  Movement *movement = &cube->movement;
+  Bounds *hitbox = &cube->hitbox;
+
+  if (hit->delta.y != 0) {
+    movement->velocity.current.y = 0;
+    movement->acceleration.y = 0;
+    hitbox->center.y += hit->delta.y;
+    movement->position.y = (cube->hitbox.center.y - 8) << 8;
+    cube->state = hit->delta.y < 0 ? STATE_GROUNDED : cube->state;
   }
 
   else if (hit->delta.x != 0) {
-    cube->velocity.x = 0;
-    cube->acceleration.x = 0;
-    cube->hitbox.center.x += hit->delta.x;
-    cube->position.x = (cube->hitbox.center.x - 8) << 8;
+    movement->velocity.current.x = 0;
+    movement->acceleration.x = 0;
+    hitbox->center.x += hit->delta.x;
+    movement->position.x = (cube->hitbox.center.x - 8) << 8;
   }
 }
 

@@ -43,71 +43,71 @@ Scene_DoEnter() {
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(14, 12));
+  Object_SetPosition(object, 14, 12);
 
   object = Course_AddObject(course);
   Object_CreateBox(object);
-  Object_SetPosition(object, &Vector_Of(20, 15));
+  Object_SetPosition(object, 20, 15);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(20, 10));
+  Object_SetPosition(object, 20, 10);
 
   object = Course_AddObject(course);
   Object_CreateBox(object);
-  Object_SetPosition(object, &Vector_Of(26, 15));
+  Object_SetPosition(object, 26, 15);
 
   object = Course_AddObject(course);
   Object_CreateBox(object);
-  Object_SetPosition(object, &Vector_Of(26, 13));
+  Object_SetPosition(object, 26, 13);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(26, 8));
+  Object_SetPosition(object, 26, 8);
 
   object = Course_AddObject(course);
   Object_CreateBox(object);
-  Object_SetPosition(object, &Vector_Of(29, 15));
+  Object_SetPosition(object, 29, 15);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(29, 10));
+  Object_SetPosition(object, 29, 10);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(33, 6));
+  Object_SetPosition(object, 33, 6);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(37, 2));
+  Object_SetPosition(object, 37, 2);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(41, -2));
+  Object_SetPosition(object, 41, -2);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(45, -6));
+  Object_SetPosition(object, 45, -6);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(49, -10));
+  Object_SetPosition(object, 49, -10);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(53, -14));
+  Object_SetPosition(object, 53, -14);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(57, -18));
+  Object_SetPosition(object, 57, -18);
 
   object = Course_AddObject(course);
   Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, &Vector_Of(38, 12));
+  Object_SetPosition(object, 38, 12);
 
   object = Course_AddObject(course);
   Object_CreateLowPlatform(object);
-  Object_SetPosition(object, &Vector_Of(45, 14));
+  Object_SetPosition(object, 45, 14);
 }
 
 static void
