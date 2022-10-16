@@ -56,7 +56,7 @@ Scene_DoPlay() {
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
 
-  if (GBA_Input_IsHit(input, GBA_KEY_A)) {
+  if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
     Cube_Jump(cube);
   }
 
@@ -78,6 +78,7 @@ Scene_DoPlay() {
   Bounds *hitbox = Cube_GetHitbox(cube);
   Hit hit = Course_CheckHits(course, hitbox);
   Cube_TakeHit(cube, &hit);
+  Cube_HandleRotation(cube, course);
 
   Camera_Update(camera);
   GBA_VSync();

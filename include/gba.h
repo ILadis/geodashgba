@@ -412,13 +412,19 @@ GBA_Sprite_SetPaletteBank(
 void
 GBA_Sprite_SetAffine(
     GBA_Sprite *sprite,
-    GBA_Affine *affine);
+    GBA_Affine *affine,
+    bool extended);
 
 GBA_Affine*
 GBA_Sprite_GetAffine(GBA_Sprite *sprite);
 
 void
 GBA_Input_PollStates(GBA_Input *input);
+
+bool
+GBA_Input_IsPressed(
+    GBA_Input *input,
+    GBA_Key key);
 
 bool
 GBA_Input_IsHit(

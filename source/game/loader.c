@@ -3,9 +3,9 @@
 
 Loader*
 Loader_ForTestCourse() {
-  static Loader loader = { .layout = ""
+  static Loader loader = {
     "                                                         |"
-    "                                                x        |"
+    "                                                xxxxxx   |"
     "                                                         |"
     "                                             x           |"
     "                                                         |"

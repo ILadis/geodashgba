@@ -13,7 +13,7 @@ Course_Reset(Course *course) {
   course->count = 0;
   course->floor = 16;
   course->offset = Vector_Of(0, 0);
-  course->grid.bounds = Bounds_Of(0, 0, 800, 800);
+  course->grid.bounds = Bounds_Of(0, 0, 1200, 1200);
 }
 
 Object*

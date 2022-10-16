@@ -365,13 +365,14 @@ GBA_Sprite_SetPaletteBank(
 void
 GBA_Sprite_SetAffine(
     GBA_Sprite *sprite,
-    GBA_Affine *affine)
+    GBA_Affine *affine,
+    bool extended)
 {
   GBA_System *system = GBA_GetSystem();
   GBA_Affine *affines = system->affines;
 
   int index = ((void *) affine - (void *) affines) >> 5;
-  sprite->attr0 |= 0x100; // sets mode to 1
+  sprite->attr0 |= extended ? 0x300 : 0x100; // sets mode to 1 (normal rendering area) or 3 (double rendering area)
   sprite->attr1 |= (index << 9);
 }
 
@@ -399,6 +400,14 @@ GBA_Input_PollStates(GBA_Input *input) {
 
   input->previous.value = input->current.value;
   input->current.value = ~(keypad->value);
+}
+
+bool
+GBA_Input_IsPressed(
+    GBA_Input *input,
+    GBA_Key key)
+{
+  return (input->current.value & key) > 0;
 }
 
 bool
