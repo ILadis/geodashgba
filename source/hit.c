@@ -37,6 +37,39 @@ Bounds_Intersects(
   return hit;
 }
 
+Hit
+Hit_Combine(
+    const Hit *hit,
+    const Hit *other)
+{
+  int x1 = Math_abs(other->delta.x);
+  int y1 = Math_abs(other->delta.y);
+
+  int x2 = Math_abs(hit->delta.x);
+  int y2 = Math_abs(hit->delta.y);
+
+  int dx = hit->delta.x;
+  int px = hit->position.x;
+
+  int dy = hit->delta.y;
+  int py = hit->position.y;
+
+  if (x1 > x2) {
+    dx = other->delta.x;
+    px = other->position.x;
+  }
+
+  if (y1 > y2) {
+    dy = other->delta.y;
+    py = other->position.y;
+  }
+
+  return (Hit) {
+    .position = Vector_Of(px, py),
+    .delta = Vector_Of(dx, dy),
+  };
+}
+
 static Bounds
 Bounds_Combine(
     const Bounds *bounds,

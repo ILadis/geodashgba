@@ -55,11 +55,10 @@ Course_CheckHits(
     Course *course,
     Bounds *hitbox)
 {
-  Hit hit = Course_CheckFloorHit(course, hitbox);
-  if (Hit_IsHit(&hit)) return hit;
-
   Iterator iterator;
   Cell_GetUnits(&course->grid, hitbox, &iterator);
+
+  Hit hit = {0};
 
   while (Iterator_HasNext(&iterator)) {
     Unit *unit = Iterator_GetNext(&iterator);
@@ -67,9 +66,12 @@ Course_CheckHits(
 
     Bounds *bounds = &object->hitbox;
 
-    Hit hit = Bounds_Intersects(bounds, hitbox);
-    if (Hit_IsHit(&hit)) return hit;
+    Hit h = Bounds_Intersects(bounds, hitbox);
+    if (Hit_IsHit(&h)) hit = Hit_Combine(&hit, &h);
   }
+
+  Hit h = Course_CheckFloorHit(course, hitbox);
+  if (Hit_IsHit(&h)) hit = Hit_Combine(&hit, &h);
 
   return hit;
 }

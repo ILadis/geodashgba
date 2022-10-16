@@ -79,7 +79,7 @@ Cube_TakeHit(
     cube->state = hit->delta.y < 0 ? STATE_GROUNDED : cube->state;
   }
 
-  else if (hit->delta.x != 0) {
+  if (hit->delta.x != 0) {
     movement->velocity.current.x = 0;
     movement->acceleration.x = 0;
     hitbox->center.x += hit->delta.x;

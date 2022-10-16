@@ -26,6 +26,11 @@ Bounds_Intersects(
     const Bounds *bounds,
     const Bounds *other);
 
+Hit
+Hit_Combine(
+    const Hit *hit,
+    const Hit *other);
+
 static inline Vector
 Bounds_Lower(const Bounds *bounds) {
   return (Vector) {
