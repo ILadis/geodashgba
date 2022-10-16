@@ -53,10 +53,8 @@ Course_CheckFloorHit(
 Hit
 Course_CheckHits(
     Course *course,
-    Cube *cube)
+    Bounds *hitbox)
 {
-  Bounds *hitbox = Cube_GetHitbox(cube);
-
   Hit hit = Course_CheckFloorHit(course, hitbox);
   if (Hit_IsHit(&hit)) return hit;
 

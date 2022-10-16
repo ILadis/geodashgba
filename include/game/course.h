@@ -6,14 +6,13 @@
 #include <hit.h>
 #include <grid.h>
 
-#include <game/cube.h>
 #include <game/object.h>
 #include <game/camera.h>
 
 typedef struct Course {
   Vector offset;
   int floor, count;
-  Object objects[30];
+  Object objects[255];
   Cell grid;
   bool redraw;
 } Course;
@@ -24,13 +23,21 @@ Course_GetInstance();
 void
 Course_Reset(Course *course);
 
+static inline void
+Course_SetFloorHeight(
+    Course *course,
+    int height)
+{
+  course->floor = height;
+}
+
 Object*
 Course_AddObject(Course *course);
 
 Hit
 Course_CheckHits(
     Course *course,
-    Cube *cube);
+    Bounds *hitbox);
 
 void
 Course_Draw(

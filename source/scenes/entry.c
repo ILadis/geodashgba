@@ -8,6 +8,7 @@
 
 #include <game/camera.h>
 #include <game/cube.h>
+#include <game/loader.h>
 #include <game/course.h>
 #include <game/object.h>
 
@@ -40,75 +41,8 @@ Scene_DoEnter() {
   Camera_FollowTarget(camera, position);
   Camera_Update(camera);
 
-  Object *object = NULL;
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 14, 12);
-
-  object = Course_AddObject(course);
-  Object_CreateBox(object);
-  Object_SetPosition(object, 20, 15);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 20, 10);
-
-  object = Course_AddObject(course);
-  Object_CreateBox(object);
-  Object_SetPosition(object, 26, 15);
-
-  object = Course_AddObject(course);
-  Object_CreateBox(object);
-  Object_SetPosition(object, 26, 13);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 26, 8);
-
-  object = Course_AddObject(course);
-  Object_CreateBox(object);
-  Object_SetPosition(object, 29, 15);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 29, 10);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 33, 6);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 37, 2);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 41, -2);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 45, -6);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 49, -10);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 53, -14);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 57, -18);
-
-  object = Course_AddObject(course);
-  Object_CreateBlockWithPole(object);
-  Object_SetPosition(object, 38, 12);
-
-  object = Course_AddObject(course);
-  Object_CreateLowPlatform(object);
-  Object_SetPosition(object, 45, 14);
+  Loader *loader = Loader_ForTestCourse();
+  Loader_LoadCourse(loader, course);
 }
 
 static void
@@ -141,7 +75,8 @@ Scene_DoPlay() {
   }
 
   Cube_Update(cube);
-  Hit hit = Course_CheckHits(course, cube);
+  Bounds *hitbox = Cube_GetHitbox(cube);
+  Hit hit = Course_CheckHits(course, hitbox);
   Cube_TakeHit(cube, &hit);
 
   Camera_Update(camera);

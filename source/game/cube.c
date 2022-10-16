@@ -12,7 +12,7 @@ Cube_Reset(Cube *cube) {
   Movement *movement = &cube->movement;
 
   // initial position
-  const int x = 50;
+  const int x = 10;
   const int y = 20;
 
   // movement is using 8w fixed-point integer
