@@ -44,7 +44,8 @@ Cube_Jump(Cube *cube);
 void
 Cube_Accelerate(
     Cube *cube,
-    Direction direction);
+    Direction direction,
+    int speed);
 
 void
 Cube_Update(Cube *cube);

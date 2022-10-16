@@ -21,6 +21,24 @@ Movement_SetVelocityLimit(
 }
 
 static inline void
+Movement_SetVelocity(
+    Movement *movement,
+    int x, int y)
+{
+  movement->velocity.current.x = x;
+  movement->velocity.current.y = y;
+}
+
+static inline void
+Movement_SetAcceleration(
+    Movement *movement,
+    int x, int y)
+{
+  movement->acceleration.x = x;
+  movement->acceleration.y = y;
+}
+
+static inline void
 Movement_SetGravity(
     Movement *movement,
     int gravity)

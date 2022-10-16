@@ -38,12 +38,16 @@ Cube_Jump(Cube *cube) {
 void
 Cube_Accelerate(
     Cube *cube,
-    Direction direction)
+    Direction direction,
+    int speed)
 {
-  if (Direction_IsHorizontal(direction)) {
-    int ax = (direction == DIRECTION_LEFT) ? -160 : 160;
-    cube->movement.acceleration.x = ax;
-  }
+  const Vector *vector = Vector_FromDirection(direction);
+
+  int ax = speed * vector->x;
+  int ay = speed * vector->y;
+
+  Movement *movement = &cube->movement;
+  Movement_SetAcceleration(movement, ax, ay);
 }
 
 void
@@ -57,8 +61,6 @@ Cube_Update(Cube *cube) {
   // revert 8w fixed-point integer
   hitbox->center.x = (position->x >> 8) + 8;
   hitbox->center.y = (position->y >> 8) + 8;
-
-  movement->acceleration.x = 0; // better set somwhere else
 }
 
 void

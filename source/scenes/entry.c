@@ -28,6 +28,7 @@ Scene_DoEnter() {
 
   Cube *cube = Cube_GetInstance();
   Cube_Reset(cube);
+  Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
 
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
@@ -112,6 +113,7 @@ Scene_DoEnter() {
 
 static void
 Scene_DoPlay() {
+  static bool debug = false;
   GBA_Input *input = GBA_GetInput();
 
   GBA_Input_PollStates(input);
@@ -124,19 +126,25 @@ Scene_DoPlay() {
     Cube_Jump(cube);
   }
 
-  if (GBA_Input_IsHeld(input, GBA_KEY_LEFT)) {
-    Cube_Accelerate(cube, DIRECTION_LEFT);
-  } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
-    Cube_Accelerate(cube, DIRECTION_RIGHT);
+  if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
+    debug = true;
+  }
+
+  if (debug) {
+    if (GBA_Input_IsHeld(input, GBA_KEY_LEFT)) {
+      Cube_Accelerate(cube, DIRECTION_LEFT, 160);
+    } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
+      Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+    } else {
+      Cube_Accelerate(cube, DIRECTION_RIGHT, 0);
+    }
   }
 
   Cube_Update(cube);
   Hit hit = Course_CheckHits(course, cube);
-
   Cube_TakeHit(cube, &hit);
 
   Camera_Update(camera);
-
   GBA_VSync();
 
   Cube_Draw(cube, camera);
