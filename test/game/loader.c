@@ -1,6 +1,6 @@
 
 #include <game/loader.h>
-#include "test.h"
+#include "../test.h"
 
 test(LoadCourse_ShouldSetExpectedCourseSize) {
   // arrange

@@ -83,8 +83,8 @@ test(Sprite_GetAffine_ShouldReturnPreviouslyAssignedAffine) {
 
   GBA_Affine *affine1 = GBA_Affine_Allocate();
 
-  GBA_Sprite_SetAffine(sprite1, affine1);
-  GBA_Sprite_SetAffine(sprite2, affine1);
+  GBA_Sprite_SetAffine(sprite1, affine1, false);
+  GBA_Sprite_SetAffine(sprite2, affine1, false);
 
   // act
   GBA_Affine *affine2 = GBA_Sprite_GetAffine(sprite1);
