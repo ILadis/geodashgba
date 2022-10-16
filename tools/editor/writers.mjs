@@ -19,7 +19,7 @@ TileMapWriter.prototype.write = function(tileMap) {
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let tile = tiles.at(x, y);
+      let tile = tileMap.at(x, y);
 
       this.file.write('    ');
       this.file.writeLine(!tile ? '{ 0 },' : '{'

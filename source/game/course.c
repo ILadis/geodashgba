@@ -83,33 +83,32 @@ Course_DrawBackground(
     Camera *camera)
 {
   extern const GBA_TileMapRef backgroundTileMap;
-
-  GBA_EnableBackgroundLayer(0, (GBA_BackgroundControl) {
+  static const GBA_BackgroundControl layers[] = {
+    { // background layer
     .size = 1,
     .colorMode = 1,
     .tileSetIndex = 0,
     .tileMapIndex = 8,
     .priority = 3,
-  });
+    },
+    { // objects layer
+      .size = 0,
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 14,
+      .priority = 2,
+    }
+  };
 
-  GBA_EnableBackgroundLayer(1, (GBA_BackgroundControl) {
-    .size = 0,
-    .colorMode = 1,
-    .tileSetIndex = 0,
-    .tileMapIndex = 14,
-    .priority = 2,
-  });
+  if (course->redraw) {
+    GBA_EnableBackgroundLayer(0, layers[0]);
+    GBA_EnableBackgroundLayer(1, layers[1]);
 
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 0);
-  GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
-}
+    GBA_TileMapRef target;
+    GBA_TileMapRef_FromBackgroundLayer(&target, 0);
+    GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
+  }
 
-static inline void
-Course_DrawOffset(
-    Course *course,
-    Camera *camera)
-{
   Vector *position = Camera_GetPosition(camera);
 
   course->offset.x = position->x;
@@ -209,15 +208,14 @@ Course_Draw(
     Course *course,
     Camera *camera)
 {
-  Course_DrawOffset(course, camera);
-
   if (course->redraw) {
     // FIXME currently a workaround to fill grid
     Course_FillGrid(course);
-    Course_DrawBackground(course, camera);
   }
 
+  Course_DrawBackground(course, camera);
   Course_DrawFloor(course, camera);
   Course_DrawObjects(course, camera);
+
   course->redraw = false;
 }

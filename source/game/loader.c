@@ -94,7 +94,7 @@ Loader_SetSpawn(
 {
   Vector *cursor = &loader->cursor;
   // standard box is 2x2 tiles, multiply by 16 to get pixel coordinates
-  Course_SetSpawn(course, cursor->x * 16, cursor->y * 16);
+  Course_SetSpawn(course, cursor->x * 16, cursor->y * 16 + 8);
 }
 
 static void

@@ -11,6 +11,7 @@
 #include <game/loader.h>
 #include <game/course.h>
 #include <game/object.h>
+#include <game/particle.h>
 
 static void
 Scene_DoEnter() {
@@ -44,6 +45,8 @@ Scene_DoEnter() {
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
   Camera_Update(camera);
+
+  Particle_ResetAll();
 }
 
 static void
@@ -61,6 +64,11 @@ Scene_DoPlay() {
     Cube_Jump(cube);
   }
 
+  if (GBA_Input_IsHit(input, GBA_KEY_B)) {
+    Vector *position = Cube_GetPosition(cube);
+    Particle_NewInstance(position);
+  }
+
   if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
     debug = true;
   }
@@ -76,16 +84,21 @@ Scene_DoPlay() {
   }
 
   Cube_Update(cube);
+
   Bounds *hitbox = Cube_GetHitbox(cube);
   Hit hit = Course_CheckHits(course, hitbox);
+
   Cube_TakeHit(cube, &hit);
   Cube_HandleRotation(cube, course);
 
+  Particle_UpdateAll();
   Camera_Update(camera);
+
   GBA_VSync();
 
   Cube_Draw(cube, camera);
   Course_Draw(course, camera);
+  Particle_DrawAll();
 
 /*
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
