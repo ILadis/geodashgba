@@ -8,20 +8,19 @@ Cube_GetInstance() {
 }
 
 void
-Cube_Reset(Cube *cube) {
+Cube_Reset(
+    Cube *cube,
+    Vector *spawn)
+{
   Movement *movement = &cube->movement;
-
-  // initial position
-  const int x = 10;
-  const int y = 20;
 
   // movement is using 8w fixed-point integer
   Movement_SetVelocityLimit(movement, 600, 1300);
   Movement_SetGravity(movement, 90);
   Movement_SetFriction(movement, 60);
-  Movement_SetPosition(movement, (x << 8) + 8, (y << 8) + 8);
+  Movement_SetPosition(movement, (spawn->x << 8) + 8, (spawn->y << 8) + 8);
 
-  cube->hitbox = Bounds_Of(x, y, 8, 8);
+  cube->hitbox = Bounds_Of(spawn->x, spawn->y, 8, 8);
   cube->state.current = STATE_UNKNOWN;
   cube->state.previous = STATE_UNKNOWN;
 }

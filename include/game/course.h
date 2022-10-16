@@ -10,7 +10,7 @@
 #include <game/camera.h>
 
 typedef struct Course {
-  Vector offset;
+  Vector spawn, offset;
   int floor, count;
   Object objects[255];
   Cell grid;
@@ -22,6 +22,20 @@ Course_GetInstance();
 
 void
 Course_Reset(Course *course);
+
+static inline void
+Course_SetSpawn(
+    Course *course,
+    int x, int y)
+{
+  course->spawn.x = x;
+  course->spawn.y = y;
+}
+
+static inline Vector*
+Course_GetSpawn(Course *course) {
+  return &course->spawn;
+}
 
 static inline void
 Course_SetFloorHeight(

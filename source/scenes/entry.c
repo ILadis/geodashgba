@@ -27,22 +27,23 @@ Scene_DoEnter() {
   GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
   GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
 
-  Cube *cube = Cube_GetInstance();
-  Cube_Reset(cube);
-  Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
-
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
   Course *course = Course_GetInstance();
   Course_Reset(course);
 
+  Loader *loader = Loader_ForTestCourse();
+  Loader_LoadCourse(loader, course);
+
+  Cube *cube = Cube_GetInstance();
+  Vector *spawn = Course_GetSpawn(course);
+  Cube_Reset(cube, spawn);
+  Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
   Camera_Update(camera);
-
-  Loader *loader = Loader_ForTestCourse();
-  Loader_LoadCourse(loader, course);
 }
 
 static void

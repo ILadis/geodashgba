@@ -15,7 +15,7 @@ Loader_ForTestCourse() {
     "                         i                               |"
     "                    i    x  xxxxxxxxxx                   |"
     "               i    x    x          xxxxx                |"
-    "_______________x____x____x____________xxxxx______________|"
+    "_o_____________x____x____x____________xxxxx______________|"
   };
 
   return &loader;
@@ -88,7 +88,17 @@ Loader_AddObject(
 }
 
 static void
-Loader_SetFloorHeigth(
+Loader_SetSpawn(
+    Loader *loader,
+    Course *course)
+{
+  Vector *cursor = &loader->cursor;
+  // standard box is 2x2 tiles, multiply by 16 to get pixel coordinates
+  Course_SetSpawn(course, cursor->x * 16, cursor->y * 16);
+}
+
+static void
+Loader_SetFloorHeight(
     Loader *loader,
     Course *course)
 {
@@ -111,8 +121,11 @@ Loader_LoadCourse(
     case 'x':
       Loader_AddObject(loader, course);
       break;
+    case 'o':
+      Loader_SetSpawn(loader, course);
+      break;
     case '_':
-      Loader_SetFloorHeigth(loader, course);
+      Loader_SetFloorHeight(loader, course);
       break;
     }
   }

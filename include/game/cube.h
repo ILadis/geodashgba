@@ -58,7 +58,9 @@ Cube_SetState(
 }
 
 void
-Cube_Reset(Cube *cube);
+Cube_Reset(
+    Cube *cube,
+    Vector *spawn);
 
 void
 Cube_Jump(Cube *cube);

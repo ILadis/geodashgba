@@ -11,7 +11,8 @@ void
 Course_Reset(Course *course) {
   course->redraw = true;
   course->count = 0;
-  course->floor = 16;
+  course->floor = 0;
+  course->spawn = Vector_Of(0, 0);
   course->offset = Vector_Of(0, 0);
   course->grid.bounds = Bounds_Of(0, 0, 1200, 1200);
 }
@@ -77,7 +78,7 @@ Course_CheckHits(
 }
 
 static inline void
-Course_Redraw(
+Course_DrawBackground(
     Course *course,
     Camera *camera)
 {
@@ -102,17 +103,6 @@ Course_Redraw(
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 0);
   GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
-
-  Iterator iterator;
-  Bounds *viewport = Camera_GetViewport(camera);
-  Cell_GetUnits(&course->grid, viewport, &iterator);
-
-  while (Iterator_HasNext(&iterator)) {
-    Unit *unit = Iterator_GetNext(&iterator);
-    Object *object = unit->object;
-
-    Camera_Draw(camera, &object->position, object->tiles);
-  }
 }
 
 static inline void
@@ -155,12 +145,23 @@ Course_DrawFloor(
     Course *course,
     Camera *camera)
 {
-  // TODO clearing should be done in camera
   Vector *position = Camera_GetPosition(camera);
   Vector *delta = Camera_GetDelta(camera);
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  if (course->redraw) {
+    int x = (position->x >> 3);
+    int y = (position->y >> 3);
+
+    for (int row = 0; row < 32; row++, y++) {
+      for (int col = 0; col < 32; col++, x++) {
+        const GBA_Tile *tile = Course_FloorTile(course, y);
+        GBA_TileMapRef_BlitTile(&target, x, y, tile);
+      }
+    }
+  }
 
   if (delta->x != 0) {
     int x = (position->x >> 3) + (delta->x > 0 ? 30 : 0); // right/left most edge (not visible yet)
@@ -188,7 +189,8 @@ Course_DrawObjects(
     Course *course,
     Camera *camera)
 {
-  Course_DrawFloor(course, camera);
+  void (*draw)(Camera *camera, const Vector *position, const GBA_TileMapRef *tileMap);
+  draw = course->redraw ? Camera_Draw : Camera_DrawDelta;
 
   Iterator iterator;
   Bounds *viewport = Camera_GetViewport(camera);
@@ -198,7 +200,7 @@ Course_DrawObjects(
     Unit *unit = Iterator_GetNext(&iterator);
     Object *object = unit->object;
 
-    Camera_DrawDelta(camera, &object->position, object->tiles);
+    draw(camera, &object->position, object->tiles);
   }
 }
 
@@ -212,9 +214,10 @@ Course_Draw(
   if (course->redraw) {
     // FIXME currently a workaround to fill grid
     Course_FillGrid(course);
-    Course_Redraw(course, camera);
-    course->redraw = false;
-  } else {
-    Course_DrawObjects(course, camera);
+    Course_DrawBackground(course, camera);
   }
+
+  Course_DrawFloor(course, camera);
+  Course_DrawObjects(course, camera);
+  course->redraw = false;
 }
