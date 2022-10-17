@@ -32,13 +32,17 @@ Particle_NewInstance(Vector *position) {
 
   // movement is using 8w fixed-point integer
   Movement_SetVelocityLimit(movement, 5000, 5000);
-  Movement_SetGravity(movement, 90);
-  Movement_SetFriction(movement, 60);
   Movement_SetPosition(movement, (position->x << 8) + 4, (position->y << 8) + 4);
 
-  Movement_SetVelocity(movement, 1500, -1500);
+  int angle = Math_rand();
+  int velocity = 1500;
 
-  particle->ttl = 60;
+  int dx = (Math_cos(angle) * velocity) >> 8; // from 16w to 8w fixed-point integer
+  int dy = (Math_sin(angle) * velocity) >> 8;
+
+  Movement_SetVelocity(movement, dx, dy);
+
+  particle->ttl = 16;
 
   return particle;
 }
@@ -80,7 +84,7 @@ Particle_LoadSprite(Particle *particle) {
   if (sprite == NULL) {
     particle->sprite = sprite = GBA_Sprite_Allocate();
 
-    // TODO find better way to specify/rotate tile id
+    // TODO find better way to specify/choose tile id
     static int tileId = 4;
     base.tileId = tileId++;
     if (tileId > 6) tileId = 4;
@@ -100,10 +104,10 @@ Particle_Draw(Particle *particle) {
   Movement *movement = &particle->movement;
   Vector *position = Movement_GetPosition(movement);
 
+  // revert 8w fixed-point integer
   int x = position->x >> 8;
   int y = position->y >> 8;
 
-  // revert 8w fixed-point integer
   Bounds bounds = {
     .size = Vector_Of(4, 4),
     .center = Vector_Of(x, y),

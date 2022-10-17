@@ -39,7 +39,7 @@ Cube_CalculateRotationVelocity(
   // do a 4/4 rotation
   if (frames >= 64) alpha = 256;
 
-  int velocity = sign * (alpha / frames);
+  int velocity = sign * Math_div(alpha, frames);
 
   return velocity;
 }

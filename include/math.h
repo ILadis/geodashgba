@@ -23,6 +23,9 @@ int
 Math_cos(int alpha);
 
 int
+Math_rand();
+
+int
 Math_div(int num, int denom);
 
 short

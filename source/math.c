@@ -40,6 +40,12 @@ Math_cos(int alpha) {
   return sinlut[(alpha + 64) & 0xFF];
 }
 
+int
+Math_rand() {
+  static int seed = 0;
+	return seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+}
+
 #ifdef NOGBA
 
 int

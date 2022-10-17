@@ -64,8 +64,11 @@ Scene_DoPlay() {
     Cube_Jump(cube);
   }
 
-  if (GBA_Input_IsHit(input, GBA_KEY_B)) {
+  if (GBA_Input_IsPressed(input, GBA_KEY_B)) {
     Vector *position = Cube_GetPosition(cube);
+    Particle_NewInstance(position);
+    Particle_NewInstance(position);
+    Particle_NewInstance(position);
     Particle_NewInstance(position);
   }
 
