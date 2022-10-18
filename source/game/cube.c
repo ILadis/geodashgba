@@ -47,10 +47,10 @@ Cube_Accelerate(
   Movement_SetAcceleration(movement, ax, ay);
 }
 
-void
-Cube_Update(Cube *cube) {
-  Movement *movement = &cube->movement;
+static inline void
+Cube_ApplyMovement(Cube *cube) {
   Bounds *hitbox = &cube->hitbox;
+  Movement *movement = &cube->movement;
 
   Movement_Update(movement);
   Vector *position = Movement_GetPosition(movement);
@@ -60,36 +60,105 @@ Cube_Update(Cube *cube) {
   hitbox->center.y = position->y >> 8;
 }
 
-void
-Cube_TakeHit(
+static inline void
+Cube_ApplyHit(
     Cube *cube,
-    Hit *hit)
+    Course *course)
 {
-  Movement *movement = &cube->movement;
   Bounds *hitbox = &cube->hitbox;
+  Hit hit = Course_CheckHits(course, hitbox);
 
+  Movement *movement = &cube->movement;
   State state = STATE_AIRBORNE;
 
-  if (hit->delta.y < 0) {
+  if (hit.delta.y < 0) {
+    hitbox->center.y += hit.delta.y + 1; // stay in contact with ground
     movement->velocity.current.y = 0;
-    hitbox->center.y += hit->delta.y + 1; // stay in contact with object
     movement->position.y = cube->hitbox.center.y << 8;
     state = STATE_GROUNDED;
   }
 
-  if (hit->delta.y > 0) {
+  if (hit.delta.y > 0) {
+    hitbox->center.y += hit.delta.y;
     movement->velocity.current.y = 0;
-    hitbox->center.y += hit->delta.y;
     movement->position.y = cube->hitbox.center.y << 8;
   }
 
-  if (hit->delta.x != 0) {
+  if (hit.delta.x != 0) {
+    hitbox->center.x += hit.delta.x;
     movement->velocity.current.x = 0;
-    hitbox->center.x += hit->delta.x;
     movement->position.x = cube->hitbox.center.x << 8;
   }
 
   Cube_SetState(cube, state);
+}
+
+static inline int
+Cube_CalculateRotationVelocity(
+    Cube *cube,
+    Course *course)
+{
+  Cube shadow = (Cube) {
+    .movement = cube->movement,
+    .hitbox = cube->hitbox,
+    .state = cube->state,
+  };
+
+  int sign = Math_signum(shadow.movement.velocity.current.x);
+  if (sign == 0) {
+    return 0;
+  }
+
+  // do not slow down vertical movement
+  Movement_SetFriction(&shadow.movement, 0);
+
+  int frames = 0;
+  do {
+    frames++;
+
+    Cube_ApplyMovement(&shadow);
+    Cube_ApplyHit(&shadow, course);
+  } while (!Cube_EnteredState(&shadow, STATE_GROUNDED));
+
+  // do a 1/4 rotation
+  int alpha = 64;
+  // do a 2/4 rotation
+  if (frames >= 24) alpha = 128;
+  // do a 3/4 rotation
+  if (frames >= 40) alpha = 192;
+  // do a 4/4 rotation
+  if (frames >= 64) alpha = 256;
+
+  int velocity = sign * Math_div(alpha, frames);
+
+  return velocity;
+}
+
+static void
+Cube_ApplyRotation(
+    Cube *cube,
+    Course *course)
+{
+  if (Cube_EnteredState(cube, STATE_GROUNDED)) {
+    cube->rotation.velocity = 0;
+    cube->rotation.angle = 64;
+  }
+
+  if (Cube_EnteredState(cube, STATE_AIRBORNE)) {
+    int velocity = Cube_CalculateRotationVelocity(cube, course);
+    cube->rotation.velocity = velocity;
+    cube->rotation.angle = 64;
+  }
+}
+
+void
+Cube_Update(
+    Cube *cube,
+    Course *course)
+{
+  Cube_ApplyMovement(cube);
+  Cube_ApplyHit(cube, course);
+  Cube_ApplyRotation(cube, course);
 }
 
 static inline GBA_Sprite*

@@ -8,13 +8,13 @@
 
 #include <game/camera.h>
 #include <game/move.h>
-
-typedef struct Course Course;
+#include <game/course.h>
 
 typedef enum State {
   STATE_UNKNOWN,
   STATE_AIRBORNE,
   STATE_GROUNDED,
+  STATE_DESTROYED,
 } State;
 
 typedef struct Cube {
@@ -27,11 +27,6 @@ typedef struct Cube {
 
 Cube*
 Cube_GetInstance();
-
-static inline Bounds*
-Cube_GetHitbox(Cube *cube) {
-  return &cube->hitbox;
-}
 
 static inline Vector*
 Cube_GetPosition(Cube *cube) {
@@ -72,15 +67,7 @@ Cube_Accelerate(
     int speed);
 
 void
-Cube_Update(Cube *cube);
-
-void
-Cube_TakeHit(
-    Cube *cube,
-    Hit *hit);
-
-void
-Cube_HandleRotation(
+Cube_Update(
     Cube *cube,
     Course *course);
 

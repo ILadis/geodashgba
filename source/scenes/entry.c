@@ -86,16 +86,9 @@ Scene_DoPlay() {
     }
   }
 
-  Cube_Update(cube);
-
-  Bounds *hitbox = Cube_GetHitbox(cube);
-  Hit hit = Course_CheckHits(course, hitbox);
-
-  Cube_TakeHit(cube, &hit);
-  Cube_HandleRotation(cube, course);
-
-  Particle_UpdateAll();
+  Cube_Update(cube, course);
   Camera_Update(camera);
+  Particle_UpdateAll();
 
   GBA_VSync();
 
