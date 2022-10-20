@@ -18,14 +18,14 @@ test(Intersects_ShouldReturnNoHitWhenBoundsDoNotIntersect) {
 test(Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnTopEdge) {
   // arrange
   Bounds bound1 = Bounds_Of(5, 4, 4, 2);
-  Bounds bound2 = Bounds_Of(3, 3, 1, 2);
+  Bounds bound2 = Bounds_Of(3, 2, 1, 2);
 
   // assert
   Hit hit = Bounds_Intersects(&bound1, &bound2);
 
   // assert
   assert(hit.delta.x ==  0);
-  assert(hit.delta.y == -3);
+  assert(hit.delta.y == -2);
 }
 
 test(Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnRightEdge) {

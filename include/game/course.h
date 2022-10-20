@@ -48,6 +48,9 @@ Course_SetFloorHeight(
 Object*
 Course_AddObject(Course *course);
 
+void
+Course_Finalize(Course *course);
+
 Hit
 Course_CheckHits(
     Course *course,

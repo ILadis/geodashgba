@@ -6,12 +6,12 @@
 #include <prefab.h>
 
 #include <game/camera.h>
-#include <game/move.h>
+#include <game/body.h>
 
 typedef struct Particle {
-  Movement movement;
-  int ttl;
+  Body body;
   GBA_Sprite *sprite;
+  int life, delay;
 } Particle;
 
 void
@@ -24,6 +24,8 @@ void
 Particle_DrawAll();
 
 Particle*
-Particle_NewInstance(Vector *position);
+Particle_NewInstance(
+    Vector *position,
+    int life, int delay);
 
 #endif

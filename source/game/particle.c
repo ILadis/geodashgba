@@ -25,14 +25,17 @@ Particle_DrawAll() {
 }
 
 Particle*
-Particle_NewInstance(Vector *position) {
+Particle_NewInstance(
+    Vector *position,
+    int life, int delay)
+{
   Particle *particle = Prefab_NewInstance(prefabs);
 
-  Movement *movement = &particle->movement;
+  Body *body = &particle->body;
 
-  // movement is using 8w fixed-point integer
-  Movement_SetVelocityLimit(movement, 5000, 5000);
-  Movement_SetPosition(movement, (position->x << 8) + 4, (position->y << 8) + 4);
+  // body is using 8w fixed-point integer
+  Body_SetVelocityLimit(body, 5000, 5000);
+  Body_SetPosition(body, (position->x << 8) + 4, (position->y << 8) + 4);
 
   int angle = Math_rand();
   int velocity = 1500;
@@ -40,20 +43,18 @@ Particle_NewInstance(Vector *position) {
   int dx = (Math_cos(angle) * velocity) >> 8; // from 16w to 8w fixed-point integer
   int dy = (Math_sin(angle) * velocity) >> 8;
 
-  Movement_SetVelocity(movement, dx, dy);
+  Body_SetVelocity(body, dx, dy);
 
-  particle->ttl = 16;
+  particle->life = life;
+  particle->delay = delay;
 
   return particle;
 }
 
 static bool
 Particle_Update(Particle *particle) {
-  Movement *movement = &particle->movement;
-  Movement_Update(movement);
-
-  int ttl = particle->ttl -= 1;
-  if (ttl <= 0) {
+  int life = particle->life -= 1;
+  if (life <= 0) {
     GBA_Sprite *sprite = particle->sprite;
     if (sprite != NULL) {
       GBA_Sprite_Release(sprite);
@@ -61,6 +62,12 @@ Particle_Update(Particle *particle) {
     }
 
     return false;
+  }
+
+  int delay = particle->delay -= 1;
+  if (delay <= 0) {
+    Body *body = &particle->body;
+    Body_Update(body);
   }
 
   return true;
@@ -101,8 +108,8 @@ static bool
 Particle_Draw(Particle *particle) {
   GBA_Sprite *sprite = Particle_LoadSprite(particle);
 
-  Movement *movement = &particle->movement;
-  Vector *position = Movement_GetPosition(movement);
+  Body *body = &particle->body;
+  Vector *position = Body_GetPosition(body);
 
   // revert 8w fixed-point integer
   int x = position->x >> 8;
@@ -114,7 +121,7 @@ Particle_Draw(Particle *particle) {
   };
 
   Camera *camera = Camera_GetInstance();
-  if (Camera_InViewport(camera, &bounds)) {
+  if (particle->delay <= 0 && Camera_InViewport(camera, &bounds)) {
     Camera_RelativeTo(camera, &bounds.center);
     GBA_Sprite_SetPosition(sprite, bounds.center.x, bounds.center.y);
     GBA_Sprite_SetObjMode(sprite, 0); // show sprite

@@ -23,8 +23,8 @@ Course_AddObject(Course *course) {
   return &course->objects[index];
 }
 
-static inline void
-Course_FillGrid(Course *course) {
+void
+Course_Finalize(Course *course) {
   Cell *grid = &course->grid;
   for (int i = 0; i < course->count; i++) {
     Object *object = &course->objects[i];
@@ -208,11 +208,6 @@ Course_Draw(
     Course *course,
     Camera *camera)
 {
-  if (course->redraw) {
-    // FIXME currently a workaround to fill grid
-    Course_FillGrid(course);
-  }
-
   Course_DrawBackground(course, camera);
   Course_DrawFloor(course, camera);
   Course_DrawObjects(course, camera);

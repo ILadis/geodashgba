@@ -4,18 +4,18 @@
 Loader*
 Loader_ForTestCourse() {
   static Loader loader = {
-    "                                                         |"
-    "                                                xxxxxx   |"
-    "                                                         |"
-    "                                             x           |"
-    "                                                         |"
-    "                                          x              |"
-    "                                                         |"
-    "                                       x                 |"
-    "                         i                               |"
-    "                    i    x  xxxxxxxxxx                   |"
-    "               i    x    x          xxxxx                |"
-    "_o_____________x____x____x____________xxxxx______________|"
+    "                                                             x|"
+    "                                                xxxxxx       x|"
+    "                                                             x|"
+    "                                             x               x|"
+    "                                                             x|"
+    "                                          x                  x|"
+    "                                                             x|"
+    "                                       x                     x|"
+    "                         i                                   x|"
+    "                    i    x  xxxxxxxxxx                       x|"
+    "               i    x    x          xxxxx                    x|"
+    "_o_____________x____x____x____________xxxxx__________________x|"
   };
 
   return &loader;
@@ -129,6 +129,8 @@ Loader_LoadCourse(
       break;
     }
   }
+
+  Course_Finalize(course);
 
   return true;
 }

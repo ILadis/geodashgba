@@ -8,9 +8,9 @@
 
 #include <game/camera.h>
 #include <game/cube.h>
-#include <game/loader.h>
 #include <game/course.h>
-#include <game/object.h>
+#include <game/spawner.h>
+#include <game/loader.h>
 #include <game/particle.h>
 
 static void
@@ -38,9 +38,10 @@ Scene_DoEnter() {
   Loader_LoadCourse(loader, course);
 
   Cube *cube = Cube_GetInstance();
+
+  Spawner *spawner = Spawner_GetInstance();
   Vector *spawn = Course_GetSpawn(course);
-  Cube_Reset(cube, spawn);
-  Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+  Spawner_SetTarget(spawner, cube, spawn);
 
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
@@ -59,6 +60,7 @@ Scene_DoPlay() {
   Cube *cube = Cube_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
+  Spawner *spawner = Spawner_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
     Cube_Jump(cube);
@@ -66,10 +68,10 @@ Scene_DoPlay() {
 
   if (GBA_Input_IsPressed(input, GBA_KEY_B)) {
     Vector *position = Cube_GetPosition(cube);
-    Particle_NewInstance(position);
-    Particle_NewInstance(position);
-    Particle_NewInstance(position);
-    Particle_NewInstance(position);
+    Particle_NewInstance(position, 16, 0);
+    Particle_NewInstance(position, 16, 0);
+    Particle_NewInstance(position, 16, 0);
+    Particle_NewInstance(position, 16, 0);
   }
 
   if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
@@ -86,12 +88,14 @@ Scene_DoPlay() {
     }
   }
 
+  Spawner_Update(spawner);
   Cube_Update(cube, course);
   Camera_Update(camera);
   Particle_UpdateAll();
 
   GBA_VSync();
 
+  Spawner_Draw(spawner, camera);
   Cube_Draw(cube, camera);
   Course_Draw(course, camera);
   Particle_DrawAll();

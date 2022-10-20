@@ -7,7 +7,7 @@
 #include <hit.h>
 
 #include <game/camera.h>
-#include <game/move.h>
+#include <game/body.h>
 #include <game/course.h>
 
 typedef enum State {
@@ -18,7 +18,7 @@ typedef enum State {
 } State;
 
 typedef struct Cube {
-  Movement movement;
+  Body body;
   Bounds hitbox;
   struct { State current, previous; } state;
   struct { int angle, velocity; } rotation;
@@ -32,6 +32,11 @@ static inline Vector*
 Cube_GetPosition(Cube *cube) {
   return &cube->hitbox.center;
 }
+
+void
+Cube_SetPosition(
+    Cube *cube,
+    const Vector *position);
 
 static inline bool
 Cube_EnteredState(Cube *cube, State state) {
@@ -51,11 +56,6 @@ Cube_SetState(
   cube->state.previous = cube->state.current;
   cube->state.current = state;
 }
-
-void
-Cube_Reset(
-    Cube *cube,
-    Vector *spawn);
 
 void
 Cube_Jump(Cube *cube);
