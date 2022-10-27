@@ -5,19 +5,27 @@
 #include <math.h>
 #include <vector.h>
 
+typedef struct Dynamics {
+  int friction;
+  Vector gravity;
+  Vector maxvel;
+} Dynamics;
+
 typedef struct Body {
+  const Dynamics *dynamics;
   Vector position;
-  Vector acceleration, gravity, friction;
-  struct { Vector current, limit; } velocity;
+  Vector acceleration, velocity;
 } Body;
 
+const Dynamics*
+Dynamics_OfZero();
+
 static inline void
-Body_SetVelocityLimit(
+Body_SetDynamics(
     Body *body,
-    int x, int y)
+    const Dynamics *dynamics)
 {
-  body->velocity.limit.x = Math_abs(x);
-  body->velocity.limit.y = Math_abs(y);
+  body->dynamics = dynamics;
 }
 
 static inline void
@@ -25,8 +33,8 @@ Body_SetVelocity(
     Body *body,
     int x, int y)
 {
-  body->velocity.current.x = x;
-  body->velocity.current.y = y;
+  body->velocity.x = x;
+  body->velocity.y = y;
 }
 
 static inline void
@@ -36,24 +44,6 @@ Body_SetAcceleration(
 {
   body->acceleration.x = x;
   body->acceleration.y = y;
-}
-
-static inline void
-Body_SetGravity(
-    Body *body,
-    int gravity)
-{
-  body->gravity.x = 0;
-  body->gravity.y = Math_abs(gravity);
-}
-
-static inline void
-Body_SetFriction(
-    Body *body,
-    int friction)
-{
-  body->friction.y = 0;
-  body->friction.x = Math_abs(friction);
 }
 
 static inline void

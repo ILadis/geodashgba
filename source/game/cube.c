@@ -14,11 +14,15 @@ Cube_SetPosition(
 {
   Body *body = &cube->body;
 
+  static const Dynamics dynamics = (Dynamics) {
+    .friction = 60,
+    .gravity  = { 0, 90 },
+    .maxvel   = { 600, 1300 },
+  };
+
   // body is using 8w fixed-point integer
-  Body_SetVelocityLimit(body, 600, 1300);
-  Body_SetGravity(body, 90);
-  Body_SetFriction(body, 60);
-  Body_SetPosition(body, (position->x << 8) + 8, (position->y << 8) + 8);
+  Body_SetDynamics(body, &dynamics);
+  Body_SetPosition(body, position->x << 8, position->y << 8);
 
   cube->hitbox = Bounds_Of(position->x, position->y, 8, 8);
 }
@@ -26,7 +30,7 @@ Cube_SetPosition(
 void
 Cube_Jump(Cube *cube) {
   if (Cube_InState(cube, STATE_GROUNDED)) {
-    cube->body.velocity.current.y = -1500;
+    cube->body.velocity.y = -1500;
   }
 }
 
@@ -66,7 +70,7 @@ Cube_ResolveHit(Cube *cube, int dy) {
   hitbox->center.y += dy;
 
   Body *body = &cube->body;
-  body->velocity.current.y = 0;
+  body->velocity.y = 0;
   body->position.y = cube->hitbox.center.y << 8;
 }
 
@@ -74,9 +78,9 @@ static inline void
 Cube_HaltMovement(Cube *cube) {
   Body *body = &cube->body;
 
+  const Dynamics *dynamics = Dynamics_OfZero();
+  Body_SetDynamics(body, dynamics);
   Body_SetVelocity(body, 0, 0);
-  Body_SetGravity(body, 0);
-  Body_SetFriction(body, 0);
   Body_SetAcceleration(body, 0, 0);
 }
 
@@ -90,17 +94,19 @@ Cube_ApplyHit(
 
   State state = STATE_AIRBORNE;
 
-  if (hit.delta.y < 0) {
-    Cube_ResolveHit(cube, hit.delta.y + 1); // stay in contact with ground
-    state = STATE_GROUNDED;
-  }
-  else if (hit.delta.y > 0) {
-    Cube_ResolveHit(cube, hit.delta.y);
-  }
-
   if (hit.delta.x != 0) {
     Cube_HaltMovement(cube);
     state = STATE_DESTROYED;
+  }
+
+  else {
+    if (hit.delta.y < 0) {
+      Cube_ResolveHit(cube, hit.delta.y + 1); // stay in contact with ground
+      state = STATE_GROUNDED;
+    }
+    else if (hit.delta.y > 0) {
+      Cube_ResolveHit(cube, hit.delta.y);
+    }
   }
 
   Cube_SetState(cube, state);
@@ -117,13 +123,10 @@ Cube_CalculateRotationVelocity(
     .state = cube->state,
   };
 
-  int sign = Math_signum(shadow.body.velocity.current.x);
+  int sign = Math_signum(shadow.body.velocity.x);
   if (sign == 0) {
     return 0;
   }
-
-  // do not slow down body
-  Body_SetFriction(&shadow.body, 0);
 
   int frames = 0;
   do {
@@ -135,12 +138,12 @@ Cube_CalculateRotationVelocity(
 
   // do a 1/4 rotation
   int alpha = 64;
-  // do a 2/4 rotation
-  if (frames >= 24) alpha = 128;
-  // do a 3/4 rotation
-  if (frames >= 40) alpha = 192;
   // do a 4/4 rotation
   if (frames >= 64) alpha = 256;
+  // do a 3/4 rotation
+  else if (frames >= 40) alpha = 192;
+  // do a 2/4 rotation
+  else if (frames >= 24) alpha = 128;
 
   int velocity = sign * Math_div(alpha, frames);
 

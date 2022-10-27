@@ -33,8 +33,14 @@ Particle_NewInstance(
 
   Body *body = &particle->body;
 
+  static const Dynamics dynamics = (Dynamics) {
+    .friction = 0,
+    .gravity  = { 0, 0 },
+    .maxvel   = { 5000, 5000 },
+  };
+
   // body is using 8w fixed-point integer
-  Body_SetVelocityLimit(body, 5000, 5000);
+  Body_SetDynamics(body, &dynamics);
   Body_SetPosition(body, (position->x << 8) + 4, (position->y << 8) + 4);
 
   int angle = Math_rand();
