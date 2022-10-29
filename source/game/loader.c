@@ -4,18 +4,18 @@
 Loader*
 Loader_ForTestCourse() {
   static Loader loader = {
-    "                                                             x|"
-    "                                                xxxxxx       x|"
-    "                                                             x|"
-    "                                             x               x|"
-    "                                                             x|"
-    "                                          x                  x|"
-    "                                                             x|"
-    "                                       x                     x|"
-    "                         i                                   x|"
-    "                    i    x  xxxxxxxxxx                       x|"
-    "               i    x    x          xxxxx                    x|"
-    "_o_____________x____x____x____________xxxxx__________________x|"
+    "                                                                  x|"
+    "                                                     xxxxxx       x|"
+    "                                                                  x|"
+    "                                                  x               x|"
+    "                                                                  x|"
+    "                                               x                  x|"
+    "                                                                  x|"
+    "                                            x                     x|"
+    "                              i                                   x|"
+    "                         i    x  xxxxxxxxxx                       x|"
+    "                    i    x    x          xxxxx                    x|"
+    "_o_______^___^^_____x____x____x____________xxxxx__________________x|"
   };
 
   return &loader;
@@ -74,17 +74,95 @@ Loader_NextSymbol(
   return true;
 }
 
+static bool
+Loader_GetSymbol(
+    Loader *loader,
+    Direction direction,
+    char *symbol)
+{
+  const Vector *delta = Vector_FromDirection(direction);
+  Vector *cursor = &loader->cursor;
+
+  int x = cursor->x + delta->x;
+  int y = cursor->y + delta->y;
+
+  Vector *size = &loader->size;
+  if (x >= size->x || y >= size->y) {
+    return false;
+  }
+
+  int index = size->x * y + x;
+  *symbol = loader->layout[index];
+
+  cursor->x = x;
+  cursor->y = y;
+
+  return true;
+}
+
+static inline void
+Loader_AddObjectToCourse(
+    Loader *loader,
+    Course *course,
+    Object *object)
+{
+  Bounds *bounds = &object->viewbox;
+  Hit hit = Course_CheckHits(course, bounds);
+
+  int delta = Math_abs(hit.delta.x) + Math_abs(hit.delta.y);
+  if (delta < 4) {
+    Object* o = Course_AllocateObject(course);
+    *o = *object;
+    Course_AddObject(course, o);
+  }
+}
+
 static void
-Loader_AddObject(
+Loader_AddBoxWithPole(
+    Loader *loader,
+    Course *course)
+{
+  Vector cursor = loader->cursor;
+  int height = 0;
+
+  char symbol;
+  while (Loader_GetSymbol(loader, DIRECTION_DOWN, &symbol)) {
+    if (symbol != 'x') break;
+    else height++;
+  }
+
+  loader->cursor = cursor;
+
+  Object box = {0};
+  Object_CreateBoxWithPole(&box, height);
+  Object_SetPosition(&box, cursor.x * 2, cursor.y * 2 - 1);
+  Loader_AddObjectToCourse(loader, course, &box);
+}
+
+static void
+Loader_AddBox(
     Loader *loader,
     Course *course)
 {
   Vector *cursor = &loader->cursor;
 
-  Object* object = Course_AddObject(course);
-  Object_CreateBox(object);
-  // TODO should consider object viewport when calculating top left position
-  Object_SetPosition(object, cursor->x * 2, cursor->y * 2);
+  Object box = {0};
+  Object_CreateBox(&box);
+  Object_SetPosition(&box, cursor->x * 2, cursor->y * 2);
+  Loader_AddObjectToCourse(loader, course, &box);
+}
+
+static void
+Loader_AddSpike(
+    Loader *loader,
+    Course *course)
+{
+  Vector *cursor = &loader->cursor;
+
+  Object spike = {0};
+  Object_CreateSpike(&spike, DIRECTION_UP);
+  Object_SetPosition(&spike, cursor->x * 2, cursor->y * 2);
+  Loader_AddObjectToCourse(loader, course, &spike);
 }
 
 static void
@@ -112,14 +190,24 @@ Loader_LoadCourse(
     Loader *loader,
     Course *course)
 {
+  char symbol;
+
   Loader_ResetCursor(loader);
   Course_Reset(course);
 
-  char symbol;
+  // workaround to not collide with floor when adding objects
+  Course_SetFloorHeight(course, 100);
+
   while (Loader_NextSymbol(loader, &symbol)) {
     switch (symbol) {
+    case 'i':
+      Loader_AddBoxWithPole(loader, course);
+      break;
     case 'x':
-      Loader_AddObject(loader, course);
+      Loader_AddBox(loader, course);
+      break;
+    case '^':
+      Loader_AddSpike(loader, course);
       break;
     case 'o':
       Loader_SetSpawn(loader, course);
@@ -129,8 +217,6 @@ Loader_LoadCourse(
       break;
     }
   }
-
-  Course_Finalize(course);
 
   return true;
 }

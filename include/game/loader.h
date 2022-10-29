@@ -10,8 +10,6 @@
 typedef struct Loader {
   const char *layout;
   Vector size, cursor;
-  // int index;
-  // error
 } Loader;
 
 #define Loader_ForLayout(layout) ((Loader) { layout })

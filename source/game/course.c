@@ -18,22 +18,22 @@ Course_Reset(Course *course) {
 }
 
 Object*
-Course_AddObject(Course *course) {
+Course_AllocateObject(Course *course) {
   int index = course->count++;
   return &course->objects[index];
 }
 
 void
-Course_Finalize(Course *course) {
+Course_AddObject(
+    Course *course,
+    Object *object)
+{
   Cell *grid = &course->grid;
-  for (int i = 0; i < course->count; i++) {
-    Object *object = &course->objects[i];
-    Bounds *viewbox = &object->viewbox;
 
-    Unit unit = Unit_Of(viewbox, object);
+  Bounds *viewbox = &object->viewbox;
+  Unit unit = Unit_Of(viewbox, object);
 
-    Cell_AddUnit(grid, &unit);
-  }
+  Cell_AddUnit(grid, &unit);
 }
 
 static inline Hit
@@ -43,7 +43,7 @@ Course_CheckFloorHit(
 {
   Hit hit = {0};
 
-  int dy = (course->floor + 1)*8 - (hitbox->center.y + hitbox->size.y + 1);
+  int dy = (course->floor + 1) * 8 - (hitbox->center.y + hitbox->size.y + 1);
   if (dy < 0) {
     hit.delta.y = dy;
   }
@@ -84,12 +84,12 @@ Course_DrawBackground(
 {
   extern const GBA_TileMapRef backgroundTileMap;
   static const GBA_BackgroundControl layers[] = {
-    { // background layer
-    .size = 1,
-    .colorMode = 1,
-    .tileSetIndex = 0,
-    .tileMapIndex = 8,
-    .priority = 3,
+   { // background layer
+      .size = 1,
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 8,
+      .priority = 3,
     },
     { // objects layer
       .size = 0,

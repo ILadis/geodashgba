@@ -5,11 +5,12 @@ static inline void
 Object_SetViewboxFromTiles(Object *object) {
   const GBA_TileMapRef *tiles = object->tiles;
 
-  int x = (tiles->width  >> 1) * 8;
-  int y = (tiles->width  >> 1) * 8;
+  int x = (tiles->width  * 8) / 2;
+  int y = (tiles->height * 8) / 2;
 
-  int width =  x + 4;
-  int height = y + 4;
+  // makes viewport 1px larger on each side
+  int width =  x + 1;
+  int height = y + 1;
 
   Bounds viewbox = Bounds_Of(x, y, width, height);
 
@@ -34,7 +35,7 @@ Object_CreateBox(Object *object) {
   Object_SetViewboxFromTiles(object);
 }
 
-static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
+static const GBA_TileMapRef blockWithPole = (GBA_TileMapRef) {
   .width = 2,
   .height = 5,
   .tiles = (GBA_Tile[]) {
@@ -52,9 +53,35 @@ static const GBA_TileMapRef blockWpole = (GBA_TileMapRef) {
 };
 
 void
-Object_CreateBlockWithPole(Object *object) {
+Object_CreateBoxWithPole(
+    Object *object,
+    int height)
+{
+  // TODO implement different sizes (heights)
   object->hitbox = Bounds_Of(8, 32, 8, 9);
-  object->tiles = &blockWpole;
+  object->tiles = &blockWithPole;
+  Object_SetViewboxFromTiles(object);
+}
+
+static const GBA_TileMapRef spike = (GBA_TileMapRef) {
+  .width = 2,
+  .height = 2,
+  .tiles = (GBA_Tile[]) {
+    { .tileId = 17, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 17, .vFlip = 0, .hFlip = 1 },
+    { .tileId = 25, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 25, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
+void
+Object_CreateSpike(
+    Object *object,
+    Direction direction)
+{
+  // TODO implement different directions
+  object->hitbox = Bounds_Of(8, 8, 8, 8);
+  object->tiles = &spike;
   Object_SetViewboxFromTiles(object);
 }
 

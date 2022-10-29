@@ -15,19 +15,20 @@ typedef struct Object {
 } Object;
 
 void
-Object_CreateBlock(Object *object);
-
-void
-Object_CreateBlockWithPole(Object *object);
-
-void
-Object_CreateLowPlatform(Object *object);
-
-void
 Object_CreateBox(Object *object);
 
 void
-Object_CreatePole(Object *object);
+Object_CreateBoxWithPole(
+    Object *object,
+    int height);
+
+void
+Object_CreateSpike(
+    Object *object,
+    Direction direction);
+
+void
+Object_CreateLowPlatform(Object *object);
 
 static inline void
 Object_SetPosition(
