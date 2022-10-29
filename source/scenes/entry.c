@@ -48,6 +48,9 @@ Scene_DoEnter() {
   Camera_Update(camera);
 
   Particle_ResetAll();
+
+  mGBA_OpenLog();
+  mGBA_LogInfo(mGBA_LOG_INFO, "Hello World!");
 }
 
 static void
