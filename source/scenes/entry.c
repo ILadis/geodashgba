@@ -49,8 +49,8 @@ Scene_DoEnter() {
 
   Particle_ResetAll();
 
-  mGBA_OpenLog();
-  mGBA_LogInfo(mGBA_LOG_INFO, "Hello World!");
+  mGBA_DebugEnable(true);
+  mGBA_DebugLog(mGBA_LOG_INFO, "Hello World!");
 }
 
 static void

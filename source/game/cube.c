@@ -17,7 +17,7 @@ Cube_SetPosition(
   static const Dynamics dynamics = (Dynamics) {
     .friction = 60,
     .gravity  = { 0, 90 },
-    .maxvel   = { 600, 1300 },
+    .limits   = { 600, 1300 },
   };
 
   // body is using 8w fixed-point integer
@@ -118,9 +118,9 @@ Cube_CalculateRotationVelocity(
     Course *course)
 {
   Cube shadow = (Cube) {
-    .body = cube->body,
+    .body   = cube->body,
     .hitbox = cube->hitbox,
-    .state = cube->state,
+    .state  = cube->state,
   };
 
   int sign = Math_signum(shadow.body.velocity.x);
@@ -174,6 +174,7 @@ Cube_Update(
 {
   Cube_ApplyMovement(cube);
   Cube_ApplyHit(cube, course);
+  // TODO extract this into own component (cube has list of extra components)
   Cube_ApplyRotation(cube, course);
 }
 

@@ -21,8 +21,8 @@ Body_Update(Body *body) {
     vx -= Math_min(+vx, dynamics->friction);
   }
 
-  int lx = dynamics->maxvel.x;
-  int ly = dynamics->maxvel.y;
+  int lx = dynamics->limits.x;
+  int ly = dynamics->limits.y;
 
   // limit to max speed
   vx = Math_clamp(vx, -lx, +lx);

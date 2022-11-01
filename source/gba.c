@@ -437,18 +437,13 @@ static struct {
 };
 
 bool
-mGBA_OpenLog() {
-  mGBA_Debug.enable[0] = 0xC0DE;
+mGBA_DebugEnable(bool enable) {
+  mGBA_Debug.enable[0] = enable ? 0xC0DE : 0;
   return mGBA_Debug.enable[0] == 0x1DEA;
 }
 
 void
-mGBA_CloseLog() {
-  mGBA_Debug.enable[0] = 0;
-}
-
-void
-mGBA_LogInfo(
+mGBA_DebugLog(
   mGBA_LogLevel level,
   const char* message)
 {

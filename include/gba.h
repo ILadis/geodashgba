@@ -446,13 +446,10 @@ typedef enum mGBA_LogLevel {
 } mGBA_LogLevel;
 
 bool
-mGBA_OpenLog();
+mGBA_DebugEnable(bool enable);
 
 void
-mGBA_CloseLog();
-
-void
-mGBA_LogInfo(
+mGBA_DebugLog(
   mGBA_LogLevel level,
   const char* message);
 

@@ -8,7 +8,7 @@
 typedef struct Dynamics {
   int friction;
   Vector gravity;
-  Vector maxvel;
+  Vector limits;
 } Dynamics;
 
 typedef struct Body {
