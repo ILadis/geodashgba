@@ -59,9 +59,15 @@ Particle_NewInstance(
 
 static bool
 Particle_Update(Particle *particle) {
+  int delay = particle->delay -= 1;
+  if (delay > 0) {
+    return true;
+  }
+
   int life = particle->life -= 1;
   if (life <= 0) {
     GBA_Sprite *sprite = particle->sprite;
+
     if (sprite != NULL) {
       GBA_Sprite_Release(sprite);
       particle->sprite = NULL;
@@ -70,11 +76,8 @@ Particle_Update(Particle *particle) {
     return false;
   }
 
-  int delay = particle->delay -= 1;
-  if (delay <= 0) {
-    Body *body = &particle->body;
-    Body_Update(body);
-  }
+  Body *body = &particle->body;
+  Body_Update(body);
 
   return true;
 }
@@ -112,6 +115,11 @@ Particle_LoadSprite(Particle *particle) {
 
 static bool
 Particle_Draw(Particle *particle) {
+  int delay = particle->delay;
+  if (delay > 0) {
+    return true;
+  }
+
   GBA_Sprite *sprite = Particle_LoadSprite(particle);
 
   Body *body = &particle->body;
@@ -127,7 +135,7 @@ Particle_Draw(Particle *particle) {
   };
 
   Camera *camera = Camera_GetInstance();
-  if (particle->delay <= 0 && Camera_InViewport(camera, &bounds)) {
+  if (Camera_InViewport(camera, &bounds)) {
     Camera_RelativeTo(camera, &bounds.center);
     GBA_Sprite_SetPosition(sprite, bounds.center.x, bounds.center.y);
     GBA_Sprite_SetObjMode(sprite, 0); // show sprite

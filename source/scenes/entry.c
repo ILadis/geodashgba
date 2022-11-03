@@ -66,7 +66,7 @@ Scene_DoPlay() {
   Spawner *spawner = Spawner_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
-    Cube_Jump(cube);
+    Cube_Jump(cube, 1500);
   }
 
   if (GBA_Input_IsPressed(input, GBA_KEY_B)) {

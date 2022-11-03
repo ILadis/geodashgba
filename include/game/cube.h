@@ -49,7 +49,9 @@ Cube_InState(Cube *cube, State state) {
 }
 
 void
-Cube_Jump(Cube *cube);
+Cube_Jump(
+    Cube *cube,
+    int speed);
 
 void
 Cube_Accelerate(

@@ -28,9 +28,14 @@ Cube_SetPosition(
 }
 
 void
-Cube_Jump(Cube *cube) {
+Cube_Jump(
+    Cube *cube,
+    int speed)
+{
   if (Cube_InState(cube, STATE_GROUNDED)) {
-    cube->body.velocity.y = -1500;
+    const Dynamics *dynamics = cube->body.dynamics;
+    int sy = Math_signum(dynamics->gravity.y);
+    cube->body.velocity.y = -1 * sy * speed;
   }
 }
 
