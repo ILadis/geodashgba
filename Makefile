@@ -36,8 +36,8 @@ tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
 
 assets:
-	@tools/sinlut > assets/sinlut.c
 	@mkdir -p assets/graphics
+	@tools/sinlut > assets/sinlut.c
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/background.tmx assets/background.c || true

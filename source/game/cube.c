@@ -84,32 +84,49 @@ Cube_HaltMovement(Cube *cube) {
   Body_SetAcceleration(body, 0, 0);
 }
 
+static void
+Cube_HitCallback(
+    Unit *unit,
+    Object *object,
+    Hit *hit)
+{
+  Cube *cube = unit->object;
+
+  if (Cube_InState(cube, STATE_DESTROYED)) return;
+
+  if (object->deadly) {
+    Cube_HaltMovement(cube);
+    cube->state.current = STATE_DESTROYED;
+  }
+
+  else if (object->solid) {
+    if (hit->delta.x != 0) {
+      Cube_HaltMovement(cube);
+      cube->state.current = STATE_DESTROYED;
+    }
+
+    else {
+      if (hit->delta.y < 0) {
+        Cube_ResolveHit(cube, hit->delta.y + 1); // stay in contact with ground
+        cube->state.current = STATE_GROUNDED;
+      }
+      else if (hit->delta.y > 0) {
+        Cube_ResolveHit(cube, hit->delta.y);
+      }
+    }
+  }
+}
+
 static inline void
 Cube_ApplyHit(
     Cube *cube,
     Course *course)
 {
-  Bounds *hitbox = &cube->hitbox;
-  Hit hit = Course_CheckHits(course, hitbox);
+  cube->state.previous = cube->state.current;
+  cube->state.current = STATE_AIRBORNE;
 
-  State state = STATE_AIRBORNE;
-
-  if (hit.delta.x != 0) {
-    Cube_HaltMovement(cube);
-    state = STATE_DESTROYED;
-  }
-
-  else {
-    if (hit.delta.y < 0) {
-      Cube_ResolveHit(cube, hit.delta.y + 1); // stay in contact with ground
-      state = STATE_GROUNDED;
-    }
-    else if (hit.delta.y > 0) {
-      Cube_ResolveHit(cube, hit.delta.y);
-    }
-  }
-
-  Cube_SetState(cube, state);
+  Unit unit = Unit_Of(&cube->hitbox, cube);
+  Course_CheckHits(course, &unit, Cube_HitCallback);
 }
 
 static inline int
@@ -174,7 +191,6 @@ Cube_Update(
 {
   Cube_ApplyMovement(cube);
   Cube_ApplyHit(cube, course);
-  // TODO extract this into own component (cube has list of extra components)
   Cube_ApplyRotation(cube, course);
 }
 

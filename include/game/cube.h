@@ -48,15 +48,6 @@ Cube_InState(Cube *cube, State state) {
   return cube->state.current == state;
 }
 
-static inline void
-Cube_SetState(
-    Cube *cube,
-    State state)
-{
-  cube->state.previous = cube->state.current;
-  cube->state.current = state;
-}
-
 void
 Cube_Jump(Cube *cube);
 

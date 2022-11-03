@@ -32,6 +32,8 @@ void
 Object_CreateBox(Object *object) {
   object->hitbox = Bounds_Of(8, 8, 8, 8);
   object->tiles = &box;
+  object->solid = true;
+  object->deadly = false;
   Object_SetViewboxFromTiles(object);
 }
 
@@ -60,6 +62,8 @@ Object_CreateBoxWithPole(
   // TODO implement different sizes (heights)
   object->hitbox = Bounds_Of(8, 32, 8, 9);
   object->tiles = &blockWithPole;
+  object->solid = true;
+  object->deadly = false;
   Object_SetViewboxFromTiles(object);
 }
 
@@ -82,6 +86,8 @@ Object_CreateSpike(
   // TODO implement different directions
   object->hitbox = Bounds_Of(8, 8, 8, 8);
   object->tiles = &spike;
+  object->solid = true;
+  object->deadly = true;
   Object_SetViewboxFromTiles(object);
 }
 

@@ -104,16 +104,16 @@ static inline void
 Loader_AddObjectToCourse(
     Loader *loader,
     Course *course,
-    Object *object)
+    Object *template)
 {
-  Bounds *bounds = &object->viewbox;
-  Hit hit = Course_CheckHits(course, bounds);
+  Unit unit = Unit_Of(&template->viewbox, template);
+  Hit hit = Course_CheckHits(course, &unit, NULL);
 
   int delta = Math_abs(hit.delta.x) + Math_abs(hit.delta.y);
   if (delta < 4) {
-    Object* o = Course_AllocateObject(course);
-    *o = *object;
-    Course_AddObject(course, o);
+    Object* object = Course_AllocateObject(course);
+    Object_AssignFrom(object, template);
+    Course_AddObject(course, object);
   }
 }
 

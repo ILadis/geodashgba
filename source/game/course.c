@@ -54,25 +54,40 @@ Course_CheckFloorHit(
 Hit
 Course_CheckHits(
     Course *course,
-    Bounds *hitbox)
+    Unit *unit,
+    HitCallback callback)
 {
+  Bounds *hitbox = unit->bounds;
+
   Iterator iterator;
   Cell_GetUnits(&course->grid, hitbox, &iterator);
 
   Hit hit = {0};
 
   while (Iterator_HasNext(&iterator)) {
-    Unit *unit = Iterator_GetNext(&iterator);
-    Object *object = unit->object;
+    Unit *other = Iterator_GetNext(&iterator);
+    Object *object = other->object;
 
     Bounds *bounds = &object->hitbox;
 
     Hit h = Bounds_Intersects(bounds, hitbox);
-    if (Hit_IsHit(&h)) hit = Hit_Combine(&hit, &h);
+    if (Hit_IsHit(&h)) {
+      hit = Hit_Combine(&hit, &h);
+      if (callback != NULL) callback(unit, object, &h);
+    }
   }
 
   Hit h = Course_CheckFloorHit(course, hitbox);
-  if (Hit_IsHit(&h)) hit = Hit_Combine(&hit, &h);
+  if (Hit_IsHit(&h)) {
+    hit = Hit_Combine(&hit, &h);
+
+    Object floor = (Object) {
+      .solid = true,
+      .deadly = false,
+    };
+
+    if (callback != NULL) callback(unit, &floor, &h);
+  }
 
   return hit;
 }

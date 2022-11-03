@@ -11,6 +11,7 @@ typedef struct Object {
   Vector position;
   Bounds hitbox, viewbox;
   const GBA_TileMapRef *tiles;
+  bool solid, deadly;
   // TODO consider adding action function (when cube hits this object)?
 } Object;
 
@@ -41,6 +42,11 @@ Object_SetPosition(
   object->hitbox.center.y  += y * 8;
   object->viewbox.center.x += x * 8;
   object->viewbox.center.y += y * 8;
+}
+
+static inline void
+Object_AssignFrom(Object *dst, Object *src) {
+  *dst = *src;
 }
 
 #endif

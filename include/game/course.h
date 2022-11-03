@@ -12,10 +12,12 @@
 typedef struct Course {
   Vector spawn, offset;
   int floor, count;
-  Object objects[255];
+  Object objects[100];
   Cell grid;
   bool redraw;
 } Course;
+
+typedef void (*HitCallback)(Unit *unit, Object *object, Hit *hit);
 
 Course*
 Course_GetInstance();
@@ -56,7 +58,8 @@ Course_AddObject(
 Hit
 Course_CheckHits(
     Course *course,
-    Bounds *hitbox);
+    Unit *unit,
+    HitCallback callback);
 
 void
 Course_Draw(
