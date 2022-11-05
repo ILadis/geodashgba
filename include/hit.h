@@ -14,7 +14,14 @@ typedef struct Bounds {
   Vector size;
 } Bounds;
 
+typedef struct Raycast {
+  Vector position;
+  Vector direction;
+  unsigned int length;
+} Raycast;
+
 #define Bounds_Of(x, y, w, h) ((Bounds) {{ x, y }, { w, h }})
+#define Raycast_Of(x, y, dx, dy, l) ((Raycast) {{ x, y }, { dx, dy }, l })
 
 static inline bool
 Hit_IsHit(Hit *hit) {
@@ -22,14 +29,24 @@ Hit_IsHit(Hit *hit) {
 }
 
 Hit
+Hit_Combine(
+    const Hit *hit,
+    const Hit *other);
+
+Hit
+Raycast_Intersects(
+    const Raycast *raycast,
+    const Bounds *bounds);
+
+Hit
 Bounds_Intersects(
     const Bounds *bounds,
     const Bounds *other);
 
 Hit
-Hit_Combine(
-    const Hit *hit,
-    const Hit *other);
+Bounds_Contains(
+    const Bounds *bounds,
+    const Vector *point);
 
 static inline Vector
 Bounds_Lower(const Bounds *bounds) {

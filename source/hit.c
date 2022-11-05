@@ -2,42 +2,6 @@
 #include <hit.h>
 
 Hit
-Bounds_Intersects(
-    const Bounds *bounds,
-    const Bounds *other)
-{
-  Hit hit = {0};
-
-  int dx = other->center.x - bounds->center.x;
-  int px = (other->size.x + bounds->size.x) - Math_abs(dx);
-
-  if (px <= 0) {
-    return hit;
-  }
-
-  int dy = other->center.y - bounds->center.y;
-  int py = (other->size.y + bounds->size.y) - Math_abs(dy);
-
-  if (py <= 0) {
-    return hit;
-  }
-
-  if (px < py) {
-    int sx = dx < 0 ? -1 : + 1;
-    hit.delta.x = px * sx;
-    hit.position.x = bounds->center.x + (bounds->size.x * sx);
-    hit.position.y = bounds->center.y;
-  } else {
-    int sy = dy < 0 ? -1 : + 1;
-    hit.delta.y = py * sy;
-    hit.position.x = other->center.x;
-    hit.position.y = bounds->center.y + (bounds->size.y * sy);
-  }
-
-  return hit;
-}
-
-Hit
 Hit_Combine(
     const Hit *hit,
     const Hit *other)
@@ -68,6 +32,143 @@ Hit_Combine(
     .position = Vector_Of(px, py),
     .delta = Vector_Of(dx, dy),
   };
+}
+
+Hit
+Raycast_Intersects(
+    const Raycast *raycast,
+    const Bounds *bounds)
+{
+  int dx = raycast->direction.x;
+  int dy = raycast->direction.y;
+
+  Vector step = Vector_Of(1, 1);
+
+  if (dx < 0) {
+    dx = -dx;
+    step.x = -1;
+  }
+
+  if (dy < 0) {
+    dy = -dy;
+    step.y = -1;
+  }
+
+  int xerror = 2 * dx;
+  int yerror = 2 * dy;
+
+  Vector point = raycast->position;
+  unsigned int length = raycast->length;
+
+  Hit hit = {0};
+
+  if (dy <= dx) {
+    int error = -dx;
+
+    do {
+      hit = Bounds_Contains(bounds, &point);
+      if (Hit_IsHit(&hit)) return hit;
+
+      error += yerror;
+      if (error > 0) {
+        point.y += step.y;
+        error -= xerror;
+      }
+
+      point.x += step.x;
+    } while (length--);
+  }
+
+  else {
+    int error = -dy;
+
+    do {
+      hit = Bounds_Contains(bounds, &point);
+      if (Hit_IsHit(&hit))  return hit;
+
+      error += xerror;
+      if (error > 0) {
+        point.x += step.x;
+        error -= yerror;
+      }
+
+      point.y += step.y;
+    } while (length--);
+  }
+
+  return hit;
+}
+
+Hit
+Bounds_Intersects(
+    const Bounds *bounds,
+    const Bounds *other)
+{
+  Hit hit = {0};
+
+  int dx = other->center.x - bounds->center.x;
+  int px = (other->size.x + bounds->size.x) - Math_abs(dx);
+
+  if (px <= 0) {
+    return hit;
+  }
+
+  int dy = other->center.y - bounds->center.y;
+  int py = (other->size.y + bounds->size.y) - Math_abs(dy);
+
+  if (py <= 0) {
+    return hit;
+  }
+
+  if (px < py) {
+    int sx = dx < 0 ? -1 : + 1;
+    hit.delta.x = px * sx;
+    hit.position.x = bounds->center.x + (bounds->size.x * sx);
+    hit.position.y = other->center.y;
+  } else {
+    int sy = dy < 0 ? -1 : + 1;
+    hit.delta.y = py * sy;
+    hit.position.x = other->center.x;
+    hit.position.y = bounds->center.y + (bounds->size.y * sy);
+  }
+
+  return hit;
+}
+
+Hit
+Bounds_Contains(
+    const Bounds *bounds,
+    const Vector *point)
+{
+  Hit hit = {0};
+
+  int dx = point->x - bounds->center.x;
+  int px = bounds->size.x - Math_abs(dx);
+
+  if (px <= 0) {
+    return hit;
+  }
+
+  int dy = point->y - bounds->center.y;
+  int py = bounds->size.y - Math_abs(dy);
+
+  if (py <= 0) {
+    return hit;
+  }
+
+  if (px < py) {
+    int sx = dx < 0 ? -1 : + 1;
+    hit.delta.x = px * sx;
+    hit.position.x = bounds->center.x + (bounds->size.x * sx);
+    hit.position.y = point->y;
+  } else {
+    int sy = dy < 0 ? -1 : + 1;
+    hit.delta.y = py * sy;
+    hit.position.x = point->x;
+    hit.position.y = bounds->center.y + (bounds->size.y * sy);
+  }
+
+  return hit;
 }
 
 static Bounds

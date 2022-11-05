@@ -42,7 +42,7 @@ do { \
 
 #define assert(test) \
 do { \
-  if (test == 0) { \
+  if ((test) == 0) { \
     fail(#test); \
     return; \
   } \

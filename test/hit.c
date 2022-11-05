@@ -2,6 +2,47 @@
 #include <hit.h>
 #include "test.h"
 
+test(Intersects_ShouldReturnHitWhenRaycastIntersectsBounds) {
+  // arrange
+  Bounds bounds = Bounds_Of(5, 4, 3, 2);
+  Raycast casts[] = {
+    Raycast_Of(1, 4, 4, 3, 3),
+    Raycast_Of(1, 4, 6,-1, 5),
+    Raycast_Of(1, 4, 3, 0, 2),
+    Raycast_Of(1, 1, 3, 2, 3),
+    Raycast_Of(2, 8, 2,-5, 3),
+  };
+
+  // act
+  for (int i = 0; i < ARRAY_LENGTH(casts); i++) {
+    Hit hit = Raycast_Intersects(&casts[i], &bounds);
+
+    // assert
+    assert(hit.delta.x != 0 || hit.delta.y != 0);
+  }
+}
+
+test(Intersects_ShouldReturnNoHitWhenRaycastDoesNotIntersectBounds) {
+  // arrange
+  Bounds bounds = Bounds_Of(5, 4, 3, 2);
+  Raycast casts[] = {
+    Raycast_Of(2, 8, 2,-2, 2),
+    Raycast_Of(2, 8,-1, 3, 3),
+    Raycast_Of(2, 8, 3, 1, 9),
+    Raycast_Of(9, 3, 2, 2, 3),
+    Raycast_Of(5,-1, 0, 1, 3),
+  };
+
+  // act
+  for (int i = 0; i < ARRAY_LENGTH(casts); i++) {
+    Hit hit = Raycast_Intersects(&casts[i], &bounds);
+
+    // assert
+    assert(hit.delta.x == 0);
+    assert(hit.delta.y == 0);
+  }
+}
+
 test(Intersects_ShouldReturnNoHitWhenBoundsDoNotIntersect) {
   // arrange
   Bounds bound1 = Bounds_Of(10, 12, 4, 5);
@@ -93,6 +134,47 @@ test(Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter) {
   assert(hit.delta.y == 5);
 }
 
+test(Contains_ShouldReturnHitWhenPointIsWithinBounds) {
+  // arrange
+  Bounds bounds = Bounds_Of(5, 4, 3, 2);
+  Vector points[] = {
+    Vector_Of(3, 3),
+    Vector_Of(7, 5),
+    Vector_Of(5, 4),
+    Vector_Of(4, 5),
+  };
+
+  // act
+  for (int i = 0; i < ARRAY_LENGTH(points); i++) {
+    Hit hit = Bounds_Contains(&bounds, &points[i]);
+
+    // assert
+    assert(hit.delta.x != 0 || hit.delta.y != 0);
+  }
+}
+
+test(Contains_ShouldReturnNoHitWhenPointIsNotWithinBounds) {
+  // arrange
+  Bounds bounds = Bounds_Of(5, 4, 3, 2);
+  Vector points[] = {
+    Vector_Of(2, 2),
+    Vector_Of(1, 4),
+    Vector_Of(3, 8),
+    Vector_Of(8, 6),
+    Vector_Of(9, 4),
+    Vector_Of(7, 1),
+  };
+
+  // act
+  for (int i = 0; i < ARRAY_LENGTH(points); i++) {
+    Hit hit = Bounds_Contains(&bounds, &points[i]);
+
+    // assert
+    assert(hit.delta.x == 0);
+    assert(hit.delta.y == 0);
+  }
+}
+
 test(Expand_ShouldReturnExpandedBoundsWhenGivenBoundsIntersect) {
   // arrange
   Bounds bound1 = Bounds_Of(5, 4, 4, 2);
@@ -169,6 +251,8 @@ test(Embed_ShouldReturnEmbeddedBoundsWhenGivenBoundsContainEachOther) {
 }
 
 suite(
+  Intersects_ShouldReturnHitWhenRaycastIntersectsBounds,
+  Intersects_ShouldReturnNoHitWhenRaycastDoesNotIntersectBounds,
   Intersects_ShouldReturnNoHitWhenBoundsDoNotIntersect,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnTopEdge,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnRightEdge,
@@ -176,6 +260,8 @@ suite(
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnLeftEdge,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsAreEmbedded,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter,
+  Contains_ShouldReturnHitWhenPointIsWithinBounds,
+  Contains_ShouldReturnNoHitWhenPointIsNotWithinBounds,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsIntersect,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsDoNotIntersect,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsContainEachOther,
