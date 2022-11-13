@@ -252,6 +252,7 @@ typedef struct { u32 data[16]; } GBA_Bitmap8;
 typedef GBA_Bitmap4 GBA_TileSet4[512];
 typedef GBA_Bitmap8 GBA_TileSet8[256];
 
+#define GBA_COLORS(ADDR)   ((GBA_Color   *) (ADDR))
 #define GBA_SPRITES(ADDR)  ((GBA_Sprite  *) (ADDR))
 #define GBA_AFFINES(ADDR)  ((GBA_Affine  *) (ADDR))
 #define GBA_TILEMAPS(ADDR) ((GBA_TileMap *) (ADDR))
@@ -306,6 +307,7 @@ typedef struct GBA_System {
   GBA_BlendControl *const volatile blendControl;
   GBA_Blend *const volatile blend;
 
+  GBA_Color *const pixels;
   GBA_TileSet4 *const tileSets4;
   GBA_TileSet8 *const tileSets8;
 
@@ -332,6 +334,9 @@ GBA_GetSystem();
 
 GBA_Input*
 GBA_GetInput();
+
+void
+GBA_EnableMode(int mode);
 
 void
 GBA_EnableBackgroundLayer(
@@ -417,6 +422,29 @@ GBA_Sprite_SetAffine(
 
 GBA_Affine*
 GBA_Sprite_GetAffine(GBA_Sprite *sprite);
+
+void
+GBA_Bitmap_FillPixel(
+    int px, int py,
+    GBA_Color color);
+
+void
+GBA_Bitmap_FillRect(
+    int px, int py,
+    int width, int height,
+    GBA_Color color);
+
+void
+GBA_Bitmap_DrawRect(
+    int px1, int py1,
+    int px2, int py2,
+    GBA_Color color);
+
+void
+GBA_Bitmap_DrawLine(
+    int px1, int py1,
+    int px2, int py2,
+    GBA_Color color);
 
 void
 GBA_Input_PollStates(GBA_Input *input);

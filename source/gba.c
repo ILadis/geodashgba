@@ -33,6 +33,7 @@ GBA_GetSystem() {
     .blendControl = GBA_BLEND_CONTROL(MEM_IO + 0x0050),
     .blend        = GBA_BLEND(MEM_IO + 0x0052),
 
+    .pixels    = GBA_COLORS(MEM_VRAM + 0x0000),
     .tileSets4 = GBA_TILESETS4(MEM_VRAM + 0x0000),
     .tileSets8 = GBA_TILESETS8(MEM_VRAM + 0x0000),
 
@@ -51,6 +52,23 @@ GBA_Input*
 GBA_GetInput() {
   GBA_System *system = GBA_GetSystem();
   return &system->input;
+}
+
+void
+GBA_EnableMode(int mode) {
+  GBA_System *system = GBA_GetSystem();
+
+  u16 value = system->displayControl->value;
+  value &= 0b1111111101111000;
+  value |= mode;
+
+  if (mode >= 3 && mode <= 5) {
+    // enable BG2 for bitmap modes
+    value &= 0b1111000011111111;
+    value |= 0b0000010000000000;
+  }
+
+  system->displayControl->value = value;
 }
 
 void
@@ -391,6 +409,116 @@ GBA_Sprite_GetAffine(GBA_Sprite *sprite) {
   }
 
   return NULL;
+}
+
+inline void
+GBA_Bitmap_FillPixel(
+    int px, int py,
+    GBA_Color color)
+{
+  GBA_System *system = GBA_GetSystem();
+  GBA_Color *pixels = system->pixels;
+
+  const int height = GBA_SCREEN_HEIGHT;
+  const int width = GBA_SCREEN_WIDTH;
+
+  bool visible = true
+    && px >= 0 && px < width
+    && py >= 0 && py < height;
+
+  if (visible) {
+    int index = py * width + px;
+    pixels[index].value = color.value;
+  }
+}
+
+void
+GBA_Bitmap_FillRect(
+    int px, int py,
+    int width, int height,
+    GBA_Color color)
+{
+  for (int y = py; y < py + height; y++) {
+    for (int x = px; x < px + width; x++) {
+      GBA_Bitmap_FillPixel(x, y, color);
+    }
+  }
+}
+
+void
+GBA_Bitmap_DrawRect(
+    int px1, int py1,
+    int px2, int py2,
+    GBA_Color color)
+{
+  GBA_Bitmap_DrawLine(px1, py1, px2, py1, color);
+  GBA_Bitmap_DrawLine(px1, py2, px2, py2, color);
+
+  GBA_Bitmap_DrawLine(px1, py1, px1, py2, color);
+  GBA_Bitmap_DrawLine(px2, py1, px2, py2, color);
+}
+
+void
+GBA_Bitmap_DrawLine(
+    int px1, int py1,
+    int px2, int py2,
+    GBA_Color color)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  int dx = px2 - px1;
+  int dy = py2 - py1;
+
+  int xstep = 1;
+  int ystep = GBA_SCREEN_WIDTH;
+
+  int offset = py1 * ystep + px1;
+  GBA_Color *pixels = &system->pixels[offset];
+
+  if (dx < 0) {
+    dx = -dx;
+    xstep = -xstep;
+  }
+
+  if (dy < 0) {
+    dy = -dy;
+    ystep = -ystep;
+  }
+
+  int xerror = 2 * dx;
+  int yerror = 2 * dy;
+
+  if (dy <= dx) {
+    int error = -dx;
+
+    do {
+      pixels->value = color.value;
+
+      error += yerror;
+      if (error > 0) {
+        pixels += ystep;
+        error -= xerror;
+      }
+
+      pixels += xstep;
+    } while (dx-- > 0);
+  }
+
+  else {
+    int error = -dy;
+
+    do {
+      pixels->value = color.value;
+
+      error += xerror;
+      if (error > 0) {
+        pixels += xstep;
+        error -= yerror;
+      }
+
+      pixels += ystep;
+    } while (dy-- > 0);
+  }
 }
 
 void
