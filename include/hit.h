@@ -74,6 +74,11 @@ Bounds_Equals(
 }
 
 Bounds
+Bounds_Enlarge(
+    const Bounds *bounds,
+    const Vector *size);
+
+Bounds
 Bounds_Expand(
     const Bounds *bounds,
     const Bounds *other);

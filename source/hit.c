@@ -211,6 +211,20 @@ Bounds_Combine(
 }
 
 Bounds
+Bounds_Enlarge(
+    const Bounds *bounds,
+    const Vector *size)
+{
+  return (Bounds) {
+    .center = bounds->center,
+    .size = {
+      .x = bounds->size.x + size->x,
+      .y = bounds->size.y + size->y,
+    }
+  };
+}
+
+Bounds
 Bounds_Expand(
     const Bounds *bounds,
     const Bounds *other)

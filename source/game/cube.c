@@ -25,6 +25,7 @@ Cube_SetPosition(
   Body_SetPosition(body, position->x << 8, position->y << 8);
 
   cube->hitbox = Bounds_Of(position->x, position->y, 8, 8);
+  cube->state.current = STATE_UNKNOWN;
 }
 
 void
@@ -105,7 +106,25 @@ Cube_HitCallback(
   }
 
   else if (object->solid) {
-    if (hit->delta.x != 0) {
+    // TODO refactor/improve this
+    int vx = cube->body.velocity.x >> 8;
+    int vy = cube->body.velocity.y >> 8;
+
+    int cx = cube->body.position.x >> 8;
+    int cy = cube->body.position.y >> 8;
+
+    Raycast ray = Raycast_Of(cx - vx, cy - vy, vx, vy, 8);
+
+    Bounds hitbox = Bounds_Enlarge(&object->hitbox, &cube->hitbox.size);
+    Hit hit2 = Raycast_Intersects(&ray, &hitbox);
+
+    bool dead = hit->delta.x != 0;
+    if (Hit_IsHit(&hit2)) {
+      dead = hit2.delta.x != 0;
+      hit->delta.y = hit2.position.y - cy;
+    }
+
+    if (dead) {
       Cube_HaltMovement(cube);
       cube->state.current = STATE_DESTROYED;
     }
@@ -128,10 +147,15 @@ Cube_ApplyHit(
     Course *course)
 {
   cube->state.previous = cube->state.current;
-  cube->state.current = STATE_AIRBORNE;
 
-  Unit unit = Unit_Of(&cube->hitbox, cube);
-  Course_CheckHits(course, &unit, Cube_HitCallback);
+  if (Cube_InState(cube, STATE_DESTROYED)) {
+    cube->state.current = STATE_DESTROYED;
+  } else {
+    cube->state.current = STATE_AIRBORNE;
+
+    Unit unit = Unit_Of(&cube->hitbox, cube);
+    Course_CheckHits(course, &unit, Cube_HitCallback);
+  }
 }
 
 static inline int

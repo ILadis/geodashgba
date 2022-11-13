@@ -1,6 +1,5 @@
 
 #include <gba.h>
-#include <text.h>
 #include <scene.h>
 
 #include <assets/graphics/tiles.h>
@@ -97,6 +96,12 @@ Scene_DoPlay() {
   Particle_UpdateAll();
 
   GBA_VSync();
+
+  if (debug && Cube_InState(cube, STATE_DESTROYED)) {
+    void Debug_DrawHitboxes();
+    Debug_DrawHitboxes();
+    while (debug);
+  }
 
   Spawner_Draw(spawner, camera);
   Cube_Draw(cube, camera);
