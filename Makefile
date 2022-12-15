@@ -44,6 +44,10 @@ assets:
 
 tests: gba_test grid_test hit_test math_test prefab_test scene_test vector_test loader_game_test
 
+debug: CFLAGS += -O0 -g
+debug: clean main.gba main.elf
+	@mgba -3 --gdb main.gba
+
 %_game_test: test/game/%.c
 	@gcc $< $(TFILES) -o $@.elf -g -I. -Iinclude -DNOGBA
 	@./$@.elf
