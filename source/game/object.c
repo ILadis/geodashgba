@@ -8,11 +8,7 @@ Object_SetViewboxFromTiles(Object *object) {
   int x = (tiles->width  * 8) / 2;
   int y = (tiles->height * 8) / 2;
 
-  // makes viewport 1px larger on each side
-  int width =  x + 1;
-  int height = y + 1;
-
-  Bounds viewbox = Bounds_Of(x, y, width, height);
+  Bounds viewbox = Bounds_Of(x, y, x, y);
 
   object->viewbox = viewbox;
 }
@@ -60,7 +56,7 @@ Object_CreateBoxWithPole(
     int height)
 {
   // TODO implement different sizes (heights)
-  object->hitbox = Bounds_Of(8, 32, 8, 9);
+  object->hitbox = Bounds_Of(8, 32, 8, 8);
   object->tiles = &blockWithPole;
   object->solid = true;
   object->deadly = false;
@@ -88,49 +84,5 @@ Object_CreateSpike(
   object->tiles = &spike;
   object->solid = true;
   object->deadly = true;
-  Object_SetViewboxFromTiles(object);
-}
-
-static const GBA_TileMapRef platform = (GBA_TileMapRef) {
-  .width = 10,
-  .height = 3,
-  .tiles = (GBA_Tile[]) {
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 24, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 19, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 20, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 21, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 20, .vFlip = 0, .hFlip = 1 },
-    { .tileId = 19, .vFlip = 0, .hFlip = 1 },
-    { .tileId = 27, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 28, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 29, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 28, .vFlip = 0, .hFlip = 1 },
-    { .tileId = 27, .vFlip = 0, .hFlip = 1 },
-  }
-};
-
-void
-Object_CreateLowPlatform(Object *object) {
-  object->hitbox = Bounds_Of(40, 16, 40, 9);
-  object->tiles = &platform;
   Object_SetViewboxFromTiles(object);
 }

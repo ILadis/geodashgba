@@ -174,6 +174,34 @@ test(Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll) {
   assert(GBA_Input_IsHeld(input, GBA_KEY_LEFT) == true);
 }
 
+test(TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex) {
+  // arrange
+  GBA_EnableBackgroundLayer(0, (GBA_BackgroundControl) {
+      .size = 3, // 512x512
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 14,
+      .priority = 2,
+  });
+
+  GBA_TileMapRef layer;
+  GBA_TileMapRef_FromBackgroundLayer(&layer, 0);
+
+  GBA_Tile tile = { .tileId = 42 };
+
+  // act
+  GBA_TileMapRef_BlitTile(&layer, 10, 10, &tile);
+  GBA_TileMapRef_BlitTile(&layer, 40, 20, &tile);
+  GBA_TileMapRef_BlitTile(&layer, 25, 50, &tile);
+  GBA_TileMapRef_BlitTile(&layer, 50, 50, &tile);
+
+  // assert
+  assert(layer.tiles[       32 * 10 + 10].value == tile.value);
+  assert(layer.tiles[1024 + 32 * 20 +  8].value == tile.value);
+  assert(layer.tiles[2048 + 32 * 18 + 25].value == tile.value);
+  assert(layer.tiles[3072 + 32 * 18 + 18].value == tile.value);
+}
+
 suite(
   Sprite_Allocate_ShouldReturnNewSpriteInstanceForEachCall,
   Sprite_Release_ShouldMakeReleasedSpriteAvailableAgain,
@@ -183,4 +211,5 @@ suite(
   Affine_Allocate_ShouldReturnNewAffineInstanceForEachCall,
   Affine_Release_ShouldMakeReleasedAffineAvailableAgain,
   Input_IsHit_ShoudReturnTrueWhenQueriedKeyWasHitInLastKeypadPoll,
-  Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll);
+  Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll,
+  TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex);

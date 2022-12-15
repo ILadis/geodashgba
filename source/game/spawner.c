@@ -41,7 +41,7 @@ Spawner_Update(Spawner *spawner) {
 
       // TODO workaround to force redraw after camera resets to spawn
       Course *course = Course_GetInstance();
-      course->redraw = true;
+      Course_ResetAndLoad(course, NULL);
     }
   }
 }

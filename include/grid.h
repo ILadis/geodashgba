@@ -54,6 +54,20 @@ Cell_GetCapacity(Cell *cell) {
   return ARRAY_LENGTH(cell->units);
 }
 
+void
+Grid_Reset(Grid *grid);
+
+static inline void
+Grid_SetBounds(Grid *grid, Bounds *bounds) {
+  grid->root.bounds = *bounds;
+}
+
+static inline void
+Grid_SetCells(Grid *grid, Cell *cells) {
+  grid->cells = cells;
+  grid->count = 0;
+}
+
 static inline Cell*
 Grid_GetRoot(Grid *grid) {
   return &grid->root;

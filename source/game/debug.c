@@ -48,7 +48,7 @@ Debug_DrawHitboxes() {
 
   Iterator iterator;
   Bounds *viewport = Camera_GetViewport(camera);
-  Grid_GetUnits(course->grid, viewport, &iterator);
+  Grid_GetUnits(&course->current->grid, viewport, &iterator);
 
   while (Iterator_HasNext(&iterator)) {
     Unit *unit = Iterator_GetNext(&iterator);

@@ -63,6 +63,11 @@ typedef union GBA_DisplayControl {
  * |  0   | regular | regular | regular | regular |
  * |  1   | regular | regular | affine  |    -    |
  * |  2   |    -    |    -    | affine  | affine  |
+ * | Mode |  Width  | Height  |  Bits per Pixel   | Page flip |
+ * +------+---------+---------+-------------------+-----------+
+ * |  3   |   240   |   160   |        16         |    no     |
+ * |  4   |   240   |   160   |         8         |    yes    |
+ * |  5   |   160   |   128   |        16         |    yes    |
  */
 
 typedef union GBA_BackgroundControl {

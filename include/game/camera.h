@@ -33,11 +33,10 @@ Camera_GetDelta(Camera *camera) {
   return &camera->delta;
 }
 
-// FIXME currently unused (consider removing camera->viewport as well)
 static inline bool
 Camera_InViewport(
     Camera *camera,
-    Bounds *bounds)
+    const Bounds *bounds)
 {
   Hit hit = Bounds_Intersects(&camera->viewport, bounds);
   return Hit_IsHit(&hit);
@@ -62,17 +61,5 @@ Camera_FollowTarget(
 
 void
 Camera_Update(Camera *camera);
-
-void
-Camera_DrawDelta(
-    Camera *camera,
-    const Vector *position,
-    const GBA_TileMapRef *tileMap);
-
-void
-Camera_Draw(
-    Camera *camera,
-    const Vector *position,
-    const GBA_TileMapRef *tileMap);
 
 #endif

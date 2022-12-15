@@ -134,8 +134,12 @@ GBA_TileMapRef_GetTileIndex(
   ty &= ymask;
   tx &= xmask;
 
-  int index = (ty >> 5) * (tileMap->width >> 5) + (tx >> 5);
-  return index*1024 + (ty & 0b011111)*32 + (tx & 0b011111);
+  const int size = sizeof(GBA_TileMap) / sizeof(GBA_Tile);
+
+  int index = (ty/32) * (tileMap->width/32) + (tx/32);
+  int offset = index * size;
+
+  return (ty%32)*32 + (tx%32) + offset;
 }
 
 void

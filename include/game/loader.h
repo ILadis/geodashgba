@@ -4,22 +4,22 @@
 #include <gba.h>
 #include <vector.h>
 
-#include <game/course.h>
+#include <game/chunk.h>
 #include <game/object.h>
 
 typedef struct Loader {
-  const char *layout;
+  const char **layout;
   Vector size, cursor;
 } Loader;
 
-#define Loader_ForLayout(layout) ((Loader) { layout })
+#define Loader_ForLayout(...) ((Loader) { .layout = {__VA_ARGS__, NULL} })
 
 Loader*
-Loader_ForTestCourse();
+Loader_ForTestCourse(bool reset);
 
-bool
-Loader_LoadCourse(
+void
+Loader_GetChunk(
     Loader *loader,
-    Course *course);
+    Chunk *chunk);
 
 #endif

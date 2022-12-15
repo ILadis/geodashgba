@@ -30,16 +30,14 @@ Scene_DoEnter() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
+  Loader *loader = Loader_ForTestCourse(true);
   Course *course = Course_GetInstance();
-  Course_Reset(course);
-
-  Loader *loader = Loader_ForTestCourse();
-  Loader_LoadCourse(loader, course);
+  Course_ResetAndLoad(course, loader);
 
   Cube *cube = Cube_GetInstance();
 
   Spawner *spawner = Spawner_GetInstance();
-  Vector *spawn = Course_GetSpawn(course);
+  const Vector *spawn = Course_GetSpawn(course);
   Spawner_SetTarget(spawner, cube, spawn);
 
   Vector *position = Cube_GetPosition(cube);

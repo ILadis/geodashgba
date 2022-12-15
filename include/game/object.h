@@ -8,7 +8,6 @@
 #include <game/camera.h>
 
 typedef struct Object {
-  Vector position;
   Bounds hitbox, viewbox;
   const GBA_TileMapRef *tiles;
   bool solid, deadly;
@@ -28,16 +27,11 @@ Object_CreateSpike(
     Object *object,
     Direction direction);
 
-void
-Object_CreateLowPlatform(Object *object);
-
 static inline void
 Object_SetPosition(
     Object *object,
     int x, int y)
 {
-  object->position.x = x;
-  object->position.y = y;
   object->hitbox.center.x  += x * 8;
   object->hitbox.center.y  += y * 8;
   object->viewbox.center.x += x * 8;
@@ -45,8 +39,8 @@ Object_SetPosition(
 }
 
 static inline void
-Object_AssignFrom(Object *dst, Object *src) {
-  *dst = *src;
+Object_AssignFrom(Object *object, Object *other) {
+  *object = *other;
 }
 
 #endif

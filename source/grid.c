@@ -1,6 +1,30 @@
 
 #include <grid.h>
 
+static inline void
+Cell_Reset(Cell *cell) {
+  if (Cell_IsDivided(cell)) {
+    Cell_Reset(cell->cells[0]);
+    Cell_Reset(cell->cells[1]);
+    Cell_Reset(cell->cells[2]);
+    Cell_Reset(cell->cells[3]);
+  }
+
+  cell->size = 0;
+  cell->cells[0] = NULL;
+  cell->cells[1] = NULL;
+  cell->cells[2] = NULL;
+  cell->cells[3] = NULL;
+}
+
+void
+Grid_Reset(Grid *grid) {
+  Cell *root = Grid_GetRoot(grid);
+  Cell_Reset(root);
+
+  grid->count = 0;
+}
+
 static Cell*
 Grid_AllocateNew(
     Grid *grid,
