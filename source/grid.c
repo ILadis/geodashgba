@@ -2,13 +2,11 @@
 #include <grid.h>
 
 static Cell*
-Cell_AllocateNew(
+Grid_AllocateNew(
+    Grid *grid,
     Cell *parent,
     int offset)
 {
-  static int count = 0;
-  static Cell cells[100] = {0};
-
   static const Vector directions[4] = {
     Vector_Of(-1, -1), // top left
     Vector_Of(+1, -1), // top right
@@ -22,8 +20,8 @@ Cell_AllocateNew(
 
   const Vector *direction = &directions[offset];
 
-  int index = count++;
-  Cell *cell = &cells[index];
+  int index = grid->count++;
+  Cell *cell = &grid->cells[index];
 
   Bounds *bounds = &parent->bounds;
 
@@ -60,20 +58,21 @@ Cell_AllocateNew(
   return cell;
 }
 
+static bool Grid_AddUnitToCell(Grid *grid, Cell *cell, Unit *unit);
+
 static inline void
-Cell_RelocateUnits(
+Grid_RelocateUnits(
+    Grid *grid,
     Cell *parent,
     Cell *cell)
 {
-  bool Cell_AddUnit(Cell *cell, Unit *unit);
-
   Unit *units = parent->units;
   int count = parent->size;
 
   for (int i = 0, j = 0; i < count; i++) {
     Unit *unit = &units[i];
 
-    if (Cell_AddUnit(cell, unit)) {
+    if (Grid_AddUnitToCell(grid, cell, unit)) {
       parent->size--;
     } else {
       units[j].bounds = unit->bounds;
@@ -83,7 +82,10 @@ Cell_RelocateUnits(
 }
 
 Cell*
-Cell_Subdivide(Cell *parent) {
+Grid_Subdivide(
+    Grid *grid,
+    Cell *parent)
+{
   if (Cell_IsDivided(parent)) {
     return parent->cells[0];
   }
@@ -95,8 +97,8 @@ Cell_Subdivide(Cell *parent) {
   }
 
   for (int i = 0; i < 4; i++) {
-    Cell *cell = Cell_AllocateNew(parent, i);
-    Cell_RelocateUnits(parent, cell);
+    Cell *cell = Grid_AllocateNew(grid, parent, i);
+    Grid_RelocateUnits(grid, parent, cell);
   }
 
   return parent->cells[0];
@@ -131,8 +133,9 @@ Cell_UnitInBounds(
   return Bounds_Equals(&embed, unit->bounds);
 }
 
-bool
-Cell_AddUnit(
+static bool
+Grid_AddUnitToCell(
+    Grid *grid,
     Cell *cell,
     Unit *unit)
 {
@@ -142,25 +145,25 @@ Cell_AddUnit(
 
   if (Cell_IsDivided(cell)) {
     // try add unit to most fitting sub cell
-    if (Cell_AddUnit(cell->cells[0], unit)) return true;
-    if (Cell_AddUnit(cell->cells[1], unit)) return true;
-    if (Cell_AddUnit(cell->cells[2], unit)) return true;
-    if (Cell_AddUnit(cell->cells[3], unit)) return true;
+    if (Grid_AddUnitToCell(grid, cell->cells[0], unit)) return true;
+    if (Grid_AddUnitToCell(grid, cell->cells[1], unit)) return true;
+    if (Grid_AddUnitToCell(grid, cell->cells[2], unit)) return true;
+    if (Grid_AddUnitToCell(grid, cell->cells[3], unit)) return true;
   }
 
   if (Cell_TryAddUnit(cell, unit)) {
     return true;
   }
 
-  Cell *cells = Cell_Subdivide(cell);
+  Cell *cells = Grid_Subdivide(grid, cell);
   if (cells == NULL) {
     return false;
   }
 
-  if (Cell_AddUnit(&cells[0], unit)) return true;
-  if (Cell_AddUnit(&cells[1], unit)) return true;
-  if (Cell_AddUnit(&cells[2], unit)) return true;
-  if (Cell_AddUnit(&cells[3], unit)) return true;
+  if (Grid_AddUnitToCell(grid, &cells[0], unit)) return true;
+  if (Grid_AddUnitToCell(grid, &cells[1], unit)) return true;
+  if (Grid_AddUnitToCell(grid, &cells[2], unit)) return true;
+  if (Grid_AddUnitToCell(grid, &cells[3], unit)) return true;
 
   // there may now be space after relocation
   if (Cell_TryAddUnit(cell, unit)) {
@@ -174,6 +177,15 @@ Cell_AddUnit(
   // TODO free unused cells
 
   return false;
+}
+
+bool
+Grid_AddUnit(
+    Grid *grid,
+    Unit *unit)
+{
+  Cell *root = &grid->root;
+  return Grid_AddUnitToCell(grid, root, unit);
 }
 
 static inline int
@@ -270,15 +282,16 @@ Iterator_GetNext(Iterator *iterator) {
 }
 
 bool
-Cell_GetUnits(
-    Cell *cell,
+Grid_GetUnits(
+    Grid *grid,
     Bounds *bounds,
     Iterator *iterator)
 {
   iterator->bounds = bounds;
   iterator->stack.size = 0;
 
-  Iterator_CheckNext(iterator, cell);
+  Cell *root = &grid->root;
+  Iterator_CheckNext(iterator, root);
 
   Cell *next = Iterator_PopStack(iterator);
 

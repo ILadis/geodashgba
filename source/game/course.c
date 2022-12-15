@@ -1,9 +1,12 @@
 
 #include <game/course.h>
 
+static Grid *grid = Grid_Of(0, 0, 1200, 1200, 100);
+
 Course*
 Course_GetInstance() {
   static Course course = {0};
+  course.grid = grid;
   return &course;
 }
 
@@ -14,7 +17,6 @@ Course_Reset(Course *course) {
   course->floor = 0;
   course->spawn = Vector_Of(0, 0);
   course->offset = Vector_Of(0, 0);
-  course->grid.bounds = Bounds_Of(0, 0, 1200, 1200);
 }
 
 Object*
@@ -28,12 +30,12 @@ Course_AddObject(
     Course *course,
     Object *object)
 {
-  Cell *grid = &course->grid;
+  Grid *grid = course->grid;
 
   Bounds *viewbox = &object->viewbox;
   Unit unit = Unit_Of(viewbox, object);
 
-  Cell_AddUnit(grid, &unit);
+  Grid_AddUnit(grid, &unit);
 }
 
 static inline Hit
@@ -57,10 +59,11 @@ Course_CheckHits(
     Unit *unit,
     HitCallback callback)
 {
+  Grid *grid = course->grid;
   Bounds *hitbox = unit->bounds;
 
   Iterator iterator;
-  Cell_GetUnits(&course->grid, hitbox, &iterator);
+  Grid_GetUnits(grid, hitbox, &iterator);
 
   Hit hit = {0};
 
@@ -208,7 +211,7 @@ Course_DrawObjects(
 
   Iterator iterator;
   Bounds *viewport = Camera_GetViewport(camera);
-  Cell_GetUnits(&course->grid, viewport, &iterator);
+  Grid_GetUnits(course->grid, viewport, &iterator);
 
   while (Iterator_HasNext(&iterator)) {
     Unit *unit = Iterator_GetNext(&iterator);

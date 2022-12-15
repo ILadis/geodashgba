@@ -17,6 +17,12 @@ typedef struct Cell {
   struct Unit units[8];
 } Cell;
 
+typedef struct Grid {
+  Cell root;
+  Cell *cells;
+  int count;
+} Grid;
+
 typedef struct Iterator {
   Bounds *bounds;
   struct {
@@ -29,6 +35,7 @@ typedef struct Iterator {
   } next;
 } Iterator;
 
+#define Grid_Of(x, y, w, h, size) &((Grid) { .root = { .bounds = {{ x, y }, { w, h }} }, .cells = (Cell[size]) { }, .count = 0 })
 #define Cell_Of(x, y, w, h) ((Cell) { .bounds = {{ x, y }, { w, h }} })
 #define Unit_Of(bounds, object) ((Unit) { bounds, object })
 
@@ -47,17 +54,24 @@ Cell_GetCapacity(Cell *cell) {
   return ARRAY_LENGTH(cell->units);
 }
 
+static inline Cell*
+Grid_GetRoot(Grid *grid) {
+  return &grid->root;
+}
+
 Cell*
-Cell_Subdivide(Cell *cell);
+Grid_Subdivide(
+    Grid *grid,
+    Cell *cell);
 
 bool
-Cell_AddUnit(
-    Cell *cell,
+Grid_AddUnit(
+    Grid *grid,
     Unit *unit);
 
 bool
-Cell_GetUnits(
-    Cell *cell,
+Grid_GetUnits(
+    Grid *grid,
     Bounds *bounds,
     Iterator *iterator);
 

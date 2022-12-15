@@ -13,7 +13,7 @@ typedef struct Course {
   Vector spawn, offset;
   int floor, count;
   Object objects[100];
-  Cell grid;
+  Grid *grid;
   bool redraw;
 } Course;
 
