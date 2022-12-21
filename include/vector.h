@@ -23,15 +23,6 @@ typedef struct Vector {
 
 #define Vector_Of(x, y) ((Vector) { x, y })
 
-static inline bool
-Vector_Equals(
-    const Vector *vector,
-    const Vector *other)
-{
-  return vector->x == other->x
-    && vector->y == other->y;
-}
-
 static inline int
 Vector_GetLength(const Vector *vector) {
   return vector->x * vector->x + vector->y * vector->y;
@@ -41,6 +32,23 @@ static inline void
 Vector_Rshift(Vector *vector, int value) {
   vector->x >>= value;
   vector->y >>= value;
+}
+
+static inline int
+Vector_DotProduct(
+    const Vector *vector,
+    const Vector *other)
+{
+  return vector->x * other->x + vector->y * other->y;
+}
+
+static inline bool
+Vector_Equals(
+    const Vector *vector,
+    const Vector *other)
+{
+  return vector->x == other->x
+    && vector->y == other->y;
 }
 
 const Vector*

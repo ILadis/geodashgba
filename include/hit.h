@@ -14,6 +14,16 @@ typedef struct Bounds {
   Vector size;
 } Bounds;
 
+typedef struct Shape {
+  const Vector *vertices;
+  unsigned int length;
+} Shape;
+
+typedef struct Projection {
+  const Vector *axis;
+  int min, max;
+} Projection;
+
 typedef struct Raycast {
   Vector position;
   Vector direction;
@@ -21,6 +31,8 @@ typedef struct Raycast {
 } Raycast;
 
 #define Bounds_Of(x, y, w, h) ((Bounds) {{ x, y }, { w, h }})
+#define Shape_Of(vertices) ((Shape) { vertices, length(vertices) })
+#define Projection_Of(axis, min, max) ((Projection) { axis, min, max })
 #define Raycast_Of(x, y, dx, dy, l) ((Raycast) {{ x, y }, { dx, dy }, l })
 
 static inline bool
@@ -32,6 +44,11 @@ Hit
 Hit_Combine(
     const Hit *hit,
     const Hit *other);
+
+bool
+Shape_Intersects(
+    const Shape *shape,
+    const Shape *other);
 
 Hit
 Raycast_Intersects(
@@ -87,5 +104,24 @@ Bounds
 Bounds_Embed(
     const Bounds *bounds,
     const Bounds *other);
+
+Vector
+Shape_GetAxis(
+    const Shape *shape,
+    int index);
+
+Projection
+Shape_ProjectOnto(
+    const Shape *shape,
+    const Vector *axis);
+
+static inline bool
+Projection_Overlap(
+    const Projection *project,
+    const Projection *other)
+{
+  return (project->min > other->min   && project->min < other->max)
+      || (  other->min > project->min &&   other->min < project->max);
+}
 
 #endif

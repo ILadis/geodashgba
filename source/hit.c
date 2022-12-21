@@ -34,6 +34,36 @@ Hit_Combine(
   };
 }
 
+bool
+Shape_Intersects(
+    const Shape *shape,
+    const Shape *other)
+{
+  for (int i = 0; i < shape->length; i++) {
+    Vector axis = Shape_GetAxis(shape, i);
+
+    Projection p1 = Shape_ProjectOnto(shape, &axis);
+    Projection p2 = Shape_ProjectOnto(other, &axis);
+
+    if (!Projection_Overlap(&p1, &p2)) {
+      return false;
+    }
+  }
+
+  for (int i = 0; i < other->length; i++) {
+    Vector axis = Shape_GetAxis(other, i);
+
+    Projection p1 = Shape_ProjectOnto(shape, &axis);
+    Projection p2 = Shape_ProjectOnto(other, &axis);
+
+    if (!Projection_Overlap(&p1, &p2)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Hit
 Raycast_Intersects(
     const Raycast *raycast,
@@ -238,4 +268,44 @@ Bounds_Embed(
     const Bounds *other)
 {
   return Bounds_Combine(bounds, other, Math_max, Math_min);
+}
+
+Vector
+Shape_GetAxis(
+    const Shape *shape,
+    int index)
+{
+  Vector axis = Vector_Of(0, 0);
+  if (index > shape->length) {
+    return axis;
+  }
+
+  const Vector *p1 = &shape->vertices[index++];
+  const Vector *p2 = &shape->vertices[index == shape->length ? 0 : index];
+
+  axis.x = -(p2->y - p1->y);
+  axis.y =   p2->x - p1->x;
+
+  return axis;
+}
+
+Projection
+Shape_ProjectOnto(
+    const Shape *shape,
+    const Vector *axis)
+{
+  int min = Vector_DotProduct(axis, &shape->vertices[0]);
+  int max = min;
+
+  for (int i = 1; i < shape->length; i++) {
+    int p = Vector_DotProduct(axis, &shape->vertices[i]);
+
+    if (p < min) {
+      min = p;
+    } else if (p > max) {
+      max = p;
+    }
+  }
+
+  return Projection_Of(axis, min, max);
 }

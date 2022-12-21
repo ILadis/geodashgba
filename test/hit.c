@@ -134,6 +134,78 @@ test(Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter) {
   assert(hit.delta.y == 5);
 }
 
+test(Intersects_ShouldReturnTrueForGivenShapes) {
+  // arrange
+  const Vector vertices1[] = {
+    Vector_Of(5, 2),
+    Vector_Of(10, 4),
+    Vector_Of(7, 11),
+    Vector_Of(1, 3),
+  };
+
+  const Vector vertices2[] = {
+    Vector_Of(7, 6),
+    Vector_Of(16, 6),
+    Vector_Of(10, 10),
+  };
+
+  const Vector vertices3[] = {
+    Vector_Of(9, 8),
+    Vector_Of(9, 10),
+    Vector_Of(6, 11),
+  };
+
+  const Shape shape1 = Shape_Of(vertices1);
+  const Shape shape2 = Shape_Of(vertices2);
+  const Shape shape3 = Shape_Of(vertices3);
+
+  // act
+  bool result1 = Shape_Intersects(&shape1, &shape2);
+  bool result2 = Shape_Intersects(&shape2, &shape3);
+  bool result3 = Shape_Intersects(&shape3, &shape1);
+
+  // assert
+  assert(result1 == true);
+  assert(result2 == true);
+  assert(result3 == true);
+}
+
+test(Intersects_ShouldReturnFalseForGivenShapes) {
+  // arrange
+  const Vector vertices1[] = {
+    Vector_Of(5, 2),
+    Vector_Of(10, 4),
+    Vector_Of(7, 11),
+    Vector_Of(1, 3),
+  };
+
+  const Vector vertices2[] = {
+    Vector_Of(9, 7),
+    Vector_Of(16, 6),
+    Vector_Of(10, 10),
+  };
+
+  const Vector vertices3[] = {
+    Vector_Of(9, 8),
+    Vector_Of(9, 10),
+    Vector_Of(7, 12),
+  };
+
+  const Shape shape1 = Shape_Of(vertices1);
+  const Shape shape2 = Shape_Of(vertices2);
+  const Shape shape3 = Shape_Of(vertices3);
+
+  // act
+  bool result1 = Shape_Intersects(&shape1, &shape2);
+  bool result2 = Shape_Intersects(&shape2, &shape3);
+  bool result3 = Shape_Intersects(&shape3, &shape1);
+
+  // assert
+  assert(result1 == false);
+  assert(result2 == false);
+  assert(result3 == false);
+}
+
 test(Contains_ShouldReturnHitWhenPointIsWithinBounds) {
   // arrange
   Bounds bounds = Bounds_Of(5, 4, 3, 2);
@@ -260,6 +332,8 @@ suite(
   Intersects_ShouldReturnHitWithDeltaWhenBoundsIntersectOnLeftEdge,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsAreEmbedded,
   Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter,
+  Intersects_ShouldReturnTrueForGivenShapes,
+  Intersects_ShouldReturnFalseForGivenShapes,
   Contains_ShouldReturnHitWhenPointIsWithinBounds,
   Contains_ShouldReturnNoHitWhenPointIsNotWithinBounds,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsIntersect,
