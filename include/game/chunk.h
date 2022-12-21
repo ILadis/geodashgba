@@ -16,6 +16,18 @@ typedef struct Chunk {
   int index, count;
 } Chunk;
 
+static inline void
+HitCallback_Invoke(
+    HitCallback callback,
+    Unit *unit,
+    Object *object,
+    Hit *hit)
+{
+  if (callback != NULL) {
+    callback(unit, object, hit);
+  }
+}
+
 static inline const Bounds*
 Chunk_GetBounds(Chunk *chunk) {
   return &chunk->grid.root.bounds;

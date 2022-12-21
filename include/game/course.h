@@ -33,7 +33,7 @@ Course_GetSpawn(Course *course) {
   return &course->spawn;
 }
 
-Hit
+void
 Course_CheckHits(
     Course *course,
     Unit *unit,

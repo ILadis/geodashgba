@@ -21,8 +21,18 @@ Camera_MoveBy(
     Camera *camera,
     Vector *delta)
 {
-  camera->position.x += delta->x;
-  camera->position.y += delta->y;
+  int x = camera->position.x += delta->x;
+  int y = camera->position.y += delta->y;
+
+  if (x < 0) {
+    camera->position.x = 0;
+    delta->x -= x;
+  }
+
+  if (y < 0) {
+    camera->position.y = 0;
+    delta->y -= y;
+  }
 
   camera->viewport.center.x += delta->x;
   camera->viewport.center.y += delta->y;
@@ -76,7 +86,7 @@ Camera_Update(Camera *camera) {
   if (target != NULL) {
     Vector delta = Camera_GetTargetDelta(camera);
 
-    Camera_SetDelta(camera, &delta);
     Camera_MoveBy(camera, &delta);
+    Camera_SetDelta(camera, &delta);
   }
 }

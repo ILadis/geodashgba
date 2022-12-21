@@ -6,7 +6,7 @@ endif
 PATH     := $(DEVKITPRO)/tools/bin:$(DEVKITPRO)/devkitARM/bin:$(PATH)
 
 # source and target files
-CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/scenes/*.c)
+CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/game/object/*.c) $(wildcard source/scenes/*.c)
 CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c)
 TFILES   := $(filter-out source/main.c, $(CFILES))
 

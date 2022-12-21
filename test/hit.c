@@ -14,7 +14,7 @@ test(Intersects_ShouldReturnHitWhenRaycastIntersectsBounds) {
   };
 
   // act
-  for (int i = 0; i < ARRAY_LENGTH(casts); i++) {
+  for (int i = 0; i < length(casts); i++) {
     Hit hit = Raycast_Intersects(&casts[i], &bounds);
 
     // assert
@@ -34,7 +34,7 @@ test(Intersects_ShouldReturnNoHitWhenRaycastDoesNotIntersectBounds) {
   };
 
   // act
-  for (int i = 0; i < ARRAY_LENGTH(casts); i++) {
+  for (int i = 0; i < length(casts); i++) {
     Hit hit = Raycast_Intersects(&casts[i], &bounds);
 
     // assert
@@ -145,7 +145,7 @@ test(Contains_ShouldReturnHitWhenPointIsWithinBounds) {
   };
 
   // act
-  for (int i = 0; i < ARRAY_LENGTH(points); i++) {
+  for (int i = 0; i < length(points); i++) {
     Hit hit = Bounds_Contains(&bounds, &points[i]);
 
     // assert
@@ -166,7 +166,7 @@ test(Contains_ShouldReturnNoHitWhenPointIsNotWithinBounds) {
   };
 
   // act
-  for (int i = 0; i < ARRAY_LENGTH(points); i++) {
+  for (int i = 0; i < length(points); i++) {
     Hit hit = Bounds_Contains(&bounds, &points[i]);
 
     // assert

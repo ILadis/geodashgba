@@ -9,20 +9,29 @@
 
 typedef struct Object {
   Bounds hitbox, viewbox;
-  const GBA_TileMapRef *tiles;
+  const struct Prototype *proto;
   bool solid, deadly;
-  // TODO consider adding action function (when cube hits this object)?
+  char align4 properties[16];
 } Object;
 
-void
-Object_CreateBox(Object *object);
+typedef struct Prototype {
+  void (*draw)(Object *object, GBA_TileMapRef *target);
+  // TODO consider trigger and tick functions
+} Prototype;
 
-void
+typedef struct Properties Properties;
+
+bool
+Object_CreateBox(
+    Object *object,
+    int width, int height);
+
+bool
 Object_CreateBoxWithPole(
     Object *object,
     int height);
 
-void
+bool
 Object_CreateSpike(
     Object *object,
     Direction direction);
@@ -36,6 +45,19 @@ Object_SetPosition(
   object->hitbox.center.y  += y * 8;
   object->viewbox.center.x += x * 8;
   object->viewbox.center.y += y * 8;
+}
+
+static inline Properties*
+Object_GetProperties(Object *object) {
+  return (Properties *) object->properties;
+}
+
+static inline void
+Object_Draw(
+    Object *object,
+    GBA_TileMapRef *target)
+{
+  object->proto->draw(object, target);
 }
 
 static inline void

@@ -51,7 +51,7 @@ Cell_GetSize(Cell *cell) {
 
 static inline int
 Cell_GetCapacity(Cell *cell) {
-  return ARRAY_LENGTH(cell->units);
+  return length(cell->units);
 }
 
 void

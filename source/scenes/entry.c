@@ -30,7 +30,7 @@ Scene_DoEnter() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
-  Loader *loader = Loader_ForTestCourse(true);
+  Loader *loader = Loader_ForTestCourse();
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, loader);
 

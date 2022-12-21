@@ -25,8 +25,15 @@ Chunk_AssignIndex(
 
 Object*
 Chunk_AllocateObject(Chunk *chunk) {
-  int index = chunk->count++;
-  return &chunk->objects[index];
+  int index = chunk->count;
+  Object *object = NULL;
+
+  if (index < length(chunk->objects)) {
+    object = &chunk->objects[index];
+    chunk->count++;
+  }
+
+  return object;
 }
 
 void
@@ -68,7 +75,7 @@ Chunk_CheckHits(
     Hit h = Bounds_Intersects(bounds, hitbox);
     if (Hit_IsHit(&h)) {
       hit = Hit_Combine(&hit, &h);
-      if (callback != NULL) callback(unit, object, &h);
+      HitCallback_Invoke(callback, unit, object, &h);
     }
   }
 

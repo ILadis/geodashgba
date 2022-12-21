@@ -12,10 +12,10 @@ typedef struct Loader {
   Vector size, cursor;
 } Loader;
 
-#define Loader_ForLayout(...) ((Loader) { .layout = {__VA_ARGS__, NULL} })
+#define Loader_ForLayout(layout) ((Loader) { layout, { 0, length(layout) }, { 0, 0 } })
 
 Loader*
-Loader_ForTestCourse(bool reset);
+Loader_ForTestCourse();
 
 void
 Loader_GetChunk(

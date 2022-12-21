@@ -214,7 +214,7 @@ Grid_AddUnit(
 
 static inline int
 Iterator_GetCapacity(Iterator *iterator) {
-  return ARRAY_LENGTH(iterator->stack.cells);
+  return length(iterator->stack.cells);
 }
 
 static inline void

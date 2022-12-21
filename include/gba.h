@@ -219,7 +219,7 @@ typedef struct GBA_Sprite {
     };
   };
   s16 fill;
-} ALIGN4 GBA_Sprite;
+} align4 GBA_Sprite;
 
 typedef struct GBA_Affine {
   u16 fill0[3];
@@ -230,7 +230,7 @@ typedef struct GBA_Affine {
   s16 pc;
   u16 fill3[3];
   s16 pd;
-} ALIGN4 GBA_Affine;
+} align4 GBA_Affine;
 
 typedef union GBA_Tile {
   u16 value;

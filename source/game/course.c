@@ -53,23 +53,8 @@ Course_ResetAndLoad(
   course->spawn = Vector_Of(20, floor.y);
 }
 
-static inline Hit
+static inline void
 Course_CheckFloorHit(
-    Course *course,
-    Bounds *hitbox)
-{
-  Hit hit = {0};
-
-  int dy  = course->floor - (hitbox->center.y + hitbox->size.y);
-  if (dy < 0) {
-    hit.delta.y = dy;
-  }
-
-  return hit;
-}
-
-Hit
-Course_CheckHits(
     Course *course,
     Unit *unit,
     HitCallback callback)
@@ -77,64 +62,28 @@ Course_CheckHits(
   Bounds *hitbox = unit->bounds;
   Hit hit = {0};
 
-  Hit h1 = Chunk_CheckHits(course->current, unit, callback);
-  if (Hit_IsHit(&h1)) {
-    hit = Hit_Combine(&hit, &h1);
-  }
-
-  Hit h2 = Chunk_CheckHits(course->next, unit, callback);
-  if (Hit_IsHit(&h2)) {
-    hit = Hit_Combine(&hit, &h2);
-  }
-
-  Hit h3 = Course_CheckFloorHit(course, hitbox);
-  if (Hit_IsHit(&h3)) {
-    hit = Hit_Combine(&hit, &h3);
+  int dy  = course->floor - (hitbox->center.y + hitbox->size.y);
+  if (dy < 0) {
+    hit.delta.y = dy;
 
     Object floor = (Object) {
       .solid = true,
       .deadly = false,
     };
 
-    if (callback != NULL) callback(unit, &floor, &h3);
-  }
-
-  return hit;
-}
-
-static inline const GBA_Tile*
-Course_FloorTile(
-    Course *course,
-    int y)
-{
-  static const GBA_Tile empty = {0};
-  static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
-
-  int dy = y - course->floor/8;
-
-  if (dy < 0) {
-    return &empty;
-  } else if (dy == 0) {
-    return &floor[0];
-  } else {
-    return &floor[1];
+    HitCallback_Invoke(callback, unit, &floor, &hit);
   }
 }
 
-static inline void
-Course_DrawFloor(
+void
+Course_CheckHits(
     Course *course,
-    Camera *camera)
+    Unit *unit,
+    HitCallback callback)
 {
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
-  for (int y = course->floor/8; y < target.height; y++) {
-    for (int x = 0; x < target.width; x++) {
-      const GBA_Tile *tile = Course_FloorTile(course, y);
-      GBA_TileMapRef_BlitTile(&target, x, y, tile);
-    }
-  }
+  Chunk_CheckHits(course->current, unit, callback);
+  Chunk_CheckHits(course->next, unit, callback);
+  Course_CheckFloorHit(course, unit, callback);
 }
 
 static inline void
@@ -167,8 +116,6 @@ Course_DrawBackground(
     GBA_TileMapRef target;
     GBA_TileMapRef_FromBackgroundLayer(&target, 0);
     GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
-
-    Course_DrawFloor(course, camera);
   }
 
   Vector *position = Camera_GetPosition(camera);
@@ -178,6 +125,25 @@ Course_DrawBackground(
 
   GBA_OffsetBackgroundLayer(0, course->offset.x >> 1, course->offset.y >> 1);
   GBA_OffsetBackgroundLayer(1, course->offset.x, course->offset.y);
+}
+
+static inline const GBA_Tile*
+Course_FloorTile(
+    Course *course,
+    int y)
+{
+  static const GBA_Tile empty = {0};
+  static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
+
+  int dy = y - course->floor/8;
+
+  if (dy < 0) {
+    return &empty;
+  } else if (dy == 0) {
+    return &floor[0];
+  } else {
+    return &floor[1];
+  }
 }
 
 static inline void
@@ -196,7 +162,7 @@ Course_DrawChunk(
   Vector_Rshift(&lower, 3);
   Vector_Rshift(&upper, 3);
 
-  for (int y = lower.y; y < upper.y; y++) {
+  for (int y = 0; y < target.height; y++) {
     for (int x = lower.x; x < upper.x; x++) {
       const GBA_Tile *tile = Course_FloorTile(course, y);
       GBA_TileMapRef_BlitTile(&target, x, y, tile);
@@ -206,13 +172,7 @@ Course_DrawChunk(
   int count = chunk->count;
   for (int i = 0; i < count; i++) {
     Object *object = &chunk->objects[i];
-
-    Vector position = Bounds_Lower(&object->viewbox);
-
-    int tx = position.x / 8;
-    int ty = position.y / 8;
-
-    GBA_TileMapRef_Blit(&target, tx, ty, object->tiles);
+    Object_Draw(object, &target);
   }
 }
 

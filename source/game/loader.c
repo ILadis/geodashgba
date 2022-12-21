@@ -1,73 +1,25 @@
 
 #include <game/loader.h>
 
-static void
-Loader_ResetCursor(Loader *loader) {
-  const char **layout = loader->layout;
-
-  int x = 0, y = 0;
-
-  while (layout[y++] != NULL);
-  while (layout[0][x++] != '\0');
-
-  loader->size.x = x - 1;
-  loader->size.y = y - 1;
-
-  loader->cursor.x = -1;
-  loader->cursor.y =  0;
-}
-
 Loader*
-Loader_ForTestCourse(bool reset) {
+Loader_ForTestCourse() {
   static const char *layout[] = {
-    "                                                                  x",
-    "                                                     xxxxxx       x",
-    "                                                                  x",
-    "                                                  x               x",
-    "                                                                  x",
-    "                                               x                  x",
-    "                                                                  x",
-    "                                            x                     x",
-    "                              i                                   x",
-    "                         i    x  xxxxxxxxxx                       x",
-    "                    i    x    x          xxxxx                    x",
-    "_________^___^^_____x____x____x____________xxxxx__________________x",
-    NULL
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                      x",
+    "                                                                                                   x  x",
+    "                                    i                  <x                                      x      x",
+    "                               i    x                  <x                        ^         x          x",
+    "                          i    x    x                             ^        xxxxxxxxxxxxx              x",
+    "_________^______^^_______^x____x____x__________^___xxxxxxxx__xxxxxxxxxxx___xxxxxxxxxxxxx______________x",
   };
 
- static Loader loader = { layout };
-
-  if (reset) {
-    Loader_ResetCursor(&loader);
-  }
-
+  static Loader loader = Loader_ForLayout(layout);
   return &loader;
-}
-
-static bool
-Loader_NextSymbol(
-    Loader *loader,
-    char *symbol)
-{
-  Vector *cursor = &loader->cursor;
-
-  int x = cursor->x + 1;
-  int y = cursor->y;
-
-  Vector *size = &loader->size;
-  if (x >= size->x) {
-    x = 0; y++;
-    if (y >= size->y) {
-      return false;
-    }
-  }
-
-  *symbol = loader->layout[y][x];
-
-  cursor->x = x;
-  cursor->y = y;
-
-  return true;
 }
 
 static bool
@@ -82,6 +34,9 @@ Loader_GetSymbolAt(
   }
 
   *symbol = loader->layout[y][x];
+  if (*symbol == '\0') {
+    return false;
+  }
 
   Vector *cursor = &loader->cursor;
 
@@ -92,7 +47,7 @@ Loader_GetSymbolAt(
 }
 
 static bool
-Loader_GetSymbol(
+Loader_NextSymbol(
     Loader *loader,
     Direction direction,
     char *symbol)
@@ -103,17 +58,7 @@ Loader_GetSymbol(
   int x = cursor->x + delta->x;
   int y = cursor->y + delta->y;
 
-  Vector *size = &loader->size;
-  if (x >= size->x || y >= size->y) {
-    return false;
-  }
-
-  *symbol = loader->layout[y][x];
-
-  cursor->x = x;
-  cursor->y = y;
-
-  return true;
+  return Loader_GetSymbolAt(loader, x, y, symbol);
 }
 
 static inline Vector
@@ -152,8 +97,10 @@ Loader_AddObjectToChunk(
 
   if (!Hit_IsHit(&hit)) {
     Object *object = Chunk_AllocateObject(chunk);
-    Object_AssignFrom(object, template);
-    Chunk_AddObject(chunk, object);
+    if (object != NULL) {
+      Object_AssignFrom(object, template);
+      Chunk_AddObject(chunk, object);
+    }
   }
 }
 
@@ -166,17 +113,18 @@ Loader_AddBoxWithPole(
   int height = 0;
 
   char symbol;
-  while (Loader_GetSymbol(loader, DIRECTION_DOWN, &symbol)) {
+  while (Loader_NextSymbol(loader, DIRECTION_DOWN, &symbol)) {
     if (symbol != 'x') break;
     else height++;
   }
 
   loader->cursor = cursor;
 
-  Object box = {0};
-  Object_CreateBoxWithPole(&box, height);
-  Object_SetPosition(&box, 0, -1);
-  Loader_AddObjectToChunk(loader, chunk, &box);
+  Object object = {0};
+  if (Object_CreateBoxWithPole(&object, height)) {
+    Object_SetPosition(&object, 0, -1);
+    Loader_AddObjectToChunk(loader, chunk, &object);
+  }
 }
 
 static void
@@ -184,19 +132,50 @@ Loader_AddBox(
     Loader *loader,
     Chunk *chunk)
 {
-  Object box = {0};
-  Object_CreateBox(&box);
-  Loader_AddObjectToChunk(loader, chunk, &box);
+  Vector cursor = loader->cursor;
+  int width = 1, height = 1;
+
+  char symbol;
+  while (Loader_NextSymbol(loader, DIRECTION_RIGHT, &symbol)) {
+    if (symbol != 'x') break;
+    else width++;
+  }
+
+  loader->cursor = cursor;
+
+  while (Loader_NextSymbol(loader, DIRECTION_DOWN, &symbol)) {
+    if (symbol != 'x') break;
+
+    int length = 1;
+    while (Loader_NextSymbol(loader, DIRECTION_RIGHT, &symbol)) {
+      if (symbol != 'x') break;
+      else length++;
+    }
+
+    if (length == width) height++;
+    else break;
+
+    loader->cursor.x = cursor.x;
+  }
+
+  loader->cursor = cursor;
+
+  Object object = {0};
+  if (Object_CreateBox(&object, width, height)) {
+    Loader_AddObjectToChunk(loader, chunk, &object);
+  }
 }
 
 static void
 Loader_AddSpike(
     Loader *loader,
-    Chunk *chunk)
+    Chunk *chunk,
+    Direction direction)
 {
-  Object spike = {0};
-  Object_CreateSpike(&spike, DIRECTION_UP);
-  Loader_AddObjectToChunk(loader, chunk, &spike);
+  Object object = {0};
+  if (Object_CreateSpike(&object, direction)) {
+    Loader_AddObjectToChunk(loader, chunk, &object);
+  }
 }
 
 void
@@ -211,6 +190,9 @@ Loader_GetChunk(
   // convert to cursor coordinates
   Vector_Rshift(&lower, 4);
   Vector_Rshift(&upper, 4);
+
+  // limit bounds of cursor to this chunk
+  loader->size.x = upper.x;
 
   for (int y = lower.y; y < upper.y; y++) {
     for (int x = lower.x; x < upper.x; x++) {
@@ -227,7 +209,13 @@ Loader_GetChunk(
         Loader_AddBox(loader, chunk);
         break;
       case '^':
-        Loader_AddSpike(loader, chunk);
+        Loader_AddSpike(loader, chunk, DIRECTION_UP);
+        break;
+      case '<':
+        Loader_AddSpike(loader, chunk, DIRECTION_LEFT);
+        break;
+      case '>':
+        Loader_AddSpike(loader, chunk, DIRECTION_RIGHT);
         break;
       }
     }

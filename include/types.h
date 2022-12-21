@@ -15,7 +15,9 @@ typedef unsigned char  u8;
 typedef unsigned short u16;
 typedef unsigned int   u32;
 
-#define ALIGN4 __attribute__((aligned(4)))
-#define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
+#define align4 __attribute__((aligned(4)))
+#define packed __attribute__((__packed__))
+
+#define length(array) (sizeof(array) / sizeof(array[0]))
 
 #endif
