@@ -209,8 +209,8 @@ Loader_GetChunk(
   Vector upper = Bounds_Upper(bounds);
 
   // convert to cursor coordinates
-  lower.x >>= 4; lower.y >>= 4;
-  upper.x >>= 4; upper.y >>= 4;
+  Vector_Rshift(&lower, 4);
+  Vector_Rshift(&upper, 4);
 
   for (int y = lower.y; y < upper.y; y++) {
     for (int x = lower.x; x < upper.x; x++) {

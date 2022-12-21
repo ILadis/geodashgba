@@ -11,21 +11,13 @@ static inline Chunk*
 Course_LoadNextChunk(Course *course) {
   int index = course->index++;
 
-  const int width  = 240;
-  const int height = (course->floor + 1) * 8;
-
-  int x = width * index + width/2;
-  int y = height/2;
-
-  Bounds bounds = Bounds_Of(x, y, width/2, height/2);
-
   Chunk *current = course->current;
   Chunk *next = course->next;
 
   course->current = next;
   course->next = current;
 
-  Chunk_ResetForBounds(current, &bounds);
+  Chunk_AssignIndex(current, index);
   Loader_GetChunk(course->loader, current);
 
   return current;
@@ -38,8 +30,6 @@ Course_ResetAndLoad(
 {
   course->redraw = true;
   course->index = 0;
-  course->floor = 61;
-  course->spawn = Vector_Of(20, course->floor * 8);
   course->offset = Vector_Of(0, 0);
 
   Chunk *current = &course->chunks[0];
@@ -55,6 +45,12 @@ Course_ResetAndLoad(
   // load two chunks
   Course_LoadNextChunk(course);
   Course_LoadNextChunk(course);
+
+  const Bounds *bounds = Chunk_GetBounds(current);
+  Vector floor = Bounds_Upper(bounds);
+
+  course->floor = floor.y - 1; // floor tile consists of 7 empty pixels and a 1 pixel line
+  course->spawn = Vector_Of(20, floor.y);
 }
 
 static inline Hit
@@ -64,9 +60,7 @@ Course_CheckFloorHit(
 {
   Hit hit = {0};
 
-  int y  = (course->floor) * 8 + 7; // floor tile consists of 7 empty pixels and a 1 pixel line
-  int dy = y - (hitbox->center.y + hitbox->size.y);
-
+  int dy  = course->floor - (hitbox->center.y + hitbox->size.y);
   if (dy < 0) {
     hit.delta.y = dy;
   }
@@ -116,7 +110,7 @@ Course_FloorTile(
   static const GBA_Tile empty = {0};
   static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
 
-  int dy = y - course->floor;
+  int dy = y - course->floor/8;
 
   if (dy < 0) {
     return &empty;
@@ -135,7 +129,7 @@ Course_DrawFloor(
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 1);
 
-  for (int y = course->floor; y < target.height; y++) {
+  for (int y = course->floor/8; y < target.height; y++) {
     for (int x = 0; x < target.width; x++) {
       const GBA_Tile *tile = Course_FloorTile(course, y);
       GBA_TileMapRef_BlitTile(&target, x, y, tile);
@@ -199,8 +193,8 @@ Course_DrawChunk(
   Vector lower = Bounds_Lower(bounds);
   Vector upper = Bounds_Upper(bounds);
 
-  lower.x /= 8; lower.y /= 8;
-  upper.x /= 8; upper.y /= 8;
+  Vector_Rshift(&lower, 3);
+  Vector_Rshift(&upper, 3);
 
   for (int y = lower.y; y < upper.y; y++) {
     for (int x = lower.x; x < upper.x; x++) {

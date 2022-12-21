@@ -37,6 +37,12 @@ Vector_GetLength(const Vector *vector) {
   return vector->x * vector->x + vector->y * vector->y;
 }
 
+static inline void
+Vector_Rshift(Vector *vector, int value) {
+  vector->x >>= value;
+  vector->y >>= value;
+}
+
 const Vector*
 Vector_FromDirection(Direction direction);
 

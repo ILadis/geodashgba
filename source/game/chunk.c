@@ -2,15 +2,24 @@
 #include <game/chunk.h>
 
 void
-Chunk_ResetForBounds(
+Chunk_AssignIndex(
     Chunk *chunk,
-    Bounds *bounds)
+    int index)
 {
   Grid *grid = &chunk->grid;
   Grid_Reset(grid);
-  Grid_SetBounds(grid, bounds);
   Grid_SetCells(grid, chunk->cells);
 
+  const int width  = 240; // 30 tiles
+  const int height = 480; // 60 tiles
+
+  int x = width * index + width/2;
+  int y = height/2;
+
+  Bounds bounds = Bounds_Of(x, y, width/2, height/2);
+  Grid_SetBounds(grid, &bounds);
+
+  chunk->index = index;
   chunk->count = 0;
 }
 

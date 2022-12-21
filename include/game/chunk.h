@@ -13,7 +13,7 @@ typedef struct Chunk {
   Object objects[20];
   Cell cells[20];
   Grid grid;
-  int count;
+  int index, count;
 } Chunk;
 
 static inline const Bounds*
@@ -22,9 +22,9 @@ Chunk_GetBounds(Chunk *chunk) {
 }
 
 void
-Chunk_ResetForBounds(
+Chunk_AssignIndex(
     Chunk *chunk,
-    Bounds *bounds);
+    int index);
 
 Object*
 Chunk_AllocateObject(Chunk *chunk);
