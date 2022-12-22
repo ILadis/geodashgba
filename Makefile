@@ -53,6 +53,10 @@ debug: clean main.gba main.elf
 	@./$@.elf
 	@rm $@.elf
 
+debug_%_game_test: test/game/%.c
+	@gcc $< $(TFILES) -o test_debug.elf -g -I. -Iinclude -DNOGBA
+	@gdbserver :2345 ./test_debug.elf
+
 %_test: test/%.c
 	@gcc $< $(TFILES) -o $@.elf -g -I. -Iinclude -DNOGBA
 	@./$@.elf

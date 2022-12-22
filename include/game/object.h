@@ -24,6 +24,9 @@ typedef struct Prototype {
 typedef struct Properties Properties;
 
 bool
+Object_CreateDisk(Object *object);
+
+bool
 Object_CreateBox(
     Object *object,
     int width, int height);

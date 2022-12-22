@@ -8,11 +8,22 @@
 #include <game/object.h>
 
 typedef struct Loader {
-  const char **layout;
-  Vector size, cursor;
+  const char *layout;
+  const Vector size;
+  Chunk *chunk;
+  Vector cursor;
+  int limit;
 } Loader;
 
-#define Loader_ForLayout(layout) ((Loader) { layout, { 0, length(layout) }, { 0, 0 } })
+#define layout(line, args...) ((const char[][sizeof(line)]) { line, ##args })
+
+#define Loader_ForLayout(line, args...) ((Loader) { \
+  .layout = (char *) layout(line, ##args), \
+  .size = { \
+    .x = sizeof(line), \
+    .y = length(layout(line, ##args)), \
+  } \
+})
 
 Loader*
 Loader_ForTestCourse();

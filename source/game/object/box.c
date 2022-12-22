@@ -1,3 +1,4 @@
+
 #include <game/object.h>
 
 typedef struct Properties {
@@ -20,7 +21,6 @@ Object_DrawBox(
     Object *object,
     GBA_TileMapRef *target)
 {
-
   Vector position = Bounds_Lower(&object->viewbox);
 
   int tx = position.x / 8;

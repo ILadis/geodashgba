@@ -49,7 +49,7 @@ Course_ResetAndLoad(
   const Bounds *bounds = Chunk_GetBounds(current);
   Vector floor = Bounds_Upper(bounds);
 
-  course->floor = floor.y - 1; // floor tile consists of 7 empty pixels and a 1 pixel line
+  course->floor = floor.y;
   course->spawn = Vector_Of(20, floor.y);
 }
 
@@ -134,7 +134,7 @@ Course_FloorTile(
     int y)
 {
   static const GBA_Tile empty = {0};
-  static const GBA_Tile floor[] = {{ .tileId = 24 }, { .tileId = 10 }};
+  static const GBA_Tile floor[] = {{ .tileId = 2 }, { .tileId = 10 }};
 
   int dy = y - course->floor/8;
 

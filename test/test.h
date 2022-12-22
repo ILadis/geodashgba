@@ -8,10 +8,10 @@ static struct {
   int result, line;
 } report;
 
-#define suite(...) \
+#define suite(specs...) \
 int main() { \
   int total = 0, failures = 0; \
-  void (*tests[])() = { __VA_ARGS__, NULL }; \
+  void (*tests[])() = { specs, NULL }; \
   printf("\n"); \
   for (int i = 0; tests[i] != NULL; i++) { \
     tests[i](); \
@@ -31,19 +31,19 @@ int main() { \
 static void name()
 
 #define success fail(0)
-#define fail(test) \
+#define fail(assertion) \
 do { \
-  report.result = test == 0; \
-  report.te##st = __func__; \
+  report.result = assertion == 0; \
+  report.test = __func__; \
   report.file = __FILE__; \
   report.line = __LINE__; \
-  report.assert = test; \
+  report.assert = assertion; \
 } while (0);
 
-#define assert(test) \
+#define assert(assertion) \
 do { \
-  if ((test) == 0) { \
-    fail(#test); \
+  if ((assertion) == 0) { \
+    fail(#assertion); \
     return; \
   } \
   else success; \
