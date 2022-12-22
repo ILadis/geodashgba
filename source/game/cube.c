@@ -24,6 +24,7 @@ Cube_SetPosition(
   Body_SetDynamics(body, &dynamics);
   Body_SetPosition(body, position->x << 8, position->y << 8);
 
+  cube->shape = Shape_Of(cube->vertices);
   cube->hitbox = Bounds_Of(position->x, position->y, 8, 8);
   cube->state.current = STATE_UNKNOWN;
 }
@@ -97,8 +98,12 @@ Cube_HitCallback(
     Hit *hit)
 {
   Cube *cube = unit->object;
+  Shape *shape = &cube->shape;
 
   if (Cube_InState(cube, STATE_DESTROYED)) return;
+
+  // detailed hit check using cube shape
+  if (!Object_IsHit(object, shape)) return;
 
   if (object->deadly) {
     Cube_HaltMovement(cube);
@@ -131,7 +136,7 @@ Cube_HitCallback(
 
     else {
       if (hit->delta.y < 0) {
-        Cube_ResolveHit(cube, hit->delta.y + 1); // stay in contact with ground
+        Cube_ResolveHit(cube, hit->delta.y + 1); // +1 to stay in contact with ground
         cube->state.current = STATE_GROUNDED;
       }
       else if (hit->delta.y > 0) {
@@ -139,6 +144,31 @@ Cube_HitCallback(
       }
     }
   }
+}
+
+static inline void
+Cube_ApplyShape(Cube *cube) {
+  Bounds *hitbox = &cube->hitbox;
+  Vector *vertices = &cube->vertices[0];
+
+  int angle = cube->rotation.angle;
+
+  Vector *position = &hitbox->center;
+
+  int dx = (Math_sin(angle) * hitbox->size.x) >> 8;
+  int dy = (Math_cos(angle) * hitbox->size.y) >> 8;
+
+  vertices[0].x = position->x - dx;
+  vertices[0].y = position->y - dy;
+
+  vertices[1].x = position->x + dx;
+  vertices[1].y = position->y - dy;
+
+  vertices[2].x = position->x + dx;
+  vertices[2].y = position->y + dy;
+
+  vertices[3].x = position->x - dx;
+  vertices[3].y = position->y + dy;
 }
 
 static inline void
@@ -152,6 +182,8 @@ Cube_ApplyHit(
     cube->state.current = STATE_DESTROYED;
   } else {
     cube->state.current = STATE_AIRBORNE;
+
+    Cube_ApplyShape(cube);
 
     Unit unit = Unit_Of(&cube->hitbox, cube);
     Course_CheckHits(course, &unit, Cube_HitCallback);

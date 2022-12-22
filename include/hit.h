@@ -117,11 +117,11 @@ Shape_ProjectOnto(
 
 static inline bool
 Projection_Overlap(
-    const Projection *project,
-    const Projection *other)
+    const Projection *p1,
+    const Projection *p2)
 {
-  return (project->min > other->min   && project->min < other->max)
-      || (  other->min > project->min &&   other->min < project->max);
+  return (p1->min >= p2->min && p1->min <= p2->max)
+      || (p2->min >= p1->min && p2->min <= p1->max);
 }
 
 #endif

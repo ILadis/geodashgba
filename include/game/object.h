@@ -11,10 +11,12 @@ typedef struct Object {
   Bounds hitbox, viewbox;
   const struct Prototype *proto;
   bool solid, deadly;
-  char align4 properties[16];
+  char align4 properties[32];
 } Object;
 
 typedef struct Prototype {
+  bool (*hit)(Object *object, Shape *shape);
+  void (*move)(Object *object, Vector *position);
   void (*draw)(Object *object, GBA_TileMapRef *target);
   // TODO consider trigger and tick functions
 } Prototype;
@@ -36,20 +38,36 @@ Object_CreateSpike(
     Object *object,
     Direction direction);
 
-static inline void
-Object_SetPosition(
-    Object *object,
-    int x, int y)
-{
-  object->hitbox.center.x  += x * 8;
-  object->hitbox.center.y  += y * 8;
-  object->viewbox.center.x += x * 8;
-  object->viewbox.center.y += y * 8;
-}
-
 static inline Properties*
 Object_GetProperties(Object *object) {
   return (Properties *) object->properties;
+}
+
+static inline bool
+Object_IsHit(
+    Object *object,
+    Shape *shape)
+{
+  if (object->proto->hit != NULL) {
+    return object->proto->hit(object, shape);
+  }
+
+  return true;
+}
+
+static inline void
+Object_Move(
+    Object *object,
+    Vector *position)
+{
+  object->hitbox.center.x  += position->x * 8;
+  object->hitbox.center.y  += position->y * 8;
+  object->viewbox.center.x += position->x * 8;
+  object->viewbox.center.y += position->y * 8;
+
+  if (object->proto->move != NULL) {
+    object->proto->move(object, position);
+  }
 }
 
 static inline void

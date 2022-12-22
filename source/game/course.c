@@ -69,6 +69,7 @@ Course_CheckFloorHit(
     Object floor = (Object) {
       .solid = true,
       .deadly = false,
+      .proto = &(Prototype) { },
     };
 
     HitCallback_Invoke(callback, unit, &floor, &hit);

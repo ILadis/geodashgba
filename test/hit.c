@@ -155,19 +155,36 @@ test(Intersects_ShouldReturnTrueForGivenShapes) {
     Vector_Of(6, 11),
   };
 
+  const Vector vertices4[] = {
+    Vector_Of(152, 464),
+    Vector_Of(144, 480),
+    Vector_Of(160, 480),
+  };
+
+  const Vector vertices5[] = {
+    Vector_Of(135, 464),
+    Vector_Of(151, 464),
+    Vector_Of(151, 480),
+    Vector_Of(135, 480),
+  };
+
   const Shape shape1 = Shape_Of(vertices1);
   const Shape shape2 = Shape_Of(vertices2);
   const Shape shape3 = Shape_Of(vertices3);
+  const Shape shape4 = Shape_Of(vertices4);
+  const Shape shape5 = Shape_Of(vertices5);
 
   // act
   bool result1 = Shape_Intersects(&shape1, &shape2);
   bool result2 = Shape_Intersects(&shape2, &shape3);
   bool result3 = Shape_Intersects(&shape3, &shape1);
+  bool result4 = Shape_Intersects(&shape4, &shape5);
 
   // assert
   assert(result1 == true);
   assert(result2 == true);
   assert(result3 == true);
+  assert(result4 == true);
 }
 
 test(Intersects_ShouldReturnFalseForGivenShapes) {

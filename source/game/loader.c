@@ -90,7 +90,7 @@ Loader_AddObjectToChunk(
     Object *template)
 {
   Vector position = Loader_GetCursorPosition(loader, chunk);
-  Object_SetPosition(template, position.x, position.y);
+  Object_Move(template, &position);
 
   Unit unit = Unit_Of(&template->hitbox, template);
   Hit hit = Chunk_CheckHits(chunk, &unit, NULL);
@@ -121,8 +121,10 @@ Loader_AddBoxWithPole(
   loader->cursor = cursor;
 
   Object object = {0};
+  Vector offset = Vector_Of(0, -1);
+
   if (Object_CreateBoxWithPole(&object, height)) {
-    Object_SetPosition(&object, 0, -1);
+    Object_Move(&object, &offset);
     Loader_AddObjectToChunk(loader, chunk, &object);
   }
 }
