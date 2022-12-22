@@ -9,7 +9,5 @@ geometry dash physics:
 sprite resources:
 - https://www.spriters-resource.com/mobile/geometrydash/
 
-todo list:
-- improve Object_DrawColumn/Row using something like: Camera_Clamp(camera, viewport)
-  where viewport is: { x1, y1 (upper left), x2, y2 (lower right) }
-- draw sprites in aseprite
+makefile automatic variables:
+- https://stackoverflow.com/a/37701195
