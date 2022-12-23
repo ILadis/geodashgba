@@ -66,11 +66,8 @@ Course_CheckFloorHit(
   if (dy < 0) {
     hit.delta.y = dy;
 
-    Object floor = (Object) {
-      .solid = true,
-      .deadly = false,
-      .proto = &(Prototype) { },
-    };
+    Object floor = {0};
+    Object_CreateFloor(&floor);
 
     HitCallback_Invoke(callback, unit, &floor, &hit);
   }

@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
   unsigned char buffer[1024] = {0};
 
   Level *in = Level_GetById(LEVEL_TEST_COURSE);
-  Level out = Level_CreateNew(buffer);
+  Level out = Level_FromBuffer(buffer);
 
   FILE *fp = stdout;
 
@@ -18,9 +18,12 @@ int main(int argc, char **argv) {
     Level_AddChunk(&out, &chunk);
   }
 
-  fprintf(fp, "const unsigned char data[] = {");
+  int length = out.cursor.x;
 
-  for (int i = 0; i < sizeof(buffer); i ++) {
+  fprintf(fp, "const unsigned int levelLength = %ld;\n", length);
+  fprintf(fp, "const unsigned char levelData[] = {");
+
+  for (int i = 0; i < length; i ++) {
     if (i % 8 == 0) fputs("\n", fp);
 
     fprintf(fp, "0x%02x", buffer[i]);

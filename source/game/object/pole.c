@@ -5,6 +5,32 @@ typedef struct Properties {
   int height;
 } align4 Properties;
 
+bool
+Object_CreateBoxWithPole(
+    Object *object,
+    int height)
+{
+  int size = --height * 8;
+  if (height < 0) {
+    return false;
+  }
+
+  Bounds hitbox  = Bounds_Of(8, 32 + size, 8,  8 + size);
+  Bounds viewbox = Bounds_Of(8, 20 + size, 8, 20 + size);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = false;
+  object->type = TYPE_BOX_WITH_POLE;
+
+  Properties *props = Object_GetProperties(object);
+  props->height = height;
+
+  return true;
+}
+
 static const GBA_TileMapRef pole = {
   .width = 2, .height = 5,
   .tiles = (GBA_Tile[]) {
@@ -53,8 +79,8 @@ static const GBA_TileMapRef vbox[] = {
   }
 };
 
-static void
-Object_ProtoDraw(
+void
+Object_DrawBoxWithPole(
     Object *object,
     GBA_TileMapRef *target)
 {
@@ -79,34 +105,4 @@ Object_ProtoDraw(
 
     GBA_TileMapRef_Blit(target, tx, ty, &vbox[2]);
   }
-}
-
-bool
-Object_CreateBoxWithPole(
-    Object *object,
-    int height)
-{
-  static const Prototype prototype = {
-    .draw = Object_ProtoDraw,
-  };
-
-  int size = --height * 8;
-  if (height < 0) {
-    return false;
-  }
-
-  Bounds hitbox  = Bounds_Of(8, 32 + size, 8,  8 + size);
-  Bounds viewbox = Bounds_Of(8, 20 + size, 8, 20 + size);
-
-  object->hitbox  = hitbox;
-  object->viewbox = viewbox;
-
-  object->solid = true;
-  object->deadly = false;
-  object->proto = &prototype;
-
-  Properties *props = Object_GetProperties(object);
-  props->height = height;
-
-  return true;
 }

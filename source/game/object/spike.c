@@ -6,6 +6,54 @@ typedef struct Properties {
   Vector vertices[3];
 } align4 Properties;
 
+static const Vector vertices[][3] = {
+  [DIRECTION_LEFT] = {
+    Vector_Of(0, 8),
+    Vector_Of(16, 0),
+    Vector_Of(16, 16),
+  },
+  [DIRECTION_RIGHT] = {
+    Vector_Of(0, 0),
+    Vector_Of(0, 16),
+    Vector_Of(16, 8),
+  },
+  [DIRECTION_UP] = {
+    Vector_Of(8, 0),
+    Vector_Of(0, 16),
+    Vector_Of(16, 16),
+  },
+  [DIRECTION_DOWN] = {
+    Vector_Of(0, 0),
+    Vector_Of(8, 16),
+    Vector_Of(16, 0),
+  }
+};
+
+bool
+Object_CreateSpike(
+    Object *object,
+    Direction direction)
+{
+  Bounds hitbox  = Bounds_Of(8, 8, 8, 8);
+  Bounds viewbox = Bounds_Of(8, 8, 8, 8);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = true;
+  object->type = TYPE_SPIKE;
+
+  Properties *props = Object_GetProperties(object);
+  props->direction = direction;
+
+  for (int i = 0; i < length(props->vertices); i++) {
+    props->vertices[i] = vertices[direction][i];
+  }
+
+  return true;
+}
+
 static const GBA_TileMapRef spikes[] = {
   [DIRECTION_LEFT] = {
     .width = 2, .height = 2,
@@ -45,31 +93,8 @@ static const GBA_TileMapRef spikes[] = {
   }
 };
 
-static const Vector vertices[][3] = {
-  [DIRECTION_LEFT] = {
-    Vector_Of(0, 8),
-    Vector_Of(16, 0),
-    Vector_Of(16, 16),
-  },
-  [DIRECTION_RIGHT] = {
-    Vector_Of(0, 0),
-    Vector_Of(0, 16),
-    Vector_Of(16, 8),
-  },
-  [DIRECTION_UP] = {
-    Vector_Of(8, 0),
-    Vector_Of(0, 16),
-    Vector_Of(16, 16),
-  },
-  [DIRECTION_DOWN] = {
-    Vector_Of(0, 0),
-    Vector_Of(8, 16),
-    Vector_Of(16, 0),
-  }
-};
-
-static bool
-Object_ProtoHit(
+bool
+Object_HitSpike(
     Object *object,
     Shape *shape)
 {
@@ -79,8 +104,8 @@ Object_ProtoHit(
   return Shape_Intersects(&hitbox, shape);
 }
 
-static void
-Object_ProtoMove(
+void
+Object_MoveSpike(
     Object *object,
     Vector *position)
 {
@@ -97,8 +122,8 @@ Object_ProtoMove(
   dx++;
 }
 
-static void
-Object_ProtoDraw(
+void
+Object_DrawSpike(
     Object *object,
     GBA_TileMapRef *target)
 {
@@ -112,35 +137,4 @@ Object_ProtoDraw(
 
   const GBA_TileMapRef *tiles = &spikes[direction];
   GBA_TileMapRef_Blit(target, tx, ty, tiles);
-}
-
-bool
-Object_CreateSpike(
-    Object *object,
-    Direction direction)
-{
-  static const Prototype prototype = {
-    .hit = Object_ProtoHit,
-    .move = Object_ProtoMove,
-    .draw = Object_ProtoDraw,
-  };
-
-  Bounds hitbox  = Bounds_Of(8, 8, 8, 8);
-  Bounds viewbox = Bounds_Of(8, 8, 8, 8);
-
-  object->hitbox  = hitbox;
-  object->viewbox = viewbox;
-
-  object->solid = true;
-  object->deadly = true;
-  object->proto = &prototype;
-
-  Properties *props = Object_GetProperties(object);
-  props->direction = direction;
-
-  for (int i = 0; i < length(props->vertices); i++) {
-    props->vertices[i] = vertices[direction][i];
-  }
-
-  return true;
 }

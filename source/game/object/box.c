@@ -6,6 +6,35 @@ typedef struct Properties {
   int height;
 } align4 Properties;
 
+bool
+Object_CreateBox(
+    Object *object,
+    int width, int height)
+{
+  int x = width * 8;
+  int y = height * 8;
+
+  if (width < 1 || height < 1) {
+    return false;
+  }
+
+  Bounds hitbox  = Bounds_Of(x, y, x, y);
+  Bounds viewbox = Bounds_Of(x, y, x, y);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = false;
+  object->type = TYPE_BOX;
+
+  Properties *props = Object_GetProperties(object);
+  props->width = width;
+  props->height = height;
+
+  return true;
+}
+
 static const GBA_TileMapRef box = {
   .width = 2, .height = 2,
   .tiles = (GBA_Tile[]) {
@@ -16,8 +45,8 @@ static const GBA_TileMapRef box = {
   }
 };
 
-static inline void
-Object_DrawBox(
+static void
+Object_Draw1x1Box(
     Object *object,
     GBA_TileMapRef *target)
 {
@@ -110,7 +139,7 @@ static const GBA_TileMapRef boxes[][3] = {
   },
 };
 
-static inline void
+static void
 Object_DrawBoxes(
     Object *object,
     GBA_TileMapRef *target,
@@ -164,7 +193,7 @@ static const GBA_TileMapRef vbox[] = {
   }
 };
 
-static inline void
+static void
 Object_DrawVbox(
     Object *object,
     GBA_TileMapRef *target,
@@ -214,7 +243,7 @@ static const GBA_TileMapRef hbox[] = {
   }
 };
 
-static inline void
+static void
 Object_DrawHbox(
     Object *object,
     GBA_TileMapRef *target,
@@ -234,8 +263,8 @@ Object_DrawHbox(
   GBA_TileMapRef_Blit(target, tx, ty, &hbox[2]);
 }
 
-static void
-Object_ProtoDraw(
+void
+Object_DrawBox(
     Object *object,
     GBA_TileMapRef *target)
 {
@@ -246,7 +275,7 @@ Object_ProtoDraw(
   int size = width * height;
 
   if (size == 1) {
-    Object_DrawBox(object, target);
+    Object_Draw1x1Box(object, target);
   } else if (size == height) {
     Object_DrawVbox(object, target, height);
   } else if (size == width) {
@@ -254,37 +283,4 @@ Object_ProtoDraw(
   } else {
     Object_DrawBoxes(object, target, width, height);
   }
-}
-
-bool
-Object_CreateBox(
-    Object *object,
-    int width, int height)
-{
-  static const Prototype prototype = {
-    .draw = Object_ProtoDraw,
-  };
-
-  int x = width * 8;
-  int y = height * 8;
-
-  if (width < 1 || height < 1) {
-    return false;
-  }
-
-  Bounds hitbox  = Bounds_Of(x, y, x, y);
-  Bounds viewbox = Bounds_Of(x, y, x, y);
-
-  object->hitbox  = hitbox;
-  object->viewbox = viewbox;
-
-  object->solid = true;
-  object->deadly = false;
-  object->proto = &prototype;
-
-  Properties *props = Object_GetProperties(object);
-  props->width = width;
-  props->height = height;
-
-  return true;
 }

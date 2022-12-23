@@ -1,6 +1,21 @@
 
 #include <game/object.h>
 
+bool
+Object_CreateDisk(Object *object) {
+  Bounds hitbox  = Bounds_Of(8, 8, 8, 4);
+  Bounds viewbox = Bounds_Of(8, 8, 8, 4);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = false;
+  object->type = TYPE_DISK;
+
+  return true;
+}
+
 static const GBA_TileMapRef disk = {
   .width = 2, .height = 2,
   .tiles = (GBA_Tile[]) {
@@ -11,8 +26,8 @@ static const GBA_TileMapRef disk = {
   }
 };
 
-static void
-Object_ProtoDraw(
+void
+Object_DrawDisk(
     Object *object,
     GBA_TileMapRef *target)
 {
@@ -22,23 +37,4 @@ Object_ProtoDraw(
   int ty = position.y / 8;
 
   GBA_TileMapRef_Blit(target, tx, ty, &disk);
-}
-
-bool
-Object_CreateDisk(Object *object) {
-  static const Prototype prototype = {
-    .draw = Object_ProtoDraw,
-  };
-
-  Bounds hitbox  = Bounds_Of(8, 8, 8, 4);
-  Bounds viewbox = Bounds_Of(8, 8, 8, 4);
-
-  object->hitbox  = hitbox;
-  object->viewbox = viewbox;
-
-  object->solid = true;
-  object->deadly = false;
-  object->proto = &prototype;
-
-  return true;
 }

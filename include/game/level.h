@@ -9,6 +9,7 @@
 
 typedef enum LevelId {
   LEVEL_TEST_COURSE,
+  LEVEL_BINV1_COURSE,
 } LevelId;
 
 typedef struct Level {
@@ -30,16 +31,16 @@ typedef struct Level {
 
 #define Level_FromLayout(line, args...) ((Level) { \
   .format = FORMAT_ASCII, \
-  .buffer = (void *) layout(line, ##args), \
+  .buffer = { (void *) layout(line, ##args) }, \
   .size = { \
     .x = sizeof(line), \
     .y = length(layout(line, ##args)), \
   } \
 })
 
-#define Level_CreateNew(buf) ((Level) { \
+#define Level_FromBuffer(buf) ((Level) { \
   .format = FORMAT_BINV1, \
-  .buffer = (void *) buf, \
+  .buffer = { (void *) buf }, \
   .size = { length(buf) } \
 })
 
