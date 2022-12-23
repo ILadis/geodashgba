@@ -219,9 +219,6 @@ Loader_GetChunk(
   for (int x = lower.x; x < upper.x; x++) {
     for (int y = lower.y; y < upper.y; y++) {
       char symbol;
-      if (x == 14 && y == 3) {
-        symbol = 'a';
-      }
       if (!Loader_GetSymbolAt(loader, x, y, &symbol)) {
         break; // continue with next x
       }
