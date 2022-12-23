@@ -8,7 +8,7 @@ Object_IsHit(
 {
   extern bool Object_HitSpike(Object *object, Shape *shape);
 
-  const bool (*hit[5])(Object *object, Shape *shape) = {
+  const bool (*hit[TYPE_COUNT])(Object *object, Shape *shape) = {
     [TYPE_SPIKE] = Object_HitSpike,
   };
 
@@ -26,7 +26,7 @@ Object_Move(
 {
   extern void Object_MoveSpike(Object *object, Vector *position);
 
-  const void (*move[5])(Object *object, Vector *position) = {
+  const void (*move[TYPE_COUNT])(Object *object, Vector *position) = {
     [TYPE_SPIKE] = Object_MoveSpike,
   };
 
@@ -50,7 +50,7 @@ Object_Draw(
   extern void Object_DrawBoxWithPole(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawSpike(Object *object, GBA_TileMapRef *target);
 
-  const void (*draw[5])(Object *object, GBA_TileMapRef *target) = {
+  const void (*draw[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
     [TYPE_DISK] = Object_DrawDisk,
     [TYPE_BOX] = Object_DrawBox,
     [TYPE_BOX_WITH_POLE] = Object_DrawBoxWithPole,

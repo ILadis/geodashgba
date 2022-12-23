@@ -12,6 +12,7 @@ typedef struct Object {
     TYPE_BOX,
     TYPE_BOX_WITH_POLE,
     TYPE_SPIKE,
+    TYPE_COUNT,
   } type;
   Bounds hitbox, viewbox;
   bool solid, deadly;

@@ -138,8 +138,6 @@ Binv1Level_GetChunk(
     Object *object = Chunk_AllocateObject(chunk);
 
     if (object != NULL) {
-      Chunk_AddObject(chunk, object);
-
       int type = 0;
       Binv1Level_ReadInt8(level, &type);
 
@@ -153,7 +151,7 @@ Binv1Level_GetChunk(
       Binv1Level_ReadInt16(level, &object->viewbox.size.x);
       Binv1Level_ReadInt16(level, &object->viewbox.size.y);
 
-      int solid = 0, deadly;
+      int solid = 0, deadly = 0;
       Binv1Level_ReadInt8(level, &solid);
       Binv1Level_ReadInt8(level, &deadly);
 
@@ -162,6 +160,8 @@ Binv1Level_GetChunk(
       object->deadly = deadly == 1;
 
       Binv1Level_ReadValue(level, &object->properties, sizeof(object->properties));
+
+      Chunk_AddObject(chunk, object);
     }
   }
 }
@@ -189,8 +189,8 @@ Binv1Level_AddChunk(
     Binv1Level_WriteInt16(level, object->viewbox.size.x);
     Binv1Level_WriteInt16(level, object->viewbox.size.y);
 
-    Binv1Level_WriteInt8(level, object->solid);
-    Binv1Level_WriteInt8(level, object->deadly);
+    Binv1Level_WriteInt8(level, object->solid ? 1 : 0);
+    Binv1Level_WriteInt8(level, object->deadly ? 1 : 0);
 
     Binv1Level_WriteValue(level, object->properties, sizeof(object->properties));
   }

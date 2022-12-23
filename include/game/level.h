@@ -9,7 +9,6 @@
 
 typedef enum LevelId {
   LEVEL_TEST_COURSE,
-  LEVEL_BINV1_COURSE,
 } LevelId;
 
 typedef struct Level {

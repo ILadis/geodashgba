@@ -30,7 +30,7 @@ Scene_DoEnter() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
-  Level *level = Level_GetById(LEVEL_BINV1_COURSE);
+  Level *level = Level_GetById(LEVEL_TEST_COURSE);
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
 
