@@ -1,12 +1,12 @@
 
-#include <game/loader.h>
+#include <game/level.h>
 #include "../test.h"
 
 test(GetChunk_ShouldCreatBoxesAtExpectedPositions) {
   // arrange
   const int offset = 432;
 
-  Loader loader = Loader_ForLayout(
+  Level level = Level_FromLayout(
     "x     x",
     "   x   ",
     "x_____x",
@@ -16,7 +16,7 @@ test(GetChunk_ShouldCreatBoxesAtExpectedPositions) {
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Loader_GetChunk(&loader, &chunk);
+  Level_GetChunk(&level, &chunk);
 
   // assert
   assert(chunk.count == 5);
@@ -36,7 +36,7 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
   // arrange
   const int offset = 320;
 
-  Loader loader = Loader_ForLayout(
+  Level level = Level_FromLayout(
     "               ",
     "       ^^^^    ",
     "^      xxxx    ",
@@ -53,7 +53,7 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Loader_GetChunk(&loader, &chunk);
+  Level_GetChunk(&level, &chunk);
 
   // assert
   assert(chunk.count == 9);

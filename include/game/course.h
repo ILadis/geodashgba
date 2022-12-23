@@ -8,12 +8,12 @@
 
 #include <game/chunk.h>
 #include <game/object.h>
-#include <game/loader.h>
+#include <game/level.h>
 #include <game/camera.h>
 
 typedef struct Course {
   Vector offset, spawn;
-  Loader *loader;
+  Level *level;
   Chunk chunks[2];
   Chunk *current, *next;
   int floor, index;
@@ -26,7 +26,7 @@ Course_GetInstance();
 void
 Course_ResetAndLoad(
     Course *course,
-    Loader *loader);
+    Level *level);
 
 static inline const Vector*
 Course_GetSpawn(Course *course) {

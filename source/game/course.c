@@ -18,7 +18,7 @@ Course_LoadNextChunk(Course *course) {
   course->next = current;
 
   Chunk_AssignIndex(current, index);
-  Loader_GetChunk(course->loader, current);
+  Level_GetChunk(course->level, current);
 
   return current;
 }
@@ -26,7 +26,7 @@ Course_LoadNextChunk(Course *course) {
 void
 Course_ResetAndLoad(
     Course *course,
-    Loader *loader)
+    Level *level)
 {
   course->redraw = true;
   course->index = 0;
@@ -38,8 +38,8 @@ Course_ResetAndLoad(
   course->current = current;
   course->next = next;
 
-  if (loader != NULL) {
-    course->loader = loader;
+  if (level != NULL) {
+    course->level = level;
   }
 
   // load two chunks

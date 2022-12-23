@@ -5,8 +5,6 @@
 #include <vector.h>
 #include <hit.h>
 
-#include <game/camera.h>
-
 typedef struct Object {
   Bounds hitbox, viewbox;
   const struct Prototype *proto;
@@ -15,6 +13,7 @@ typedef struct Object {
 } Object;
 
 typedef struct Prototype {
+  const unsigned char id;
   bool (*hit)(Object *object, Shape *shape);
   void (*move)(Object *object, Vector *position);
   void (*draw)(Object *object, GBA_TileMapRef *target);

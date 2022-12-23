@@ -9,7 +9,7 @@
 #include <game/cube.h>
 #include <game/course.h>
 #include <game/spawner.h>
-#include <game/loader.h>
+#include <game/level.h>
 #include <game/particle.h>
 
 static void
@@ -30,9 +30,9 @@ Scene_DoEnter() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
-  Loader *loader = Loader_ForTestCourse();
+  Level *level = Level_GetById(LEVEL_TEST_COURSE);
   Course *course = Course_GetInstance();
-  Course_ResetAndLoad(course, loader);
+  Course_ResetAndLoad(course, level);
 
   Cube *cube = Cube_GetInstance();
 

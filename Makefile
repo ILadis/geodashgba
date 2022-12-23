@@ -5,10 +5,9 @@ endif
 
 PATH     := $(DEVKITPRO)/tools/bin:$(DEVKITPRO)/devkitARM/bin:$(PATH)
 
-# source and target files
-CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/game/object/*.c) $(wildcard source/scenes/*.c)
+# source files
+CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/game/object/*.c) $(wildcard source/game/level/*.c) $(wildcard source/scenes/*.c)
 CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c)
-TFILES   := $(filter-out source/main.c, $(CFILES))
 
 # toolchain and flags
 EMU      := visualboyadvance-m
@@ -42,8 +41,10 @@ build: main.gba main.elf
 clean:
 	@rm -rf *.gba *.elf
 
+tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics
@@ -52,10 +53,11 @@ assets:
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/background.tmx assets/background.c || true
 
+tests: CFILES := $(filter-out source/main.c, $(CFILES))
 tests: $(TESTS)
 
 %.test:
-	@gcc $*.c $(TFILES) -o test.elf -g -O0 -I. -Iinclude -DNOGBA
+	@gcc $*.c $(CFILES) -o test.elf -g -O0 -I. -Iinclude -DNOGBA
 	@$(RUNNER) ./test.elf
 	@rm test.elf
 
