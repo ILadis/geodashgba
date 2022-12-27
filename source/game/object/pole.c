@@ -35,12 +35,12 @@ static const GBA_TileMapRef pole = {
   .width = 2, .height = 5,
   .tiles = (GBA_Tile[]) {
     // pole
-    { .tileId = 45, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 46, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 53, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 54, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 61, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 62, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 23, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 30, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 31, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 38, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 39, .vFlip = 0, .hFlip = 0 },
     // block
     { .tileId = 18, .vFlip = 0, .hFlip = 0 },
     { .tileId = 18, .vFlip = 0, .hFlip = 1 },

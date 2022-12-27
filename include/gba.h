@@ -190,6 +190,12 @@ typedef struct GBA_Color {
   };
 } GBA_Color;
 
+#define GBA_Color_From(rgb) ((GBA_Color) { \
+  .red   = round(((rgb >> 16) & 0xFF) * (31/255.0)), \
+  .green = round(((rgb >>  8) & 0xFF) * (31/255.0)), \
+  .blue  = round(((rgb >>  0) & 0xFF) * (31/255.0)), \
+})
+
 typedef struct GBA_Sprite {
   union {
     u16 attr0;
@@ -244,15 +250,24 @@ typedef union GBA_Tile {
 
 /* GBA_TileSet4/8 and GBA_TileMap overlap in memory:
  *
- * | Memory Adress | 0600:0000 | 0600:4000 | 0600:8000 | 0600:C000 |
- * | Tileset Index |     0     |     1     |     2     |     3     |
- * | Tilemap Index |   0 … 7   |   8 … 15  |  16 … 23  |  24 … 31  |
+ * | Memory Address | 0600:0000 | 0600:4000 | 0600:8000 | 0600:C000 |
+ * | Tileset Index  |     0     |     1     |     2     |     3     |
+ * | Tilemap Index  |   0 … 7   |   8 … 15  |  16 … 23  |  24 … 31  |
+ * 
+ * GBA_Tiles for GBA_Sprites follow in memory:
+ *
+ * | Memory Address | 0601:0000 | 0601:4000 |
+ * | Tile Index     |    0…511  |  512…1023 |
  */
 
 typedef GBA_Tile GBA_TileMap[1024];
 
-typedef struct { u32 data[8];  } GBA_Bitmap4;
-typedef struct { u32 data[16]; } GBA_Bitmap8;
+/* GBA_Bitmap8: the pixel value is the palette-index for that pixel.
+ * GBA_Bitmap4: the pixel value is the lower nybble of the palette-index (the upper nybble is stored in GBA_Tile/GBA_Sprite).
+ */
+
+typedef struct { u32 data[8];  } GBA_Bitmap4; // 4bpp (32 bytes)
+typedef struct { u32 data[16]; } GBA_Bitmap8; // 8bpp (64 bytes)
 
 typedef GBA_Bitmap4 GBA_TileSet4[512];
 typedef GBA_Bitmap8 GBA_TileSet8[256];
@@ -427,6 +442,11 @@ GBA_Sprite_SetAffine(
 
 GBA_Affine*
 GBA_Sprite_GetAffine(GBA_Sprite *sprite);
+
+int
+GBA_Bitmap8_GetPixel(
+    GBA_Bitmap8 *bitmap,
+    int px, int py);
 
 void
 GBA_Bitmap_FillPixel(

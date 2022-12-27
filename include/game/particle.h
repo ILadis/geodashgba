@@ -25,7 +25,7 @@ Particle_DrawAll();
 
 Particle*
 Particle_NewInstance(
-    Vector *position,
+    const Vector *position,
     int life, int delay);
 
 #endif

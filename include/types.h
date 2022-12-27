@@ -19,5 +19,6 @@ typedef unsigned int   u32;
 #define packed __attribute__((__packed__))
 
 #define length(array) (sizeof(array) / sizeof(array[0]))
+#define round(value)  (value + 0.5 - (value < 0))
 
 #endif

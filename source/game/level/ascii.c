@@ -10,7 +10,7 @@ AsciiLevel_GetSymbolAt(
   const Vector *size = &level->size;
   const int limit = level->limit;
 
-  if (x >= size->x || y >= size->y || x >= limit) {
+  if (x >= size->x || y >= size->y || (limit && x >= limit)) {
     return false;
   }
 
@@ -180,7 +180,30 @@ AsciiLevel_AddSpike(
   }
 }
 
-void
+int
+AsciiLevel_GetChunkCount(Level *level) {
+  int count = 0;
+  Chunk chunk = {0};
+
+  level->limit = 0;
+
+  do {
+    Chunk_AssignIndex(&chunk, count);
+
+    const Bounds *bounds = Chunk_GetBounds(&chunk);
+    Vector lower = Bounds_Lower(bounds);
+    Vector_Rshift(&lower, 4);
+
+    char symbol;
+    if (!AsciiLevel_GetSymbolAt(level, lower.x, lower.y, &symbol)) {
+      return count;
+    }
+
+    count++;
+  } while (true);
+}
+
+bool
 AsciiLevel_GetChunk(
     Level *level,
     Chunk *chunk)
@@ -197,9 +220,13 @@ AsciiLevel_GetChunk(
   level->limit = upper.x;
   level->chunk = chunk;
 
+  char symbol;
+  if (!AsciiLevel_GetSymbolAt(level, lower.x, lower.y, &symbol)) {
+    return false;
+  }
+
   for (int x = lower.x; x < upper.x; x++) {
     for (int y = lower.y; y < upper.y; y++) {
-      char symbol;
       if (!AsciiLevel_GetSymbolAt(level, x, y, &symbol)) {
         break; // continue with next x
       }
@@ -226,12 +253,15 @@ AsciiLevel_GetChunk(
       }
     }
   }
+
+  return true;
 }
 
-void
+bool
 AsciiLevel_AddChunk(
     Level *level,
     Chunk *chunk)
 {
   // currently unsupported
+  return false;
 }

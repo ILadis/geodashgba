@@ -18,7 +18,7 @@ Cube_ApplySpawn(
     cube->attempts++;
     cube->timer = 90;
 
-    Vector *position = Cube_GetPosition(cube);
+    const Vector *position = Cube_GetPosition(cube);
     int count;
 
     count = 10;

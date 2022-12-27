@@ -202,6 +202,29 @@ test(TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex) {
   assert(layer.tiles[3072 + 32 * 18 + 18].value == tile.value);
 }
 
+test(Bitmap8_GetPixel_ShouldReturnExpectedPixels) {
+  // arrange
+  GBA_Color palette[] = {
+    GBA_Color_From(0x000000),
+    GBA_Color_From(0xFFFFFF),
+    GBA_Color_From(0x100068),
+    GBA_Color_From(0x78f800),
+  };
+
+  GBA_Bitmap8 bitmap = {
+    0x00000000,0x00000000,0x01010100,0x01010101,0x02020101,0x02020202,0x02020201,0x02020202,
+    0x02030201,0x02020202,0x02020201,0x02020202,0x02020101,0x02020202,0x01010100,0x01010101,
+  };
+
+  // act
+  int pixel1 = GBA_Bitmap8_GetPixel(&bitmap, 2, 4);
+  int pixel2 = GBA_Bitmap8_GetPixel(&bitmap, 7, 1);
+
+  // assert
+  assert(palette[pixel1].value == palette[3].value);
+  assert(palette[pixel2].value == palette[1].value);
+}
+
 suite(
   Sprite_Allocate_ShouldReturnNewSpriteInstanceForEachCall,
   Sprite_Release_ShouldMakeReleasedSpriteAvailableAgain,
@@ -212,4 +235,5 @@ suite(
   Affine_Release_ShouldMakeReleasedAffineAvailableAgain,
   Input_IsHit_ShoudReturnTrueWhenQueriedKeyWasHitInLastKeypadPoll,
   Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll,
-  TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex);
+  TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex,
+  Bitmap8_GetPixel_ShouldReturnExpectedPixels);

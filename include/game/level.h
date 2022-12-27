@@ -46,12 +46,15 @@ typedef struct Level {
 Level*
 Level_GetById(LevelId id);
 
-void
+int
+Level_GetChunkCount(Level *level);
+
+bool
 Level_GetChunk(
     Level *level,
     Chunk *chunk);
 
-void
+bool
 Level_AddChunk(
     Level *level,
     Chunk *chunk);

@@ -43,7 +43,7 @@ Camera_MoveBy(
 
 static inline Vector
 Camera_GetTargetDelta(Camera *camera) {
-  Vector *target = camera->target;
+  const Vector *target = camera->target;
   Bounds *frame = &camera->frame;
 
   int dx = target->x - frame->center.x;
@@ -81,7 +81,7 @@ Camera_SetDelta(
 
 void
 Camera_Update(Camera *camera) {
-  Vector *target = camera->target;
+  const Vector *target = camera->target;
 
   if (target != NULL) {
     Vector delta = Camera_GetTargetDelta(camera);

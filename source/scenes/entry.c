@@ -9,6 +9,7 @@
 #include <game/cube.h>
 #include <game/course.h>
 #include <game/level.h>
+#include <game/progress.h>
 #include <game/particle.h>
 
 static void
@@ -33,9 +34,12 @@ Scene_DoEnter() {
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
 
+  Progress *progress = Progress_GetInstance();
+  Progress_SetLevel(progress, level);
+
   Cube *cube = Cube_GetInstance();
 
-  Vector *position = Cube_GetPosition(cube);
+  const Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
   Camera_Update(camera);
 
@@ -55,17 +59,10 @@ Scene_DoPlay() {
   Cube *cube = Cube_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
+  Progress *progress = Progress_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
     Cube_Jump(cube, 1500);
-  }
-
-  if (GBA_Input_IsPressed(input, GBA_KEY_B)) {
-    Vector *position = Cube_GetPosition(cube);
-    Particle_NewInstance(position, 16, 0);
-    Particle_NewInstance(position, 16, 0);
-    Particle_NewInstance(position, 16, 0);
-    Particle_NewInstance(position, 16, 0);
   }
 
   if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
@@ -84,6 +81,7 @@ Scene_DoPlay() {
 
   Cube_Update(cube, course);
   Camera_Update(camera);
+  Progress_Update(progress, cube);
   Particle_UpdateAll();
 
   GBA_VSync();
@@ -96,6 +94,7 @@ Scene_DoPlay() {
 
   Cube_Draw(cube, camera);
   Course_Draw(course, camera);
+  Progress_Draw(progress, camera);
   Particle_DrawAll();
 
 /*

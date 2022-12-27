@@ -31,7 +31,7 @@ typedef struct Cube {
 Cube*
 Cube_GetInstance();
 
-static inline Vector*
+static inline const Vector*
 Cube_GetPosition(Cube *cube) {
   return &cube->hitbox.center;
 }

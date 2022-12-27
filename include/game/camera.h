@@ -9,7 +9,7 @@
 typedef struct Camera {
   Vector position, delta;
   Bounds viewport, frame;
-  Vector *target;
+  const Vector *target;
 } Camera;
 
 Camera*
@@ -54,7 +54,7 @@ Camera_RelativeTo(
 static inline void
 Camera_FollowTarget(
     Camera *camera,
-    Vector *position)
+    const Vector *position)
 {
   camera->target = position;
 }

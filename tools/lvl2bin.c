@@ -15,11 +15,10 @@ int main(int argc, char **argv) {
     Chunk chunk = {0};
     Chunk_AssignIndex(&chunk, index++);
 
-    // TODO should return false when no more chunks are available
-    Level_GetChunk(in, &chunk);
-    if (chunk.count == 0) break;
-
-    Level_AddChunk(&out, &chunk);
+    if (Level_GetChunk(in, &chunk)) {
+      Level_AddChunk(&out, &chunk);
+    }
+    else break;
   }
 
   int length = out.cursor.x;

@@ -11,9 +11,9 @@ static Level testCourse = Level_FromLayout(
   "                                                                                                           -      xxxx  xxxxxxxxxxxxxxx               xxxxx                                 ",
   "                                                        :                                              -                xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx ^              ^                ",
   "                                                       <x                                          -                    xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxx  ----x        ^       ",
-  "                                    i                  <x                                      -                        xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx                   ------x       ",
-  "                               i    x                                            ^         -                            xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx                           ----- ",
-  "                          i    x    x                             ^        xxxxxxxxxxxxx                                xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx                                 ",
+  "                                    i                  <x                                      -                                        xxxxxxxxxxxxxxxxxxx                   ------x       ",
+  "                               i    x                                            ^         -                                                                                          ----- ",
+  "                          i    x    x                             ^        xxxxxxxxxxxxx                                xxxxxxxxxxxxxxx                                                     ",
   "_________^______^^_______^x____x____x_________^^___xxxxxxxx__xxxxxxxxxxx___xxxxxxxxxxxxx________________________________xxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxx_________________________________",
 );
 #else

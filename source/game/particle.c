@@ -26,7 +26,7 @@ Particle_DrawAll() {
 
 Particle*
 Particle_NewInstance(
-    Vector *position,
+    const Vector *position,
     int life, int delay)
 {
   Particle *particle = Prefab_NewInstance(prefabs);

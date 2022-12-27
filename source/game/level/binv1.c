@@ -15,10 +15,11 @@ Binv1Level_AdvanceCursor(
     int length)
 {
   const int offset = level->cursor.x;
-  const int limit = level->size.x;
+  const int size = level->size.x;
+  const int limit = level->limit;
 
   const int cursor = offset + length;
-  if (cursor > limit) {
+  if (cursor >= size || (limit && cursor >= limit)) {
     return false;
   }
 
@@ -124,12 +125,30 @@ Binv1Level_ResetCursor(
   return true;
 }
 
-void
+int
+Binv1Level_GetChunkCount(Level *level) {
+  int count = 0;
+  Chunk chunk = {0};
+
+  do {
+    Chunk_AssignIndex(&chunk, count);
+
+    if (!Binv1Level_ResetCursor(level, &chunk)) {
+      return count;
+    }
+
+    count++;
+  } while (true);
+}
+
+bool
 Binv1Level_GetChunk(
     Level *level,
     Chunk *chunk)
 {
-  Binv1Level_ResetCursor(level, chunk);
+  if (!Binv1Level_ResetCursor(level, chunk)) {
+    return false;
+  }
 
   int count = 0;
   Binv1Level_ReadInt8(level, &count);
@@ -164,14 +183,18 @@ Binv1Level_GetChunk(
       Chunk_AddObject(chunk, object);
     }
   }
+
+  return true;
 }
 
-void
+bool
 Binv1Level_AddChunk(
     Level *level,
     Chunk *chunk)
 {
-  Binv1Level_ResetCursor(level, chunk);
+  if (!Binv1Level_ResetCursor(level, chunk)) {
+    return false;
+  }
   Binv1Level_WriteInt8(level, chunk->count);
 
   for (int i = 0; i < chunk->count; i++) {
@@ -194,4 +217,6 @@ Binv1Level_AddChunk(
 
     Binv1Level_WriteValue(level, object->properties, sizeof(object->properties));
   }
+
+  return true;
 }

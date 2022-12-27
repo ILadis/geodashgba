@@ -415,7 +415,24 @@ GBA_Sprite_GetAffine(GBA_Sprite *sprite) {
   return NULL;
 }
 
-inline void
+int
+GBA_Bitmap8_GetPixel(
+    GBA_Bitmap8 *bitmap,
+    int px, int py)
+{
+  px &= 0b111; // bitmaps are 8x8 pixels
+  py &= 0b111;
+
+
+  int offset = py * 8 + px;
+
+  int index =  offset / 4; // a data point stores 4 pixel
+  int shift = (offset % 4) * 8;
+
+  return (bitmap->data[index] >> shift) & 0b11111111; // 8bpp
+}
+
+void
 GBA_Bitmap_FillPixel(
     int px, int py,
     GBA_Color color)
