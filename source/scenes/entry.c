@@ -8,7 +8,6 @@
 #include <game/camera.h>
 #include <game/cube.h>
 #include <game/course.h>
-#include <game/spawner.h>
 #include <game/level.h>
 #include <game/particle.h>
 
@@ -36,10 +35,6 @@ Scene_DoEnter() {
 
   Cube *cube = Cube_GetInstance();
 
-  Spawner *spawner = Spawner_GetInstance();
-  const Vector *spawn = Course_GetSpawn(course);
-  Spawner_SetTarget(spawner, cube, spawn);
-
   Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
   Camera_Update(camera);
@@ -60,7 +55,6 @@ Scene_DoPlay() {
   Cube *cube = Cube_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
-  Spawner *spawner = Spawner_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
     Cube_Jump(cube, 1500);
@@ -88,7 +82,6 @@ Scene_DoPlay() {
     }
   }
 
-  Spawner_Update(spawner);
   Cube_Update(cube, course);
   Camera_Update(camera);
   Particle_UpdateAll();
@@ -101,7 +94,6 @@ Scene_DoPlay() {
     while (debug);
   }
 
-  Spawner_Draw(spawner, camera);
   Cube_Draw(cube, camera);
   Course_Draw(course, camera);
   Particle_DrawAll();

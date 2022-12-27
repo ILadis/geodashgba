@@ -6,7 +6,8 @@ endif
 PATH     := $(DEVKITPRO)/tools/bin:$(DEVKITPRO)/devkitARM/bin:$(PATH)
 
 # source files
-CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/game/level/*.c) $(wildcard source/game/object/*.c) $(wildcard source/scenes/*.c)
+CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/scenes/*.c)
+CFILES   += $(wildcard source/game/cube/*.c) $(wildcard source/game/level/*.c) $(wildcard source/game/object/*.c)
 CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c) $(wildcard assets/levels/*.c)
 
 # toolchain and flags

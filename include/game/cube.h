@@ -22,6 +22,7 @@ typedef struct Cube {
   Bounds hitbox;
   struct { State current, previous; } state;
   struct { int angle, velocity; } rotation;
+  int attempts, timer;
   Vector vertices[4];
   Shape shape;
   GBA_Sprite *sprite;
