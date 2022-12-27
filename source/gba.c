@@ -468,16 +468,9 @@ GBA_Bitmap_DrawLine(
     int px2, int py2,
     GBA_Color color)
 {
-  GBA_System *system = GBA_GetSystem();
-
-  int dx = px2 - px1;
-  int dy = py2 - py1;
-
-  int xstep = 1;
-  int ystep = GBA_SCREEN_WIDTH;
-
-  int offset = py1 * ystep + px1;
-  GBA_Color *pixels = &system->pixels[offset];
+  int px = px1, py = py1;
+  int dx = px2 - px1, dy = py2 - py1;
+  int xstep = 1, ystep = 1;
 
   if (dx < 0) {
     dx = -dx;
@@ -496,15 +489,15 @@ GBA_Bitmap_DrawLine(
     int error = -dx;
 
     do {
-      pixels->value = color.value;
+      GBA_Bitmap_FillPixel(px, py, color);
 
       error += yerror;
       if (error > 0) {
-        pixels += ystep;
+        py += ystep;
         error -= xerror;
       }
 
-      pixels += xstep;
+      px += xstep;
     } while (dx-- > 0);
   }
 
@@ -512,15 +505,15 @@ GBA_Bitmap_DrawLine(
     int error = -dy;
 
     do {
-      pixels->value = color.value;
+      GBA_Bitmap_FillPixel(px, py, color);
 
       error += xerror;
       if (error > 0) {
-        pixels += xstep;
+        px += xstep;
         error -= yerror;
       }
 
-      pixels += ystep;
+      py += ystep;
     } while (dy-- > 0);
   }
 }

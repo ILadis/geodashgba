@@ -89,7 +89,7 @@ Scene_DoPlay() {
   GBA_VSync();
 
   if (debug && Cube_InState(cube, STATE_DESTROYED)) {
-    void Debug_DrawHitboxes();
+    extern void Debug_DrawHitboxes();
     Debug_DrawHitboxes();
     while (debug);
   }

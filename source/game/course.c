@@ -8,19 +8,18 @@ Course_GetInstance() {
 }
 
 static inline Chunk*
-Course_LoadNextChunk(Course *course) {
-  int index = course->index++;
+Course_LoadChunk(
+    Course *course,
+    int index)
+{
+  Chunk *chunk = Course_GetChunkAt(course, index);
 
-  Chunk *current = course->current;
-  Chunk *next = course->next;
+  if (index == 0 || chunk->index != index) {
+    Chunk_AssignIndex(chunk, index);
+    Level_GetChunk(course->level, chunk);
+  }
 
-  course->current = next;
-  course->next = current;
-
-  Chunk_AssignIndex(current, index);
-  Level_GetChunk(course->level, current);
-
-  return current;
+  return chunk;
 }
 
 void
@@ -32,19 +31,13 @@ Course_ResetAndLoad(
   course->index = 0;
   course->offset = Vector_Of(0, 0);
 
-  Chunk *current = &course->chunks[0];
-  Chunk *next = &course->chunks[1];
-
-  course->current = current;
-  course->next = next;
-
   if (level != NULL) {
     course->level = level;
   }
 
   // load two chunks
-  Course_LoadNextChunk(course);
-  Course_LoadNextChunk(course);
+  Chunk *current = Course_LoadChunk(course, 0);
+  Course_LoadChunk(course, 1);
 
   const Bounds *bounds = Chunk_GetBounds(current);
   Vector floor = Bounds_Upper(bounds);
@@ -79,8 +72,14 @@ Course_CheckHits(
     Unit *unit,
     HitCallback callback)
 {
-  Chunk_CheckHits(course->current, unit, callback);
-  Chunk_CheckHits(course->next, unit, callback);
+  int index = course->index;
+
+  Chunk *current = Course_GetChunkAt(course, index);
+  Chunk_CheckHits(current, unit, callback);
+
+  Chunk *next = Course_GetChunkAt(course, index + 1);
+  Chunk_CheckHits(next, unit, callback);
+
   Course_CheckFloorHit(course, unit, callback);
 }
 
@@ -147,8 +146,7 @@ Course_FloorTile(
 static inline void
 Course_DrawChunk(
     Course *course,
-    Chunk *chunk,
-    Camera *camera)
+    Chunk *chunk)
 {
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 1);
@@ -175,16 +173,15 @@ Course_DrawChunk(
 }
 
 static inline void
-Course_DrawChunks(
-    Course *course,
-    Camera *camera)
-{
-  Chunk *current = &course->chunks[0];
-  Chunk *next = &course->chunks[1];
+Course_DrawChunks(Course *course) {
+  int index = course->index;
 
   if (course->redraw) {
-    Course_DrawChunk(course, current, camera);
-    Course_DrawChunk(course, next, camera);
+    Chunk *current = Course_GetChunkAt(course, index);
+    Course_DrawChunk(course, current);
+
+    Chunk *next = Course_GetChunkAt(course, index + 1);
+    Course_DrawChunk(course, next);
   }
 }
 
@@ -193,16 +190,23 @@ Course_Draw(
     Course *course,
     Camera *camera)
 {
-  Chunk *chunk = course->current;
-  const Bounds *bounds = Chunk_GetBounds(chunk);
+  int index = course->index;
 
-  if (!Camera_InViewport(camera, bounds)) {
-    Chunk *next = Course_LoadNextChunk(course);
-    Course_DrawChunk(course, next, camera);
+  Chunk *current = Course_GetChunkAt(course, index);
+  if (!Chunk_InViewport(current, camera)) {
+    Chunk *pending = Course_GetChunkAt(course, index + 2);
+    Course_DrawChunk(course, pending);
+
+    course->index = ++index;
+  }
+
+  Chunk *next = Course_GetChunkAt(course, index + 1);
+  if (Chunk_InViewport(next, camera)) {
+    Course_LoadChunk(course, index + 2);
   }
 
   Course_DrawBackground(course, camera);
-  Course_DrawChunks(course, camera);
+  Course_DrawChunks(course);
 
   course->redraw = false;
 }

@@ -6,6 +6,7 @@
 #include <grid.h>
 
 #include <game/object.h>
+#include <game/camera.h>
 
 typedef void (*HitCallback)(Unit *unit, Object *object, Hit *hit);
 
@@ -31,6 +32,15 @@ HitCallback_Invoke(
 static inline const Bounds*
 Chunk_GetBounds(Chunk *chunk) {
   return &chunk->grid.root.bounds;
+}
+
+static inline bool
+Chunk_InViewport(
+    Chunk *chunk,
+    Camera *camera)
+{
+  const Bounds *bounds = Chunk_GetBounds(chunk);
+  return Camera_InViewport(camera, bounds);
 }
 
 void

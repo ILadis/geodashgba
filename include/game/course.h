@@ -14,8 +14,7 @@
 typedef struct Course {
   Vector offset, spawn;
   Level *level;
-  Chunk chunks[2];
-  Chunk *current, *next;
+  Chunk chunks[4];
   int floor, index;
   bool redraw;
 } Course;
@@ -31,6 +30,15 @@ Course_ResetAndLoad(
 static inline const Vector*
 Course_GetSpawn(Course *course) {
   return &course->spawn;
+}
+
+static inline Chunk*
+Course_GetChunkAt(
+    Course *course,
+    int index)
+{
+  index %= length(course->chunks);
+  return &course->chunks[index];
 }
 
 void

@@ -48,7 +48,20 @@ Debug_DrawHitboxes() {
 
   Iterator iterator;
   Bounds *viewport = Camera_GetViewport(camera);
-  Grid_GetUnits(&course->current->grid, viewport, &iterator);
+
+  Chunk *current = Course_GetChunkAt(course, course->index);
+  Grid_GetUnits(&current->grid, viewport, &iterator);
+
+  while (Iterator_HasNext(&iterator)) {
+    Unit *unit = Iterator_GetNext(&iterator);
+    Object *object = unit->object;
+
+    Bounds *hitbox = &object->hitbox;
+    Debug_DrawHitbox(camera, hitbox, green);
+  }
+
+  Chunk *next = Course_GetChunkAt(course, course->index + 1);
+  Grid_GetUnits(&next->grid, viewport, &iterator);
 
   while (Iterator_HasNext(&iterator)) {
     Unit *unit = Iterator_GetNext(&iterator);
