@@ -1,8 +1,6 @@
 
 #include <gba.h>
 
-extern const signed short sinlut[256];
-
 GBA_System*
 GBA_GetSystem() {
 #ifdef NOGBA
@@ -360,6 +358,11 @@ GBA_Sprite_SetRotation(
     GBA_Sprite *sprite,
     int alpha)
 {
+#ifdef NOGBA
+  const signed short sinlut[256] = {0};
+#else
+  extern const signed short sinlut[256];
+#endif
   GBA_Affine *affine = GBA_Sprite_GetAffine(sprite);
 
   if (affine != NULL) {

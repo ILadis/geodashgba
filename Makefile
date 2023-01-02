@@ -42,18 +42,21 @@ build: main.gba main.elf
 clean:
 	@rm -rf *.gba *.elf
 
+purge: clean
+	@rm -rf assets/ tools/sinlut tools/lvl2bin
+
 tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
 
 assets:
-	@mkdir -p assets/graphics
-	@tools/sinlut > assets/sinlut.c
-	@tools/lvl2bin > assets/levels/test.c
+	@mkdir -p assets/graphics assets/levels
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/background.tmx assets/background.c || true
+	@tools/sinlut > assets/sinlut.c
+	@tools/lvl2bin > assets/levels/test.c
 
 tests: CFILES := $(filter-out source/main.c, $(CFILES))
 tests: $(TESTS)

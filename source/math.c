@@ -1,8 +1,6 @@
 
 #include <math.h>
 
-extern const signed short sinlut[256];
-
 int
 Math_abs(int num) {
   return num < 0 ? -num : num;
@@ -31,22 +29,22 @@ Math_clamp(int num, int min, int max) {
 }
 
 int
-Math_sin(int alpha) {
-  return sinlut[alpha & 0xFF];
-}
-
-int
 Math_cos(int alpha) {
-  return sinlut[(alpha + 64) & 0xFF];
+  return Math_sin(alpha + 64);
 }
 
 int
 Math_rand() {
   static int seed = 0;
-	return seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+  return seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
 }
 
 #ifdef NOGBA
+
+int
+Math_sin(int alpha) {
+  return 0;
+}
 
 int
 Math_div(int num, int denom) {
@@ -59,6 +57,12 @@ Math_atan2(short x, short y) {
 }
 
 #else
+
+int
+Math_sin(int alpha) {
+  extern const signed short sinlut[256];
+  return sinlut[alpha & 0xFF];
+}
 
 int
 Math_div(int num, int denom) {
