@@ -79,5 +79,7 @@ Chunk_CheckHits(
     }
   }
 
+  // TODO combined hit not necessary anymore (flag if something was hit is sufficient)
+
   return hit;
 }

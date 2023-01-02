@@ -22,7 +22,7 @@ CFLAGS   := $(ARCH) -O2 -Wall -fno-strict-aliasing -nostdinc -I. -Iinclude
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases
-TESTS    := $(addsuffix .test, $(basename $(wildcard test/*.c) $(wildcard test/game/*.c)))
+TESTS    := $(basename $(wildcard test/*.c) $(wildcard test/game/*.c))
 RUNNER   := exec
 
 # debug settings
@@ -58,11 +58,11 @@ assets:
 	@tools/sinlut > assets/sinlut.c
 	@tools/lvl2bin > assets/levels/test.c
 
-tests: CFILES := $(filter-out source/main.c, $(CFILES))
 tests: $(TESTS)
 
-%.test:
-	@gcc $*.c $(CFILES) -o test.elf -g -O0 -I. -Iinclude -DNOGBA
+test/%: CFILES := $(filter-out source/main.c, $(CFILES))
+test/%:
+	@gcc $@.c $(CFILES) -o test.elf -g -O0 -I. -Iinclude -DNOGBA
 	@$(RUNNER) ./test.elf
 	@rm test.elf
 

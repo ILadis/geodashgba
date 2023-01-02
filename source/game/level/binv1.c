@@ -19,7 +19,7 @@ Binv1Level_AdvanceCursor(
   const int limit = level->limit;
 
   const int cursor = offset + length;
-  if (cursor >= size || (limit && cursor >= limit)) {
+  if (cursor > size || (limit && cursor > limit)) {
     return false;
   }
 

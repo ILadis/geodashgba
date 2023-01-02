@@ -17,7 +17,7 @@ Cube_SetPosition(
   static const Dynamics dynamics = {
     .friction = 60,
     .gravity  = { 0, 90 },
-    .limits   = { 600, 1300 },
+    .limits   = { 600, 3000 },
   };
 
   // body is using 8w fixed-point integer

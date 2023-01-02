@@ -35,6 +35,11 @@ Course_ResetAndLoad(
     course->level = level;
   }
 
+  Chunk empty = {0};
+  for (int i = 0; i < length(course->chunks); i++) {
+    course->chunks[i] = empty;
+  }
+
   // load two chunks
   Chunk *current = Course_LoadChunk(course, 0);
   Course_LoadChunk(course, 1);
@@ -72,6 +77,9 @@ Course_CheckHits(
     Unit *unit,
     HitCallback callback)
 {
+  // first check to allow objects to affect cube movement
+  Course_CheckFloorHit(course, unit, callback);
+
   int index = course->index;
 
   Chunk *current = Course_GetChunkAt(course, index);
@@ -79,8 +87,6 @@ Course_CheckHits(
 
   Chunk *next = Course_GetChunkAt(course, index + 1);
   Chunk_CheckHits(next, unit, callback);
-
-  Course_CheckFloorHit(course, unit, callback);
 }
 
 static inline void

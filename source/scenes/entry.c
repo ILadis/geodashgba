@@ -62,7 +62,7 @@ Scene_DoPlay() {
   Progress *progress = Progress_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
-    Cube_Jump(cube, 1500);
+    Cube_Jump(cube, 1400);
   }
 
   if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {

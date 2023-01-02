@@ -57,6 +57,11 @@ Cube_Jump(
     int speed);
 
 void
+Cube_Launch(
+    Cube *cube,
+    int speed);
+
+void
 Cube_Accelerate(
     Cube *cube,
     Direction direction,

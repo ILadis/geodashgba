@@ -14,6 +14,16 @@ Cube_Jump(
 }
 
 void
+Cube_Launch(
+    Cube *cube,
+    int speed)
+{
+  const Dynamics *dynamics = cube->body.dynamics;
+  int sy = Math_signum(dynamics->gravity.y);
+  cube->body.velocity.y = -1 * sy * speed;
+}
+
+void
 Cube_Accelerate(
     Cube *cube,
     Direction direction,

@@ -118,8 +118,6 @@ Object_MoveSpike(
     props->vertices[i].x += dx;
     props->vertices[i].y += dy;
   }
-
-  dx++;
 }
 
 void

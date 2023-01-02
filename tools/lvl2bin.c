@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
   Level *in = Level_GetById(LEVEL_TEST_COURSE);
   Level out = Level_FromBuffer(buffer);
 
-  FILE *fp = stdout;
+  FILE *fp = stdout, *log = stderr;
 
   int index = 0;
   while (true) {
@@ -16,9 +16,15 @@ int main(int argc, char **argv) {
     Chunk_AssignIndex(&chunk, index++);
 
     if (Level_GetChunk(in, &chunk)) {
-      Level_AddChunk(&out, &chunk);
+      if (!Level_AddChunk(&out, &chunk)) {
+        fprintf(log, "Could not add chunk to level, size exceeded?\n");
+        break;
+      }
     }
-    else break;
+    else {
+      fprintf(log, "Wrote %ld chunk(s)\n", index);
+      break;
+    }
   }
 
   int length = out.cursor.x;

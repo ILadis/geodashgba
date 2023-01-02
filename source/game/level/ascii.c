@@ -170,6 +170,17 @@ AsciiLevel_AddDisk(Level *level) {
 }
 
 static void
+AsciiLevel_AddPad(Level *level) {
+  Object object = {0};
+  Vector offset = Vector_Of(0, +1);
+
+  if (Object_CreatePad(&object)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddSpike(
     Level *level,
     Direction direction)
@@ -240,6 +251,9 @@ AsciiLevel_GetChunk(
         break;
       case '-':
         AsciiLevel_AddDisk(level);
+        break;
+      case 'T':
+        AsciiLevel_AddPad(level);
         break;
       case '^':
         AsciiLevel_AddSpike(level, DIRECTION_UP);

@@ -12,6 +12,7 @@ typedef struct Object {
     TYPE_BOX,
     TYPE_BOX_WITH_POLE,
     TYPE_SPIKE,
+    TYPE_PAD,
     TYPE_COUNT,
   } type;
   Bounds hitbox, viewbox;
@@ -26,6 +27,9 @@ Object_CreateFloor(Object *object);
 
 bool
 Object_CreateDisk(Object *object);
+
+bool
+Object_CreatePad(Object *object);
 
 bool
 Object_CreateBox(
