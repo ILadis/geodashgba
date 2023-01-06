@@ -2,9 +2,6 @@
 #include <gba.h>
 #include <scene.h>
 
-#include <assets/graphics/tiles.h>
-#include <assets/graphics/sprites.h>
-
 #include <game/camera.h>
 #include <game/cube.h>
 #include <game/course.h>
@@ -14,19 +11,6 @@
 
 static void
 Scene_DoEnter() {
-  GBA_Sprite_ResetAll();
-  GBA_EnableSprites();
-
-  GBA_System *system = GBA_GetSystem();
-
-  // used for tilemaps
-  GBA_Memcpy(&system->tileSets8[0][0], tilesTiles, tilesTilesLen);
-  GBA_Memcpy(&system->backgroundPalette[0], tilesPal, tilesPalLen);
-
-  // used for sprites
-  GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
-  GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
-
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
@@ -35,18 +19,22 @@ Scene_DoEnter() {
   Course_ResetAndLoad(course, level);
 
   Progress *progress = Progress_GetInstance();
-  Progress_SetLevel(progress, level);
+  Progress_SetCourse(progress, course);
 
   Cube *cube = Cube_GetInstance();
 
   const Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);
+
+  const Bounds *bounds = Course_GetBounds(course);
+  Vector limit = Bounds_Upper(bounds);
+  Camera_SetUpperLimit(camera, &limit);
+
   Camera_Update(camera);
 
   Particle_ResetAll();
 
-  mGBA_DebugEnable(true);
-  mGBA_DebugLog(mGBA_LOG_INFO, "Hello World!");
+  mGBA_DebugLog(mGBA_LOG_INFO, "Scene: play");
 }
 
 static void
@@ -94,19 +82,19 @@ Scene_DoPlay() {
 
   Cube_Draw(cube, camera);
   Course_Draw(course, camera);
-  Progress_Draw(progress, camera);
+  Progress_Draw(progress);
   Particle_DrawAll();
 
 /*
-  if (GBA_Input_IsHit(input, GBA_KEY_A)) {
-      extern const Scene *game;
+  if (GBA_Input_IsHit(input, GBA_KEY_B)) {
+      extern const Scene *entry;
       Scene *current = Scene_GetCurrent();
-      Scene_ReplaceWith(current, game);
+      Scene_ReplaceWith(current, entry);
   }
 */
 }
 
-const Scene *entry = &(Scene) {
+const Scene *play = &(Scene) {
   .enter = Scene_DoEnter,
   .play = Scene_DoPlay,
   .exit = Scene_Noop,

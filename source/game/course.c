@@ -33,6 +33,11 @@ Course_ResetAndLoad(
 
   if (level != NULL) {
     course->level = level;
+    course->bounds = Bounds_Of(120, 256, 120, 256);
+
+    int count = Level_GetChunkCount(level);
+    course->bounds.center.x *= count;
+    course->bounds.size.x *= count;
   }
 
   Chunk empty = {0};
@@ -48,7 +53,7 @@ Course_ResetAndLoad(
   Vector floor = Bounds_Upper(bounds);
 
   course->floor = floor.y;
-  course->spawn = Vector_Of(20, floor.y);
+  course->spawn = Vector_Of(20, floor.y - 7);
 }
 
 static inline void
@@ -94,7 +99,7 @@ Course_DrawBackground(
     Course *course,
     Camera *camera)
 {
-  extern const GBA_TileMapRef backgroundTileMap;
+  extern const GBA_TileMapRef courseBackgroundTileMap;
   static const GBA_BackgroundControl layers[] = {
    { // background layer
       .size = 1, // 512x256
@@ -118,7 +123,7 @@ Course_DrawBackground(
 
     GBA_TileMapRef target;
     GBA_TileMapRef_FromBackgroundLayer(&target, 0);
-    GBA_TileMapRef_Blit(&target, 0, 0, &backgroundTileMap);
+    GBA_TileMapRef_Blit(&target, 0, 0, &courseBackgroundTileMap);
   }
 
   Vector *position = Camera_GetPosition(camera);

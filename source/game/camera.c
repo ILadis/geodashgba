@@ -10,9 +10,10 @@ Camera_GetInstance() {
 void
 Camera_Reset(Camera *camera) {
   camera->position = Vector_Of(0, 0);
-  camera->delta = Vector_Of(0, 0);
   camera->viewport = Bounds_Of(120, 80, 120, 80);
   camera->frame = Bounds_Of(54, 96, 22, 40);
+  camera->limit.lower = Vector_Of(0, 0);
+  camera->limit.upper = Vector_Of(0, 0);
   camera->target = NULL;
 }
 
@@ -21,24 +22,26 @@ Camera_MoveBy(
     Camera *camera,
     Vector *delta)
 {
-  int x = camera->position.x += delta->x;
-  int y = camera->position.y += delta->y;
+  int x = camera->position.x + delta->x;
+  int y = camera->position.y + delta->y;
 
-  if (x < 0) {
-    camera->position.x = 0;
-    delta->x -= x;
-  }
+  const Vector *lower = &camera->limit.lower;
+  const Vector *upper = &camera->limit.upper;
 
-  if (y < 0) {
-    camera->position.y = 0;
-    delta->y -= y;
-  }
+  x = Math_clamp(x, lower->x, upper->x);
+  y = Math_clamp(y, lower->y, upper->y);
 
-  camera->viewport.center.x += delta->x;
-  camera->viewport.center.y += delta->y;
+  int dx = x - camera->position.x;
+  int dy = y - camera->position.y;
 
-  camera->frame.center.x += delta->x;
-  camera->frame.center.y += delta->y;
+  camera->position.x = x;
+  camera->position.y = y;
+
+  camera->viewport.center.x += dx;
+  camera->viewport.center.y += dy;
+
+  camera->frame.center.x += dx;
+  camera->frame.center.y += dy;
 }
 
 static inline Vector
@@ -67,26 +70,12 @@ Camera_GetTargetDelta(Camera *camera) {
   return delta;
 }
 
-static inline void
-Camera_SetDelta(
-    Camera *camera,
-    Vector *delta)
-{
-  int dx = ((camera->position.x & 0b0111) + delta->x) >> 3;
-  int dy = ((camera->position.y & 0b0111) + delta->y) >> 3;
-
-  camera->delta.x = dx;
-  camera->delta.y = dy;
-}
-
 void
 Camera_Update(Camera *camera) {
   const Vector *target = camera->target;
 
   if (target != NULL) {
     Vector delta = Camera_GetTargetDelta(camera);
-
     Camera_MoveBy(camera, &delta);
-    Camera_SetDelta(camera, &delta);
   }
 }

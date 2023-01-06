@@ -1,9 +1,12 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
 
-#include <game/camera.h>
+#include <gba.h>
+#include <vector.h>
+#include <math.h>
+
 #include <game/cube.h>
-#include <game/level.h>
+#include <game/course.h>
 
 typedef struct Progress {
   int previous, current;
@@ -15,9 +18,9 @@ Progress*
 Progress_GetInstance();
 
 void
-Progress_SetLevel(
+Progress_SetCourse(
     Progress *progress,
-    Level *level);
+    Course *course);
 
 void
 Progress_Update(
@@ -25,8 +28,6 @@ Progress_Update(
     Cube *cube);
 
 void
-Progress_Draw(
-    Progress *progress,
-    Camera *camera);
+Progress_Draw(Progress *progress);
 
 #endif

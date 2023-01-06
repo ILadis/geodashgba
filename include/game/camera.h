@@ -7,8 +7,12 @@
 #include <math.h>
 
 typedef struct Camera {
-  Vector position, delta;
+  Vector position;
   Bounds viewport, frame;
+  struct {
+    Vector lower;
+    Vector upper;
+  } limit;
   const Vector *target;
 } Camera;
 
@@ -28,9 +32,13 @@ Camera_GetViewport(Camera *camera) {
   return &camera->viewport;
 }
 
-static inline Vector*
-Camera_GetDelta(Camera *camera) {
-  return &camera->delta;
+static inline void
+Camera_SetUpperLimit(
+    Camera *camera,
+    const Vector *limit)
+{
+  camera->limit.upper.x = limit->x - camera->viewport.size.x * 2;
+  camera->limit.upper.y = limit->y - camera->viewport.size.y * 2;
 }
 
 static inline bool

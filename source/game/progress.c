@@ -7,21 +7,21 @@ Progress_GetInstance() {
   return &progress;
 }
 
+static inline const Vector*
+Progress_GetPosition(Progress *progress) {
+  static const Vector position = Vector_Of(7, 1);
+  return &position;
+}
+
 void
-Progress_SetLevel(
+Progress_SetCourse(
     Progress *progress,
-    Level *level)
+    Course *course)
 {
   progress->redraw = true;
 
-  Chunk chunk = {0};
-  Chunk_AssignIndex(&chunk, 0);
-
-  const Bounds *bounds = Chunk_GetBounds(&chunk);
-  int width = bounds->size.x * 2;
-
-  int count = Level_GetChunkCount(level);
-  int total = width * count;
+  const Bounds *bounds = Course_GetBounds(course);
+  int total = bounds->size.x * 2;
 
   progress->total = total;
 }
@@ -40,11 +40,43 @@ Progress_Update(
   progress->current = value;
 }
 
-void
-Progress_Draw(
-    Progress *progress,
-    Camera *camera)
-{
+static inline void
+Progress_DrawDelta(Progress *progress) {
+  const int width = 122;
+
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 2);
+
+  GBA_System *system = GBA_GetSystem();
+  GBA_Bitmap8 *bitmap = &system->tileSets8[0][48];
+
+  int previous = (progress->previous * width) >> 8;
+  int current = (progress->current * width) >> 8;
+
+  int delta = current - previous;
+  if (delta != 0) {
+    int step = Math_signum(delta);
+    int color = delta > 0
+      ? GBA_Bitmap8_GetPixel(bitmap, 2, 4)
+      : GBA_Bitmap8_GetPixel(bitmap, 1, 4);
+
+    const Vector *position = Progress_GetPosition(progress);
+
+    int px = 3 + position->x * 8 + current;
+    int py = 3 + position->y * 8;
+
+    for (int i = 0; i != delta; i += step, px -= step) {
+      GBA_TileMapRef_SetPixel(&target, px, py + 0, color);
+      GBA_TileMapRef_SetPixel(&target, px, py + 1, color);
+    }
+
+    GBA_TileMapRef_SetPixel(&target, px, py + 0, color);
+    GBA_TileMapRef_SetPixel(&target, px, py + 1, color);
+  }
+}
+
+static inline void
+Progress_DrawBar(Progress *progress) {
   static const GBA_BackgroundControl layer = {
     .size = 0, // 256x256
     .colorMode = 1,
@@ -53,51 +85,26 @@ Progress_Draw(
     .priority = 1,
   };
 
-  const int tx = 7, ty = 1;
-  const int px = 3 + tx * 8, py = 3 + ty * 8;
-
-  const int width = 123;
-  const int tid = 48;
-
   if (progress->redraw) {
     GBA_EnableBackgroundLayer(2, layer);
 
     GBA_TileMapRef target;
     GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
-    GBA_Tile tile = { .tileId = tid };
+    const Vector *position = Progress_GetPosition(progress);
+
+    GBA_Tile tile = { .tileId = 48 };
     for (int i = 0; i < 16; i++) {
-      GBA_TileMapRef_BlitTile(&target, tx + i, ty, &tile);
+      GBA_TileMapRef_BlitTile(&target, position->x + i, position->y, &tile);
       tile.tileId++;
     }
   }
 
-  else {
-    GBA_TileMapRef target;
-    GBA_TileMapRef_FromBackgroundLayer(&target, 2);
-
-    GBA_System *system = GBA_GetSystem();
-    GBA_Bitmap8 *bitmap = &system->tileSets8[0][tid];
-
-    int previous = (progress->previous * width) >> 8;
-    int current = (progress->current * width) >> 8;
-
-    int delta = current - previous;
-    if (delta != 0) {
-      int step = Math_signum(delta);
-      int color = delta > 0
-        ? GBA_Bitmap8_GetPixel(bitmap, 2, 4)
-        : GBA_Bitmap8_GetPixel(bitmap, 1, 4);
-
-      for (int i = 0; i != delta; i += step) {
-        GBA_TileMapRef_SetPixel(&target, px + current - i, py + 0, color);
-        GBA_TileMapRef_SetPixel(&target, px + current - i, py + 1, color);
-      }
-
-      GBA_TileMapRef_SetPixel(&target, px + current - delta, py + 0, color);
-      GBA_TileMapRef_SetPixel(&target, px + current - delta, py + 1, color);
-    }
-  }
-
   progress->redraw = false;
+}
+
+void
+Progress_Draw(Progress *progress) {
+  Progress_DrawBar(progress);
+  Progress_DrawDelta(progress);
 }

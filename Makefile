@@ -8,7 +8,7 @@ PATH     := $(DEVKITPRO)/tools/bin:$(DEVKITPRO)/devkitARM/bin:$(PATH)
 # source files
 CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source/scenes/*.c)
 CFILES   += $(wildcard source/game/cube/*.c) $(wildcard source/game/level/*.c) $(wildcard source/game/object/*.c)
-CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c) $(wildcard assets/levels/*.c)
+CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c) $(wildcard assets/tiles/*.c)
 
 # toolchain and flags
 EMU      := visualboyadvance-m
@@ -48,15 +48,16 @@ purge: clean
 tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
-	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -g -I. -Iinclude -DNOGBA
 
 assets:
-	@mkdir -p assets/graphics assets/levels
+	@mkdir -p assets/graphics assets/tiles
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
-	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/background.tmx assets/background.c || true
+	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/backgrounds.tmx assets/tiles/backgrounds.c || true
+	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/overlays.tmx assets/tiles/overlays.c || true
 	@tools/sinlut > assets/sinlut.c
-	@tools/lvl2bin > assets/levels/test.c
+	@tools/lvl2bin > assets/levels.c
 
 tests: $(TESTS)
 
