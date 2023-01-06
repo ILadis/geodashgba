@@ -52,7 +52,7 @@ Chunk_AddObject(
   }
 }
 
-Hit
+bool
 Chunk_CheckHits(
     Chunk *chunk,
     Unit *unit,
@@ -61,7 +61,7 @@ Chunk_CheckHits(
   Grid *grid = &chunk->grid;
 
   Bounds *hitbox = unit->bounds;
-  Hit hit = {0};
+  bool result = false;
 
   Iterator iterator;
   Grid_GetUnits(grid, hitbox, &iterator);
@@ -72,14 +72,12 @@ Chunk_CheckHits(
 
     Bounds *bounds = &object->hitbox;
 
-    Hit h = Bounds_Intersects(bounds, hitbox);
-    if (Hit_IsHit(&h)) {
-      hit = Hit_Combine(&hit, &h);
-      HitCallback_Invoke(callback, unit, object, &h);
+    Hit hit = Bounds_Intersects(bounds, hitbox);
+    if (Hit_IsHit(&hit)) {
+      HitCallback_Invoke(callback, unit, object, &hit);
+      result = true;
     }
   }
 
-  // TODO combined hit not necessary anymore (flag if something was hit is sufficient)
-
-  return hit;
+  return result;
 }

@@ -60,9 +60,7 @@ AsciiLevel_IsCursorOccupied(Level *level) {
   Bounds hitbox = Bounds_Of(x, y, 8, 8);
 
   Unit unit = Unit_Of(&hitbox, NULL);
-  Hit hit = Chunk_CheckHits(level->chunk, &unit, NULL);
-
-  return Hit_IsHit(&hit);
+  return Chunk_CheckHits(level->chunk, &unit, NULL);
 }
 
 static bool
@@ -92,9 +90,8 @@ AsciiLevel_AddObjectToChunk(
   Chunk *chunk = level->chunk;
 
   Unit unit = Unit_Of(&template->hitbox, template);
-  Hit hit = Chunk_CheckHits(chunk, &unit, NULL);
-
-  if (!Hit_IsHit(&hit)) {
+  
+  if (!Chunk_CheckHits(chunk, &unit, NULL)) {
     Object *object = Chunk_AllocateObject(chunk);
     if (object != NULL) {
       Object_AssignFrom(object, template);

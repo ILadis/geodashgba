@@ -56,7 +56,7 @@ Chunk_AddObject(
     Chunk *chunk,
     Object *object);
 
-Hit
+bool
 Chunk_CheckHits(
     Chunk *chunk,
     Unit *unit,
