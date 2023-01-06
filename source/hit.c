@@ -97,7 +97,9 @@ Raycast_Intersects(
 
     do {
       hit = Bounds_Contains(bounds, &point);
-      if (Hit_IsHit(&hit)) return hit;
+      if (Hit_IsHit(&hit)) {
+        break;
+      }
 
       error += yerror;
       if (error > 0) {
@@ -114,7 +116,9 @@ Raycast_Intersects(
 
     do {
       hit = Bounds_Contains(bounds, &point);
-      if (Hit_IsHit(&hit))  return hit;
+      if (Hit_IsHit(&hit)) {
+        break;
+      }
 
       error += xerror;
       if (error > 0) {

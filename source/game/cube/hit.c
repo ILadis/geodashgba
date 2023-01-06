@@ -21,6 +21,37 @@ Cube_HaltMovement(Cube *cube) {
   Body_SetAcceleration(body, 0, 0);
 }
 
+static inline Raycast
+Cube_RaycasFromMovement(Cube *cube) {
+  Body *body = &cube->body;
+
+  int vx = body->velocity.x >> 8;
+  int vy = body->velocity.y >> 8;
+
+  int cx = body->position.x >> 8;
+  int cy = body->position.y >> 8;
+
+  return Raycast_Of(cx - vx, cy - vy, vx, vy, 8);
+}
+
+static inline Hit
+Cube_HitByRaycast(
+    Cube *cube,
+    Object *object)
+{
+  Raycast ray = Cube_RaycasFromMovement(cube);
+
+  Bounds hitbox = Bounds_Enlarge(&object->hitbox, &cube->hitbox.size);
+  Hit hit = Raycast_Intersects(&ray, &hitbox);
+
+  if (Hit_IsHit(&hit)) {
+    // only delta y must be corrected for hit resolution
+    hit.delta.y = hit.position.y - (cube->body.position.y >> 8);
+  }
+
+  return hit;
+}
+
 static void
 Cube_HitCallback(
     Unit *unit,
@@ -41,23 +72,12 @@ Cube_HitCallback(
   }
 
   else if (object->solid) {
-    // TODO refactor/improve this
-    int vx = cube->body.velocity.x >> 8;
-    int vy = cube->body.velocity.y >> 8;
-
-    int cx = cube->body.position.x >> 8;
-    int cy = cube->body.position.y >> 8;
-
-    Raycast ray = Raycast_Of(cx - vx, cy - vy, vx, vy, 8);
-
-    Bounds hitbox = Bounds_Enlarge(&object->hitbox, &cube->hitbox.size);
-    Hit hit2 = Raycast_Intersects(&ray, &hitbox);
+    Hit rayhit = Cube_HitByRaycast(cube, object);
+    if (Hit_IsHit(&rayhit)) {
+      hit = &rayhit;
+    }
 
     bool dead = hit->delta.x != 0;
-    if (Hit_IsHit(&hit2)) {
-      dead = hit2.delta.x != 0;
-      hit->delta.y = hit2.position.y - cy;
-    }
 
     if (dead) {
       Cube_HaltMovement(cube);

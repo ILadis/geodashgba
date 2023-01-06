@@ -9,7 +9,7 @@ typedef struct Properties {
 
 bool
 Object_CreatePad(Object *object) {
-  Bounds hitbox  = Bounds_Of(8, 4, 8, 4);
+  Bounds hitbox  = Bounds_Of(8, 4, 4, 4);
   Bounds viewbox = Bounds_Of(8, 4, 8, 4);
 
   object->hitbox  = hitbox;
