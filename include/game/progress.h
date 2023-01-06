@@ -6,8 +6,8 @@
 #include <game/level.h>
 
 typedef struct Progress {
-  int length;
-  int value;
+  int previous, current;
+  int total;
   bool redraw;
 } Progress;
 
