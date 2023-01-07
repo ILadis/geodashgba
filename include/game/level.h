@@ -10,6 +10,7 @@
 typedef enum LevelId {
   LEVEL_SELECT_COURSE,
   LEVEL_TEST_COURSE,
+  LEVEL_COUNT,
 } LevelId;
 
 typedef struct Level {

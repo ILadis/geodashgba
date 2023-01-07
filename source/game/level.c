@@ -29,7 +29,7 @@ extern Level course02;
 
 Level*
 Level_GetById(LevelId id) {
-  static Level *levels[] = {
+  static Level *levels[LEVEL_COUNT] = {
     [LEVEL_SELECT_COURSE] = &course01,
     [LEVEL_TEST_COURSE] = &course02,
   };

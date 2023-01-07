@@ -29,6 +29,7 @@ GBA_GetSystem() {
     .backgroundOffsets  = GBA_BACKGROUND_OFFSETS(MEM_IO + 0x0010),
 
     .blendControl = GBA_BLEND_CONTROL(MEM_IO + 0x0050),
+    .blendFace    = GBA_BLEND_FACE(MEM_IO + 0x0054),
     .blend        = GBA_BLEND(MEM_IO + 0x0052),
 
     .pixels    = GBA_COLORS(MEM_VRAM + 0x0000),
@@ -82,6 +83,17 @@ GBA_EnableBackgroundLayer(
 
   system->displayControl->value = value;
   system->backgroundControls[layer] = control;
+}
+
+void
+GBA_DisableBackgroundLayer(int layer) {
+  GBA_System *system = GBA_GetSystem();
+
+  u16 value = system->displayControl->value;
+  value &= ~(1 << (8 + layer));
+  value &= 0b1111111101111111; // unset force blank
+
+  system->displayControl->value = value;
 }
 
 void

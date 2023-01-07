@@ -87,6 +87,7 @@ Progress_DrawBar(Progress *progress) {
 
   if (progress->redraw) {
     GBA_EnableBackgroundLayer(2, layer);
+    GBA_DisableBackgroundLayer(3);
 
     GBA_TileMapRef target;
     GBA_TileMapRef_FromBackgroundLayer(&target, 2);

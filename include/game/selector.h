@@ -4,13 +4,26 @@
 #include <gba.h>
 #include <hit.h>
 
+#include <game/level.h>
+
 typedef struct Selector {
-  int offset;
+  LevelId id;
   bool redraw;
 } Selector;
 
 Selector*
-Selector_GetInstance();
+Selector_GetInstance(bool redraw);
+
+void
+Selector_GoForward(Selector *selector);
+
+void
+Selector_GoBackward(Selector *selector);
+
+static inline Level*
+Selector_GetLevel(Selector *selector) {
+  return Level_GetById(selector->id);
+}
 
 void
 Selector_Update(Selector *selector);

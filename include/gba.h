@@ -34,6 +34,7 @@
 #define GBA_REG_BG3VOFS  *((volatile s16 *) (GBA_MEM_IO+0x001E))
 #define GBA_REG_BLDCNT   *((volatile u16 *) (GBA_MEM_IO+0x0050))
 #define GBA_REG_BLDVAL   *((volatile u16 *) (GBA_MEM_IO+0x0052))
+#define GBA_REG_BLDFACE  *((volatile u16 *) (GBA_MEM_IO+0x0054))
 #define GBA_REG_KEYPAD   *((volatile u16 *) (GBA_MEM_IO+0x0130))
 
 typedef union GBA_DisplayControl {
@@ -138,6 +139,13 @@ typedef union GBA_Blend {
   };
 } GBA_Blend;
 
+typedef union GBA_BlendFace {
+  u16 value;
+  struct {
+    u16 ey: 5;
+  };
+} GBA_BlendFace;
+
 typedef enum GBA_Key {
   GBA_KEY_A = 0x0001,
   GBA_KEY_B = 0x0002,
@@ -171,6 +179,7 @@ typedef union GBA_Keypad {
 #define GBA_BACKGROUND_CONTROLS(ADDR) ((GBA_BackgroundControl *) (ADDR))
 #define GBA_BACKGROUND_OFFSETS(ADDR)  ((GBA_BackgroundOffset *)  (ADDR))
 #define GBA_BLEND_CONTROL(ADDR)       ((GBA_BlendControl *)      (ADDR))
+#define GBA_BLEND_FACE(ADDR)          ((GBA_BlendFace *)         (ADDR))
 #define GBA_BLEND(ADDR)               ((GBA_Blend *)             (ADDR))
 #define GBA_KEYPAD(ADDR)              ((GBA_Keypad *)            (ADDR))
 
@@ -325,6 +334,7 @@ typedef struct GBA_System {
   GBA_BackgroundOffset *const volatile backgroundOffsets;
 
   GBA_BlendControl *const volatile blendControl;
+  GBA_BlendFace *const volatile blendFace;
   GBA_Blend *const volatile blend;
 
   GBA_Color *const pixels;
@@ -362,6 +372,9 @@ void
 GBA_EnableBackgroundLayer(
     int layer,
     GBA_BackgroundControl control);
+
+void
+GBA_DisableBackgroundLayer(int layer);
 
 void
 GBA_OffsetBackgroundLayer(

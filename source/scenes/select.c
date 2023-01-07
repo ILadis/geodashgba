@@ -32,6 +32,8 @@ Scene_DoEnter() {
     once = false;
   }
 
+  Selector_GetInstance(true);
+
   Level *level = Level_GetById(LEVEL_SELECT_COURSE);
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
@@ -59,10 +61,17 @@ Scene_DoPlay() {
 
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
-  Selector *selector = Selector_GetInstance();
+  Selector *selector = Selector_GetInstance(false);
 
   Camera_Update(camera);
   Selector_Update(selector);
+
+  if (GBA_Input_IsHit(input, GBA_KEY_LEFT)) {
+    Selector_GoBackward(selector);
+  }
+  else if (GBA_Input_IsHit(input, GBA_KEY_RIGHT)) {
+    Selector_GoForward(selector);
+  }
 
   GBA_VSync();
 
@@ -70,9 +79,12 @@ Scene_DoPlay() {
   Selector_Draw(selector);
 
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
-      extern const Scene *play;
-      Scene *current = Scene_GetCurrent();
-      Scene_ReplaceWith(current, play);
+    Level *level = Selector_GetLevel(selector);
+    Course_ResetAndLoad(course, level);
+
+    extern const Scene *play;
+    Scene *current = Scene_GetCurrent();
+    Scene_FadeReplaceWith(current, play);
   }
 }
 

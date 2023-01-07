@@ -14,9 +14,7 @@ Scene_DoEnter() {
   GBA_Sprite_ResetAll();
   GBA_EnableSprites();
 
-  Level *level = Level_GetById(LEVEL_TEST_COURSE);
   Course *course = Course_GetInstance();
-  Course_ResetAndLoad(course, level);
 
   Progress *progress = Progress_GetInstance();
   Progress_SetCourse(progress, course);
@@ -86,9 +84,9 @@ Scene_DoPlay() {
   Particle_DrawAll();
 
   if (GBA_Input_IsHit(input, GBA_KEY_B)) {
-      extern const Scene *entry;
-      Scene *current = Scene_GetCurrent();
-      Scene_ReplaceWith(current, entry);
+    extern const Scene *entry;
+    Scene *current = Scene_GetCurrent();
+    Scene_FadeReplaceWith(current, entry);
   }
 }
 

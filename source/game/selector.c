@@ -2,14 +2,42 @@
 #include <game/selector.h>
 
 Selector*
-Selector_GetInstance() {
-  static Selector selector = { .redraw = true };
+Selector_GetInstance(bool redraw) {
+  static Selector selector = {0};
+
+  if (redraw) {
+    selector.redraw = true;
+  }
+
   return &selector;
+}
+
+static inline void
+Selector_Goto(
+    Selector *selector,
+    Direction direction)
+{
+  LevelId next = selector->id + (direction == DIRECTION_RIGHT ? +1 : -1);
+
+ if (next >= 0 && next < LEVEL_COUNT) {
+    selector->id = next;
+    selector->redraw = true;
+  }
+}
+
+void
+Selector_GoForward(Selector *selector) {
+  Selector_Goto(selector, DIRECTION_RIGHT);
+}
+
+void
+Selector_GoBackward(Selector *selector) {
+  Selector_Goto(selector, DIRECTION_LEFT);
 }
 
 void
 Selector_Update(Selector *selector) {
-  selector->offset++;
+  // TODO
 }
 
 static inline void
@@ -23,14 +51,14 @@ Selector_DrawOverlay(Selector *selector) {
       .size = 1, // 512x256
       .colorMode = 1,
       .tileSetIndex = 0,
-      .tileMapIndex = 20,
+      .tileMapIndex = 21,
       .priority = 1,
     },
     { // overlay layer
       .size = 0, // 256x256
       .colorMode = 1,
       .tileSetIndex = 0,
-      .tileMapIndex = 22,
+      .tileMapIndex = 23,
       .priority = 0,
     }
   };
@@ -44,6 +72,23 @@ Selector_DrawOverlay(Selector *selector) {
   GBA_TileMapRef_Blit(&target,  5,  0, &selectTopOverlayTileMap);
   GBA_TileMapRef_Blit(&target,  0, 16, &selectLeftEdgeOverlayTileMap);
   GBA_TileMapRef_Blit(&target, 25, 16, &selectRightEdgeOverlayTileMap);
+}
+
+static inline void
+Selector_DrawLevelIndicator(Selector *selector) {
+  const GBA_Tile active = { .tileId = 94 };
+  const GBA_Tile inactive = { .tileId = 95 };
+
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 3);
+
+  int ty = 5;
+  int tx = (GBA_SCREEN_COLS - LEVEL_COUNT) / 2;
+
+  for (LevelId id = 0; id < LEVEL_COUNT; id++) {
+    const GBA_Tile *tile = id == selector->id ? &active : &inactive;
+    GBA_TileMapRef_BlitTile(&target, tx++, ty, tile);
+  }
 }
 
 static inline void
@@ -93,13 +138,15 @@ Selector_Draw(Selector *selector) {
   if (selector->redraw) {
     Selector_DrawOverlay(selector);
 
-    Bounds bounds1 = Bounds_Of(15, 8, 11, 3);
+    Bounds bounds1 = Bounds_Of(15, 9, 11, 3);
     Selector_DrawLevelBox(selector, &bounds1);
 
-    Bounds bounds2 = Bounds_Of(15 + 32, 8, 11, 3);
+    Bounds bounds2 = Bounds_Of(15 + 32, 9, 11, 3);
     Selector_DrawLevelBox(selector, &bounds2);
+
+    Selector_DrawLevelIndicator(selector);
   }
 
-  GBA_OffsetBackgroundLayer(2, selector->offset, 0);
+//GBA_OffsetBackgroundLayer(2, selector->offset, 0);
   selector->redraw = false;
 }
