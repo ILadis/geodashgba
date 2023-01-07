@@ -11,8 +11,8 @@
 
 static void
 Scene_DoEnter() {
-  Camera *camera = Camera_GetInstance();
-  Camera_Reset(camera);
+  GBA_Sprite_ResetAll();
+  GBA_EnableSprites();
 
   Level *level = Level_GetById(LEVEL_TEST_COURSE);
   Course *course = Course_GetInstance();
@@ -21,6 +21,7 @@ Scene_DoEnter() {
   Progress *progress = Progress_GetInstance();
   Progress_SetCourse(progress, course);
 
+  Camera *camera = Camera_GetInstance();
   Cube *cube = Cube_GetInstance();
 
   const Vector *position = Cube_GetPosition(cube);
@@ -31,7 +32,6 @@ Scene_DoEnter() {
   Camera_SetUpperLimit(camera, &limit);
 
   Camera_Update(camera);
-
   Particle_ResetAll();
 
   mGBA_DebugLog(mGBA_LOG_INFO, "Scene: play");
@@ -85,17 +85,29 @@ Scene_DoPlay() {
   Progress_Draw(progress);
   Particle_DrawAll();
 
-/*
   if (GBA_Input_IsHit(input, GBA_KEY_B)) {
       extern const Scene *entry;
       Scene *current = Scene_GetCurrent();
       Scene_ReplaceWith(current, entry);
   }
-*/
+}
+
+static void
+Scene_DoExit() {
+  Camera *camera = Camera_GetInstance();
+  Camera_Reset(camera);
+
+  Cube *cube = Cube_GetInstance();
+  Cube_Reset(cube);
+
+  Course *course = Course_GetInstance();
+  Course_ResetAndLoad(course, NULL);
+
+  Particle_ResetAll();
 }
 
 const Scene *play = &(Scene) {
   .enter = Scene_DoEnter,
   .play = Scene_DoPlay,
-  .exit = Scene_Noop,
+  .exit = Scene_DoExit,
 };

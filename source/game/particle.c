@@ -3,8 +3,12 @@
 
 static Prefab *prefabs = Prefab_Create(Particle, 32);
 
+static bool
+Particle_Reset(Particle *particle);
+
 void
 Particle_ResetAll() {
+  Prefab_ForEach(prefabs, (Action) Particle_Reset);
   Prefab_ResetAll(prefabs);
 }
 
@@ -55,6 +59,20 @@ Particle_NewInstance(
   particle->delay = delay;
 
   return particle;
+}
+
+static bool
+Particle_Reset(Particle *particle) {
+  const Particle empty = {0};
+
+  GBA_Sprite *sprite = particle->sprite;
+  if (sprite != NULL) {
+    GBA_Sprite_Release(sprite);
+  }
+
+  *particle = empty;
+
+  return false;
 }
 
 static bool

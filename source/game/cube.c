@@ -8,6 +8,18 @@ Cube_GetInstance() {
 }
 
 void
+Cube_Reset(Cube *cube) {
+  const Cube empty = {0};
+
+  GBA_Sprite *sprite = cube->sprite;
+  if (sprite != NULL) {
+    GBA_Sprite_Release(sprite);
+  }
+
+  *cube = empty;
+}
+
+void
 Cube_SetPosition(
     Cube *cube,
     const Vector *position)

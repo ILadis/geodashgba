@@ -6,7 +6,6 @@
 #include <assets/graphics/sprites.h>
 
 #include <game/camera.h>
-#include <game/cube.h>
 #include <game/course.h>
 #include <game/level.h>
 #include <game/selector.h>
@@ -15,12 +14,10 @@ static void
 Scene_DoEnter() {
   static bool once = true;
 
+  GBA_Sprite_ResetAll();
+  GBA_EnableSprites();
+
   if (once) {
-    mGBA_DebugEnable(true);
-
-    GBA_Sprite_ResetAll();
-    GBA_EnableSprites();
-
     GBA_System *system = GBA_GetSystem();
 
     // used for tilemaps
@@ -31,15 +28,16 @@ Scene_DoEnter() {
     GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
     GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
 
+    mGBA_DebugEnable(true);
     once = false;
   }
-
-  Camera *camera = Camera_GetInstance();
-  Camera_Reset(camera);
 
   Level *level = Level_GetById(LEVEL_SELECT_COURSE);
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
+
+  Camera *camera = Camera_GetInstance();
+  Camera_Reset(camera);
 
   const Vector *spawn = Course_GetSpawn(course);
   Camera_FollowTarget(camera, spawn);
@@ -78,8 +76,17 @@ Scene_DoPlay() {
   }
 }
 
+static void
+Scene_DoExit() {
+  Camera *camera = Camera_GetInstance();
+  Camera_Reset(camera);
+
+  Course *course = Course_GetInstance();
+  Course_ResetAndLoad(course, NULL);
+}
+
 const Scene *entry = &(Scene) {
   .enter = Scene_DoEnter,
   .play = Scene_DoPlay,
-  .exit = Scene_Noop,
+  .exit = Scene_DoExit,
 };

@@ -29,7 +29,7 @@ RUNNER   := exec
 ifdef DEBUG
   CFLAGS += -O0 -g
   RUNNER := gdbserver :2345
-  EMU    := mgba -3 --gdb
+  EMU    := mgba -l 8 -3 --gdb
 endif
 
 .PHONY : assets tools run build clean
