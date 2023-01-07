@@ -2,8 +2,10 @@
 #define SELECTOR_H
 
 #include <gba.h>
+#include <hit.h>
 
 typedef struct Selector {
+  int offset;
   bool redraw;
 } Selector;
 
