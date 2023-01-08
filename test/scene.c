@@ -16,6 +16,12 @@ static int count;
 static void
 Stage_SetCount() { count = 7; }
 
+static void
+Stage_ResetCount() { count = 0; }
+
+static void
+Stage_IncrementCount() { count++; }
+
 test(Play_ShouldInvokeEnterCallback) {
   // arrange
   Scene *scene = &(Scene) {
@@ -34,22 +40,16 @@ test(Play_ShouldInvokeEnterCallback) {
   assert(scene->stage == STAGE_PLAY);
 }
 
-static void
-Stage_ResetCount() { count = 0; }
-
-static void
-Stage_IncrementCount() { count++; }
-
 test(Play_ShouldInvokePlayCallbackUntilSceneIsAboutToBeRelaced) {
   // arrange
   Scene *scene = &(Scene) {
     .enter = Stage_ResetCount,
     .play = Stage_IncrementCount,
-    .exit = Scene_Noop,
+    .exit = Stage_ResetCount,
   };
 
   Scene *next = &(Scene) {
-    .enter = Stage_ResetCount,
+    .enter = Stage_IncrementCount,
     .play = Stage_ResetCount,
     .exit = Stage_ResetCount,
   };
@@ -64,10 +64,11 @@ test(Play_ShouldInvokePlayCallbackUntilSceneIsAboutToBeRelaced) {
   Scene_ReplaceWith(scene, next);
 
   Scene_Play(scene);
+  Scene_Play(scene);
 
   // assert
-  assert(count == 3);
-  assert(scene->stage == STAGE_REPLACE);
+  assert(count == 1);
+  assert(scene->stage == STAGE_PLAY);
 }
 
 test(Play_ShouldInvokeExitCallbackWhenSceneIsBeingReplaced) {
@@ -93,7 +94,6 @@ test(Play_ShouldInvokeExitCallbackWhenSceneIsBeingReplaced) {
 
   Scene_ReplaceWith(scene, next);
 
-  Scene_Play(scene);
   Scene_Play(scene);
 
   // assert

@@ -12,18 +12,18 @@ Scene_GetCurrent() {
   return &scene;
 }
 
-static inline void
+static void
 Scene_StageEnter(Scene *scene) {
   scene->enter();
   scene->stage = STAGE_PLAY;
 }
 
-static inline void
+static void
 Scene_StagePlay(Scene *scene) {
   scene->play();
 }
 
-static inline void
+static void
 Scene_StageReplace(Scene *scene) {
   scene->exit();
 
@@ -37,7 +37,7 @@ Scene_StageReplace(Scene *scene) {
   scene->stage = STAGE_ENTER;
 }
 
-static inline void
+static void
 Scene_StageFadeout(Scene *scene) {
   static const GBA_BlendControl blend = {
     .blendingMode = 3, // blend to black
@@ -75,7 +75,7 @@ Scene_StageFadeout(Scene *scene) {
   }
 }
 
-static inline void
+static void
 Scene_StageFadein(Scene *scene) {
   GBA_System *system = GBA_GetSystem();
   int fade = --scene->fade;

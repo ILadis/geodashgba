@@ -29,6 +29,11 @@ bool
 Object_CreateDisk(Object *object);
 
 bool
+Object_CreateOffsetDisk(
+    Object *object,
+    Direction direction);
+
+bool
 Object_CreatePad(Object *object);
 
 bool

@@ -3,35 +3,45 @@
 
 #ifdef NOGBA
 static Level course01 = Level_FromLayout(
-  "              ",
-  "              ",
-  "_________^____",
+  "       ",
+  "       ",
+  "_______",
 );
 
 static Level course02 = Level_FromLayout(
   "                                                                                                                                                                                             ",
-  "                                                                                                                                                                                             ",
-  "                                                                                                                                                                                             ",
   "                                                                                                                            --      --       ^^^^                                            ",
-  "                                                                                                               --          ^^^^    ^^^^      xxxx         ^                                  ",
+  "                                                                                                               --          ^^^^    ^^^^      ~~~~         ^                                  ",
   "                                                                                                           -      xxxx  xxxxxxxxxxxxxxx               xxxxx                                  ",
-  "                                                        :                                              -                xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx ^                                ",
-  "                                                       <x                                          -                    xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxx  ----^                 ",
-  "                                    i                  <x                                      -                                        xxxxxxxxxxxxxxxxxxx                x  ------^        ",
-  "                               i    x                                            ^         -                                                                                        x  ----  ",
-  "                          i    x    x                     T       ^    T   xxxxxxxxxxxxx                                xxxxxxxxxxxxxxx                                                      ",
-  "_________^______^^_______^x____x____x_________^^___xxxxxxxx__xxxxxxxxxxx___xxxxxxxxxxxxx________________________________xxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxx__________________________TT_^^^^_",
+  "                                                        :                                              -                xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx ^              ^                 ",
+  "                                                       <x                                          -                    xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxxx  ~~~~~        ^        ",
+  "                                      i                <x                                      -                                        xxxxxxxxxxxxxxxxxxx                   ~~~~~~~        ",
+  "                                  i   x                                          ^         -                                                                                           ----  ",
+  "                              i   x   x                           ^        xxxxxxxxxxxxx                                xxxxxxxxxxxxxxx                                                      ",
+  "_____________^______^^_______^x___x___x_______^^___xxxxxxxx__xxxxxxxxxxx___xxxxxxxxxxxxx________________________________xxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxx__________________________T__^^^^_",
+);
+
+static Level course03 = Level_FromLayout(
+  "                                                                                                                                                                          ",
+  "                                                                                                         xxxxxxxxxxxx                                                     ",
+  "                                                                                                         vvvvvvvvvvvv                                                     ",
+  "                                                                         i                                                                                                ",
+  "                                       i                             i   x                 ^                                 ^           ^                                ",
+  "                                   i   x             ~           i   x   x                 ~                                 ~           ~                 x~~~~x         ",
+  "_______________T^^^^______^^_____^^x___x_________T^^^^^^^______^^x___x___x^^^____^^____^_______^__________T___T___T______^_______^^x^^^______T^^^^x~~~~x___x____x_________",
 );
 #else
 extern Level course01;
 extern Level course02;
+extern Level course03;
 #endif
 
 Level*
 Level_GetById(LevelId id) {
   static Level *levels[LEVEL_COUNT] = {
-    [LEVEL_SELECT_COURSE] = &course01,
-    [LEVEL_TEST_COURSE] = &course02,
+    [LEVEL_EMPTY] = &course01,
+    [LEVEL_STEREO_MADNESS] = &course02,
+    [LEVEL_BACK_ON_TRACK] = &course03,
   };
 
   Level *level = NULL;

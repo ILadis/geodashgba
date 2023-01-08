@@ -34,7 +34,7 @@ Scene_DoEnter() {
 
   Selector_GetInstance(true);
 
-  Level *level = Level_GetById(LEVEL_SELECT_COURSE);
+  Level *level = Level_GetById(LEVEL_EMPTY);
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
 
@@ -79,9 +79,6 @@ Scene_DoPlay() {
   Selector_Draw(selector);
 
   if (GBA_Input_IsHit(input, GBA_KEY_A)) {
-    Level *level = Selector_GetLevel(selector);
-    Course_ResetAndLoad(course, level);
-
     extern const Scene *play;
     Scene *current = Scene_GetCurrent();
     Scene_FadeReplaceWith(current, play);
@@ -93,8 +90,11 @@ Scene_DoExit() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
+  Selector *selector = Selector_GetInstance(false);
+  Level *level = Selector_GetLevel(selector);
+
   Course *course = Course_GetInstance();
-  Course_ResetAndLoad(course, NULL);
+  Course_ResetAndLoad(course, level);
 }
 
 const Scene *entry = &(Scene) {

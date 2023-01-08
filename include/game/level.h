@@ -8,8 +8,9 @@
 #include <game/object.h>
 
 typedef enum LevelId {
-  LEVEL_SELECT_COURSE,
-  LEVEL_TEST_COURSE,
+  LEVEL_EMPTY,
+  LEVEL_STEREO_MADNESS,
+  LEVEL_BACK_ON_TRACK,
   LEVEL_COUNT,
 } LevelId;
 
