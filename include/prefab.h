@@ -10,6 +10,7 @@ typedef struct Prefab {
   void *objects;
   int count, size;
   bool locked;
+  struct Entity *const entities;
   struct Entity {
     void *object;
     bool alive;
@@ -19,10 +20,11 @@ typedef struct Prefab {
 
 #define Prefab_Create(type, limit) &((Prefab) { \
   .objects = (type[limit]){ }, \
+  .entities = (Entity[limit]){ }, \
   .count = limit, \
   .size = sizeof(type), \
   .locked = false, \
-  .free = (Entity[limit]){ }, \
+  .free = NULL, \
   .used = NULL, \
 })
 

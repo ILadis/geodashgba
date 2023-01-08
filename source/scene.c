@@ -59,13 +59,7 @@ Scene_StageFadeout(Scene *scene) {
   else if (fade == 0b11111) {
     scene->exit();
 
-    const Scene *next = scene->next;
-
-    scene->enter = next->enter;
-    scene->play  = next->play;
-    scene->exit  = next->exit;
-
-    scene->next = NULL;
+    Scene_StageReplace(scene);
     scene->stage = STAGE_FADEIN;
   }
 

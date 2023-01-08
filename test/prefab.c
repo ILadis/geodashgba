@@ -8,6 +8,19 @@ struct Stub {
   int ttl;
 };
 
+static bool
+Action_DecreaseTTL(struct Stub *stub) {
+  int ttl = stub->ttl--;
+  return ttl > 0;
+}
+
+static bool
+Action_Reset(struct Stub *stub) {
+  const struct Stub empty = {0};
+  *stub = empty;
+  return false;
+}
+
 test(NewInstance_ShouldReturnNewObjectInstanceForEachCall) {
   // arrange
   Prefab *prefabs = Prefab_Create(struct Stub, 3);
@@ -33,6 +46,22 @@ test(NewInstance_ShouldReturnNewObjectInstanceForEachCall) {
   assert(stub3 != stub1);
 }
 
+test(NewInstance_ShouldReturnExpectedObjectInstances) {
+  // arrange
+  Prefab *prefabs = Prefab_Create(struct Stub, 30);
+  Prefab_ResetAll(prefabs);
+
+  struct Stub *stubs = prefabs->objects;
+
+  // act
+  for (int i = 0; i < prefabs->count; i++) {
+    struct Stub *stub = Prefab_NewInstance(prefabs);
+
+    // assert
+    assert(stub == &stubs[i]);
+  }
+}
+
 test(ResetAll_ShouldMakeAllUsedPrefabsAvailableAgain) {
   // arrange
   Prefab *prefabs = Prefab_Create(struct Stub, 2);
@@ -55,10 +84,31 @@ test(ResetAll_ShouldMakeAllUsedPrefabsAvailableAgain) {
   assert(stub2 == stub4);
 }
 
-static bool
-Action_DecreaseTTL(struct Stub *stub) {
-  int ttl = stub->ttl--;
-  return ttl > 0;
+test(ResetAll_ShouldMakeAllPrefabsAvailableAgain) {
+  // arrange
+  Prefab *prefabs = Prefab_Create(struct Stub, 30);
+  struct Stub *stubs = prefabs->objects;
+
+  Prefab_ForEach(prefabs, (Action) Action_Reset);
+  Prefab_ResetAll(prefabs);
+
+  for (int i = 0; i < prefabs->count; i++) {
+    struct Stub *stub = Prefab_NewInstance(prefabs);
+    stub->ttl = i;
+  }
+
+  // act
+  Prefab_ForEach(prefabs, (Action) Action_DecreaseTTL);
+  Prefab_ForEach(prefabs, (Action) Action_DecreaseTTL);
+
+  Prefab_ForEach(prefabs, (Action) Action_Reset);
+  Prefab_ResetAll(prefabs);
+
+  // assert
+  for (int i = 0; i < prefabs->count; i++) {
+    struct Stub *stub = Prefab_NewInstance(prefabs);
+    assert(stub == &stubs[i]);
+  }
 }
 
 test(ForEach_ShouldInvokeActionForEachAlivePrefab) {
@@ -104,6 +154,8 @@ test(ForEach_ShouldMakePrefabsAvailableAgainIfActionReturnsFalse) {
 
 suite(
   NewInstance_ShouldReturnNewObjectInstanceForEachCall,
+  NewInstance_ShouldReturnExpectedObjectInstances,
   ResetAll_ShouldMakeAllUsedPrefabsAvailableAgain,
+  ResetAll_ShouldMakeAllPrefabsAvailableAgain,
   ForEach_ShouldInvokeActionForEachAlivePrefab,
   ForEach_ShouldMakePrefabsAvailableAgainIfActionReturnsFalse);

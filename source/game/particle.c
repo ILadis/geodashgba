@@ -84,14 +84,7 @@ Particle_Update(Particle *particle) {
 
   int life = particle->life -= 1;
   if (life <= 0) {
-    GBA_Sprite *sprite = particle->sprite;
-
-    if (sprite != NULL) {
-      GBA_Sprite_Release(sprite);
-      particle->sprite = NULL;
-    }
-
-    return false;
+    return Particle_Reset(particle);
   }
 
   Body *body = &particle->body;

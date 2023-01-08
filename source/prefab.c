@@ -64,14 +64,12 @@ Prefab_ForEach(
   Entity *before = NULL;
 
   while (entity != NULL) {
-    bool alive = entity->alive ? action(entity->object) : false;
+    bool alive = entity->alive = entity->alive ? action(entity->object) : false;
 
     if (!alive && exclusive) {
       entity = Prefab_FreeInstance(prefabs, entity, before);
       continue;
     }
-
-    entity->alive = alive;
 
     before = entity;
     entity = entity->next;
@@ -91,11 +89,11 @@ Prefab_ResetAll(Prefab *prefabs) {
     used = Prefab_FreeInstance(prefabs, used, NULL);
   }
 
-  Entity *entity = prefabs->free;
+  Entity *entity = prefabs->free = prefabs->entities;
 
   for (int i = 0; i < count; i++) {
     Entity *next = entity + 1;
-    void *object = objects + i * size ;
+    void *object =  objects + (i * size);
 
     entity->alive = false;
     entity->next = next;
