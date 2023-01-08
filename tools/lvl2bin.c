@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-  unsigned char buffer[4096] = {0};
+  unsigned char buffer[20480] = {0};
 
   LevelId id = 0;
   FILE *fp = stdout, *log = stderr;

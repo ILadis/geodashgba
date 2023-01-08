@@ -9,7 +9,7 @@ Cube_Jump(
   if (Cube_InState(cube, STATE_GROUNDED)) {
     const Dynamics *dynamics = cube->body.dynamics;
     int sy = Math_signum(dynamics->gravity.y);
-    cube->body.velocity.y = -1 * sy * speed;
+    cube->launch = -1 * sy * speed;
   }
 }
 
@@ -20,7 +20,7 @@ Cube_Launch(
 {
   const Dynamics *dynamics = cube->body.dynamics;
   int sy = Math_signum(dynamics->gravity.y);
-  cube->body.velocity.y = -1 * sy * speed;
+  cube->launch = -1 * sy * speed;
 }
 
 void
@@ -42,6 +42,12 @@ void
 Cube_ApplyMovement(Cube *cube) {
   Bounds *hitbox = &cube->hitbox;
   Body *body = &cube->body;
+
+  int launch = cube->launch;
+  if (launch != 0) {
+    body->velocity.y = launch;
+    cube->launch = 0;
+  }
 
   Body_Update(body);
   Vector *position = Body_GetPosition(body);

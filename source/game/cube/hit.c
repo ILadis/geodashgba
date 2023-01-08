@@ -31,6 +31,10 @@ Cube_RaycasFromMovement(Cube *cube) {
   int cx = body->position.x >> 8;
   int cy = body->position.y >> 8;
 
+  if (cube->state.current == STATE_GROUNDED) {
+    cy--;
+  }
+
   return Raycast_Of(cx - vx, cy - vy, vx, vy, 8);
 }
 

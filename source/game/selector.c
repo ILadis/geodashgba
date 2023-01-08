@@ -21,7 +21,6 @@ Selector_Goto(
 
  if (next >= 0 && next < LEVEL_COUNT) {
     selector->id = next;
-    selector->redraw = true;
   }
 }
 
@@ -143,10 +142,8 @@ Selector_Draw(Selector *selector) {
 
     Bounds bounds2 = Bounds_Of(15 + 32, 9, 11, 3);
     Selector_DrawLevelBox(selector, &bounds2);
-
-    Selector_DrawLevelIndicator(selector);
   }
 
-//GBA_OffsetBackgroundLayer(2, selector->offset, 0);
+  Selector_DrawLevelIndicator(selector);
   selector->redraw = false;
 }
