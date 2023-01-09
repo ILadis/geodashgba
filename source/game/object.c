@@ -50,6 +50,7 @@ Object_Draw(
   extern void Object_DrawDisk(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawBox(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawBoxWithPole(Object *object, GBA_TileMapRef *target);
+  extern void Object_DrawPit(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawSpike(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawPad(Object *object, GBA_TileMapRef *target);
 
@@ -57,6 +58,7 @@ Object_Draw(
     [TYPE_DISK] = Object_DrawDisk,
     [TYPE_BOX] = Object_DrawBox,
     [TYPE_BOX_WITH_POLE] = Object_DrawBoxWithPole,
+    [TYPE_PIT] = Object_DrawPit,
     [TYPE_SPIKE] = Object_DrawSpike,
     [TYPE_PAD] = Object_DrawPad,
   };

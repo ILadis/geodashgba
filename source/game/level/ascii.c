@@ -159,6 +159,28 @@ AsciiLevel_AddBox(Level *level) {
 }
 
 static void
+AsciiLevel_AddPit(Level *level) {
+  Vector cursor = level->cursor;
+  int width = 1;
+
+  char symbol;
+  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
+    if (symbol != '.') break;
+    else width++;
+  }
+
+  level->cursor = cursor;
+
+  Object object = {0};
+  Vector offset = Vector_Of(0, +1);
+
+  if (Object_CreatePit(&object, width)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddDisk(Level *level) {
   Object object = {0};
   if (Object_CreateDisk(&object)) {
@@ -256,6 +278,9 @@ AsciiLevel_GetChunk(
         break;
       case 'x':
         AsciiLevel_AddBox(level);
+        break;
+      case '.':
+        AsciiLevel_AddPit(level);
         break;
       case '-':
         AsciiLevel_AddDisk(level);

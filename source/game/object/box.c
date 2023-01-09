@@ -11,12 +11,12 @@ Object_CreateBox(
     Object *object,
     int width, int height)
 {
-  int x = width * 8;
-  int y = height * 8;
-
   if (width < 1 || height < 1) {
     return false;
   }
+
+  int x = width * 8;
+  int y = height * 8;
 
   Bounds hitbox  = Bounds_Of(x, y, x, y);
   Bounds viewbox = Bounds_Of(x, y, x, y);

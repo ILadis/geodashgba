@@ -11,6 +11,7 @@ typedef struct Object {
     TYPE_DISK,
     TYPE_BOX,
     TYPE_BOX_WITH_POLE,
+    TYPE_PIT,
     TYPE_SPIKE,
     TYPE_PAD,
     TYPE_COUNT,
@@ -45,6 +46,11 @@ bool
 Object_CreateBoxWithPole(
     Object *object,
     int height);
+
+bool
+Object_CreatePit(
+    Object *object,
+    int width);
 
 bool
 Object_CreateSpike(

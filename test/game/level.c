@@ -2,7 +2,30 @@
 #include <game/level.h>
 #include "../test.h"
 
-test(GetChunk_ShouldCreatBoxesAtExpectedPositions) {
+test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
+  // arrange
+  const int offset = 432;
+
+  Level level = Level_FromLayout(
+    "       ",
+    "       ",
+    "__...__",
+  );
+
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, 0),
+
+  // act
+  Level_GetChunk(&level, &chunk);
+
+  // assert
+  assert(chunk.count == 1);
+  assert(chunk.objects[0].type = TYPE_PIT);
+  assert(chunk.objects[0].hitbox.center.x == 56);
+  assert(chunk.objects[0].hitbox.center.y == 46 + offset);
+}
+
+test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
   // arrange
   const int offset = 432;
 
@@ -20,14 +43,19 @@ test(GetChunk_ShouldCreatBoxesAtExpectedPositions) {
 
   // assert
   assert(chunk.count == 5);
+  assert(chunk.objects[0].type = TYPE_BOX);
   assert(chunk.objects[0].hitbox.center.x ==   8);
   assert(chunk.objects[0].hitbox.center.y ==   8 + offset);
+  assert(chunk.objects[1].type = TYPE_BOX);
   assert(chunk.objects[1].hitbox.center.x ==   8);
   assert(chunk.objects[1].hitbox.center.y ==  40 + offset);
+  assert(chunk.objects[2].type = TYPE_BOX);
   assert(chunk.objects[2].hitbox.center.x ==  56);
   assert(chunk.objects[2].hitbox.center.y ==  24 + offset);
+  assert(chunk.objects[3].type = TYPE_BOX);
   assert(chunk.objects[3].hitbox.center.x == 104);
   assert(chunk.objects[3].hitbox.center.y ==   8 + offset);
+  assert(chunk.objects[4].type = TYPE_BOX);
   assert(chunk.objects[4].hitbox.center.x == 104);
   assert(chunk.objects[4].hitbox.center.y ==  40 + offset);
 }
@@ -78,7 +106,7 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
 test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   // arrange
   const unsigned char buffer[] = {
-    0x01, 0x04, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
+    0x01, 0x05, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00,
     0x98, 0x00, 0x00, 0x00, 0xd0, 0x01, 0x00, 0x00,
@@ -104,6 +132,7 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
 
   // assert
   assert(chunk1.count == chunk2.count);
+  assert(chunk1.objects[0].type == chunk2.objects[0].type);
   assert(chunk1.objects[0].solid == chunk2.objects[0].solid);
   assert(chunk1.objects[0].deadly == chunk2.objects[0].deadly);
   assert(chunk1.objects[0].hitbox.center.x == chunk2.objects[0].hitbox.center.x);
@@ -115,6 +144,7 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
 }
 
 suite(
-  GetChunk_ShouldCreatBoxesAtExpectedPositions,
+  GetChunk_ShouldCreatePitsAtExpectedPositions,
+  GetChunk_ShouldCreateBoxesAtExpectedPositions,
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
   GetChunk_ShouldReturnEqualObjectsForSameLevelData);
