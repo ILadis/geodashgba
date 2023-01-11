@@ -11,9 +11,9 @@ int main(int argc, char **argv) {
   double step = 2*pi / size;
   double alpha = 0.0;
 
-  FILE *fp = stdout;
+  FILE *out = stdout;
 
-  fprintf(fp, "const signed short sinlut[%d] = {\n", size);
+  fprintf(out, "const signed short sinlut[%d] = {\n", size);
 
   while (size-- > 0) {
     double number = sin(alpha);
@@ -21,13 +21,13 @@ int main(int argc, char **argv) {
 
     alpha += step;
 
-    fprintf(fp, "0x%04X", fixed);
-    fputs(",", fp);
+    fprintf(out, "0x%04X", fixed);
+    fputs(",", out);
 
-    if (size % 8 == 0) fputs("\n", fp);
-    if (size % 64 == 0 && size > 0) fputs("\n", fp);
+    if (size % 8 == 0) fputs("\n", out);
+    if (size % 64 == 0 && size > 0) fputs("\n", out);
   }
 
-  fputs("};", fp);
-  fclose(fp);
+  fputs("};", out);
+  fclose(out);
 }

@@ -17,9 +17,20 @@ Selector_Goto(
     Selector *selector,
     Direction direction)
 {
-  LevelId next = selector->id + (direction == DIRECTION_RIGHT ? +1 : -1);
+  const Vector *vector = Vector_FromDirection(direction);
+  LevelId next = selector->id + vector->x;
 
  if (next >= 0 && next < LEVEL_COUNT) {
+    Animation *animation = &selector->scroll;
+    Animation_Cancel(animation);
+
+    int from = Animation_CurrentValue(animation);
+    int to = from + vector->x * 256;
+
+    Animation scroll = Animation_From(from, to, Timing_EaseOut);
+    Animation_Start(&scroll);
+
+    selector->scroll = scroll;
     selector->id = next;
   }
 }
@@ -36,7 +47,7 @@ Selector_GoBackward(Selector *selector) {
 
 void
 Selector_Update(Selector *selector) {
-  // TODO
+  Animation_Tick(&selector->scroll, 4);
 }
 
 static inline void
@@ -145,5 +156,10 @@ Selector_Draw(Selector *selector) {
   }
 
   Selector_DrawLevelIndicator(selector);
+
+//int scroll = selector->scroll.delta + selector->scroll.offset;
+  int scroll = Animation_CurrentValue(&selector->scroll);
+  GBA_OffsetBackgroundLayer(2, scroll, 0);
+
   selector->redraw = false;
 }

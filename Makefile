@@ -48,6 +48,7 @@ purge: clean
 tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
+	@gcc tools/bezlut.c -o tools/bezlut -lm
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -g -I. -Iinclude -DNOGBA
 
 assets:
@@ -57,6 +58,7 @@ assets:
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/backgrounds.tmx assets/tiles/backgrounds.c || true
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/overlays.tmx assets/tiles/overlays.c || true
 	@tools/sinlut > assets/sinlut.c
+	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/lvl2bin > assets/levels.c
 
 tests: $(TESTS)

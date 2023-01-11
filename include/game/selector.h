@@ -3,11 +3,13 @@
 
 #include <gba.h>
 #include <hit.h>
+#include <animation.h>
 
 #include <game/level.h>
 
 typedef struct Selector {
   LevelId id;
+  Animation scroll;
   bool redraw;
 } Selector;
 

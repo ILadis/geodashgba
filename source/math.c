@@ -60,6 +60,7 @@ Math_atan2(short x, short y) {
 
 int
 Math_sin(int alpha) {
+  // signed 8w fixed-point integer
   extern const signed short sinlut[256];
   return sinlut[alpha & 0xFF];
 }

@@ -50,7 +50,7 @@ Particle_NewInstance(
   int angle = Math_rand();
   int velocity = 1500;
 
-  int dx = (Math_cos(angle) * velocity) >> 8; // from 16w to 8w fixed-point integer
+  int dx = (Math_cos(angle) * velocity) >> 8;
   int dy = (Math_sin(angle) * velocity) >> 8;
 
   Body_SetVelocity(body, dx, dy);

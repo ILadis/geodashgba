@@ -109,7 +109,7 @@ Cube_ApplyShape(Cube *cube) {
 
   Vector *position = &hitbox->center;
 
-  int dx = (Math_sin(angle) * hitbox->size.x) >> 8; // from 16w to 8w fixed-point integer
+  int dx = (Math_sin(angle) * hitbox->size.x) >> 8;
   int dy = (Math_cos(angle) * hitbox->size.y) >> 8;
 
   vertices[0].x = position->x - dx;
