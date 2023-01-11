@@ -79,6 +79,26 @@ AsciiLevel_NextSymbol(
      && !AsciiLevel_IsCursorOccupied(level);
 }
 
+static int
+AsciiLevel_CountConsecutiveSymbols(
+    Level *level,
+    Direction directon,
+    char symbol)
+{
+  Vector cursor = level->cursor;
+  int count = 0;
+
+  char next;
+  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &next)) {
+    if (next != symbol) break;
+    else count++;
+  }
+
+  level->cursor = cursor;
+
+  return count;
+}
+
 static inline void
 AsciiLevel_AddObjectToChunk(
     Level *level,
@@ -102,19 +122,10 @@ AsciiLevel_AddObjectToChunk(
 
 static void
 AsciiLevel_AddBoxWithPole(Level *level) {
-  Vector cursor = level->cursor;
-  int height = 0;
-
-  char symbol;
-  while (AsciiLevel_NextSymbol(level, DIRECTION_DOWN, &symbol)) {
-    if (symbol != 'x') break;
-    else height++;
-  }
-
-  level->cursor = cursor;
-
   Object object = {0};
   Vector offset = Vector_Of(0, -1);
+
+  int height = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_DOWN, 'x');
 
   if (Object_CreateBoxWithPole(&object, height)) {
     Object_Move(&object, &offset);
@@ -160,19 +171,10 @@ AsciiLevel_AddBox(Level *level) {
 
 static void
 AsciiLevel_AddPit(Level *level) {
-  Vector cursor = level->cursor;
-  int width = 1;
-
-  char symbol;
-  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
-    if (symbol != '.') break;
-    else width++;
-  }
-
-  level->cursor = cursor;
-
   Object object = {0};
   Vector offset = Vector_Of(0, +1);
+
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '.') + 1;
 
   if (Object_CreatePit(&object, width)) {
     Object_Move(&object, &offset);
@@ -182,8 +184,10 @@ AsciiLevel_AddPit(Level *level) {
 
 static void
 AsciiLevel_AddDisk(Level *level) {
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '-') + 1;
+
   Object object = {0};
-  if (Object_CreateDisk(&object)) {
+  if (Object_CreateDisk(&object, width)) {
     AsciiLevel_AddObjectToChunk(level, &object);
   }
 }
@@ -193,8 +197,10 @@ AsciiLevel_AddOffsetDisk(
     Level *level,
     Direction direction)
 {
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '~') + 1;
+
   Object object = {0};
-  if (Object_CreateOffsetDisk(&object, direction)) {
+  if (Object_CreateOffsetDisk(&object, direction, width)) {
     AsciiLevel_AddObjectToChunk(level, &object);
   }
 }

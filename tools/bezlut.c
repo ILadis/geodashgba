@@ -44,8 +44,6 @@ int main(int argc, char *argv[]) {
     double time = find(x, px, length);
     double y = bezier(py, length, time);
 
-    fprintf(log, "x=%f, y=%f\n", x, y);
-
     int fixed = (int) round(y * 256) & 0xFFFF;
 
     x += step;

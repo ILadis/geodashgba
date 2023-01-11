@@ -27,12 +27,15 @@ bool
 Object_CreateFloor(Object *object);
 
 bool
-Object_CreateDisk(Object *object);
+Object_CreateDisk(
+    Object *object,
+    int width);
 
 bool
 Object_CreateOffsetDisk(
     Object *object,
-    Direction direction);
+    Direction direction,
+    int width);
 
 bool
 Object_CreatePad(Object *object);

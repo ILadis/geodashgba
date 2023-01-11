@@ -3,13 +3,22 @@
 
 typedef struct Properties {
   bool offset;
-  Direction direction;
+  int width;
 } align4 Properties;
 
 bool
-Object_CreateDisk(Object *object) {
-  Bounds hitbox  = Bounds_Of(8, 8, 8, 4);
-  Bounds viewbox = Bounds_Of(8, 8, 8, 4);
+Object_CreateDisk(
+    Object *object,
+    int width)
+{
+  if (width < 1) {
+    return false;
+  }
+
+  int x = width * 8;
+
+  Bounds hitbox  = Bounds_Of(x, 8, x, 4);
+  Bounds viewbox = Bounds_Of(x, 8, x, 4);
 
   object->hitbox  = hitbox;
   object->viewbox = viewbox;
@@ -20,19 +29,25 @@ Object_CreateDisk(Object *object) {
 
   Properties *props = Object_GetProperties(object);
   props->offset = false;
+  props->width = width;
 
   return true;
 }
 
-
-
 bool
 Object_CreateOffsetDisk(
     Object *object,
-    Direction direction)
+    Direction direction,
+    int width)
 {
-  Bounds hitbox  = Bounds_Of(8, 8, 8, 4);
-  Bounds viewbox = Bounds_Of(8, 8, 8, 4);
+  if (width < 1) {
+    return false;
+  }
+
+  int x = width * 8;
+
+  Bounds hitbox  = Bounds_Of(x, 8, x, 4);
+  Bounds viewbox = Bounds_Of(x, 8, x, 4);
 
   const Vector *delta = Vector_FromDirection(direction);
 
@@ -48,7 +63,7 @@ Object_CreateOffsetDisk(
 
   Properties *props = Object_GetProperties(object);
   props->offset = true;
-  props->direction = direction;
+  props->width = width;
 
   return true;
 }
@@ -72,8 +87,6 @@ static const GBA_TileMapRef disks[] = {
   }
 };
 
-
-
 void
 Object_DrawDisk(
     Object *object,
@@ -87,5 +100,9 @@ Object_DrawDisk(
   Properties *props = Object_GetProperties(object);
 
   const GBA_TileMapRef *tiles = props->offset ? &disks[1] : &disks[0];
-  GBA_TileMapRef_Blit(target, tx, ty, tiles);
+  int width = props->width;
+
+  for (int i = 0; i < width; i++) {
+    GBA_TileMapRef_Blit(target, tx + i * tiles->width, ty, tiles);
+  }
 }
