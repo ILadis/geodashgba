@@ -112,7 +112,7 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
     0x98, 0x00, 0x00, 0x00, 0xd0, 0x01, 0x00, 0x00,
     0x90, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
     0xa0, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
   };
 
   Level level1 = Level_FromLayout(
@@ -143,8 +143,29 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   }
 }
 
+test(GetChunkCount_ShouldReturnExpectedChunkCount) {
+  // arrange
+  const unsigned char buffer[] = { 0x00, 0x00 };
+
+  Level level1 = Level_FromLayout(
+    "                              ",
+    "______________________________",
+  );
+
+  Level level2 = Level_FromBuffer(buffer);
+
+  // act
+  int count1 = Level_GetChunkCount(&level1);
+  int count2 = Level_GetChunkCount(&level2);
+
+  // assert
+  assert(count1 == 2);
+  assert(count2 == 2);
+}
+
 suite(
   GetChunk_ShouldCreatePitsAtExpectedPositions,
   GetChunk_ShouldCreateBoxesAtExpectedPositions,
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
-  GetChunk_ShouldReturnEqualObjectsForSameLevelData);
+  GetChunk_ShouldReturnEqualObjectsForSameLevelData,
+  GetChunkCount_ShouldReturnExpectedChunkCount);

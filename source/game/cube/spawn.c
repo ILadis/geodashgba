@@ -1,4 +1,5 @@
 
+#include <scene.h>
 #include <game/cube.h>
 #include <game/particle.h>
 
@@ -33,11 +34,17 @@ Cube_ApplySpawn(
   else if (Cube_InState(cube, STATE_DESTROYED)) {
     int timer = cube->timer -= 1;
     if (timer == 0) {
-      Cube_SetPosition(cube, spawn);
-      Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
-
-      // TODO workaround to force redraw after camera resets to spawn
-      Course_ResetAndLoad(course, NULL);
+      if (cube->success) {
+        extern const Scene *entry;
+        Scene *current = Scene_GetCurrent();
+        Scene_FadeReplaceWith(current, entry);
+      }
+      else {
+        Cube_SetPosition(cube, spawn);
+        Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+        // TODO workaround to force redraw after camera resets to spawn
+        Course_ResetAndLoad(course, NULL);
+      }
     }
   }
 }

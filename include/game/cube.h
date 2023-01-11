@@ -15,6 +15,7 @@ typedef enum State {
   STATE_AIRBORNE,
   STATE_GROUNDED,
   STATE_DESTROYED,
+  STATE_VICTORY,
 } State;
 
 typedef struct Cube {
@@ -23,6 +24,7 @@ typedef struct Cube {
   struct { State current, previous; } state;
   struct { int angle, velocity; } rotation;
   int launch, attempts, timer;
+  bool success;
   Vector vertices[4];
   Shape shape;
   GBA_Sprite *sprite;
@@ -52,6 +54,12 @@ Cube_EnteredState(Cube *cube, State state) {
 static inline bool
 Cube_InState(Cube *cube, State state) {
   return cube->state.current == state;
+}
+
+static inline bool
+Cube_IsMoving(Cube *cube) {
+  return cube->body.velocity.x != 0
+      || cube->body.velocity.y != 0;
 }
 
 void

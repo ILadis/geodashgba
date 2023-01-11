@@ -52,6 +52,23 @@ Chunk_AddObject(
   }
 }
 
+Object*
+Chunk_FindObjectByTyoe(
+    Chunk *chunk,
+    Type type)
+{
+  int count = chunk->count;
+  for (int i = 0; i < count; i++) {
+    Object *object = &chunk->objects[i];
+
+    if (object->type == type) {
+      return object;
+    }
+  }
+
+  return NULL;
+}
+
 bool
 Chunk_CheckHits(
     Chunk *chunk,

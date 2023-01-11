@@ -16,9 +16,15 @@ Body_Update(Body *body) {
 
   // apply friction
   if (vx < 0) {
-    vx += Math_min(-vx, dynamics->friction);
+    vx += Math_min(-vx, dynamics->friction.x);
   } else if (vx > 0) {
-    vx -= Math_min(+vx, dynamics->friction);
+    vx -= Math_min(+vx, dynamics->friction.x);
+  }
+
+  if (vy < 0) {
+    vy += Math_min(-vy, dynamics->friction.y);
+  } else if (vy > 0) {
+    vy -= Math_min(+vy, dynamics->friction.y);
   }
 
   int lx = dynamics->limits.x;

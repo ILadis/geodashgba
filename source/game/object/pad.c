@@ -38,7 +38,8 @@ Object_HitPad(
   }
 
   Cube *cube = Cube_GetInstance();
-  if (Cube_InState(cube, STATE_UNKNOWN)) {
+  // TODO workaround to prevent shadow from triggering pads
+  if (&cube->shape != shape) {
     return true;
   }
 

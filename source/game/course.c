@@ -22,6 +22,36 @@ Course_LoadChunk(
   return chunk;
 }
 
+static inline Bounds
+Course_CalculateBounds(Course *course) {
+  Bounds bounds = Bounds_Of(120, 256, 120, 256);
+  Level *level = course->level;
+
+  int count = Level_GetChunkCount(level);
+  bounds.center.x *= count;
+  bounds.size.x *= count;
+
+  Chunk last = {0};
+  Chunk_AssignIndex(&last, count - 1);
+  Level_GetChunk(level, &last);
+
+  int dx = 0;
+  Object *wall = Chunk_FindObjectByTyoe(&last, TYPE_GOAL_WALL);
+  if (wall != NULL) {
+    const Bounds *bounds = Chunk_GetBounds(&last);
+
+    Vector upper1 = Bounds_Upper(bounds);
+    Vector upper2 = Bounds_Upper(&wall->hitbox);
+
+    dx = (upper1.x - upper2.x) / 2;
+  }
+
+  bounds.center.x -= dx;
+  bounds.size.x -= dx;
+
+  return bounds;
+}
+
 void
 Course_ResetAndLoad(
     Course *course,
@@ -33,11 +63,7 @@ Course_ResetAndLoad(
 
   if (level != NULL) {
     course->level = level;
-    course->bounds = Bounds_Of(120, 256, 120, 256);
-
-    int count = Level_GetChunkCount(level);
-    course->bounds.center.x *= count;
-    course->bounds.size.x *= count;
+    course->bounds = Course_CalculateBounds(course);
   }
 
   Chunk empty = {0};
@@ -82,7 +108,6 @@ Course_CheckHits(
     Unit *unit,
     HitCallback callback)
 {
-  // first check to allow objects to affect cube movement
   Course_CheckFloorHit(course, unit, callback);
 
   int index = course->index;

@@ -127,17 +127,17 @@ Binv1Level_ResetCursor(
 
 int
 Binv1Level_GetChunkCount(Level *level) {
-  int count = 0;
+  int index = 0;
   Chunk chunk = {0};
 
   do {
-    Chunk_AssignIndex(&chunk, count);
+    Chunk_AssignIndex(&chunk, index);
 
     if (!Binv1Level_ResetCursor(level, &chunk)) {
-      return count;
+      return index - 1;
     }
 
-    count++;
+    index++;
   } while (true);
 }
 

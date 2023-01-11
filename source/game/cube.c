@@ -27,7 +27,7 @@ Cube_SetPosition(
   Body *body = &cube->body;
 
   static const Dynamics dynamics = {
-    .friction = 60,
+    .friction = { 60, 0 },
     .gravity  = { 0, 90 },
     .limits   = { 600, 3000 },
   };
@@ -55,6 +55,33 @@ Cube_Update(
   Cube_ApplyMovement(cube);
   Cube_ApplyHit(cube, course);
   Cube_ApplyRotation(cube, course);
+
+
+  if (Cube_EnteredState(cube, STATE_VICTORY)) {
+    Body *body = &cube->body;
+
+    static const Dynamics dynamics = {
+      .friction = { 100, 100 },
+      .gravity  = { 0, 0 },
+      .limits   = { 600, 3000 },
+    };
+
+    Body_SetDynamics(body, &dynamics);
+    Cube_Accelerate(cube, DIRECTION_RIGHT, 0);
+  }
+
+  else if (Cube_InState(cube, STATE_VICTORY) && !Cube_IsMoving(cube)) {
+    Body *body = &cube->body;
+
+    static const Dynamics dynamics = {
+      .friction = { 0, 0 },
+      .gravity  = { 200, 45 },
+      .limits   = { 800, 800 },
+    };
+
+    Body_SetDynamics(body, &dynamics);
+    Body_SetVelocity(body, -150, -800);
+  }
 }
 
 static inline GBA_Sprite*

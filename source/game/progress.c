@@ -21,7 +21,7 @@ Progress_SetCourse(
   progress->redraw = true;
 
   const Bounds *bounds = Course_GetBounds(course);
-  int total = bounds->size.x * 2;
+  int total = bounds->size.x * 2 - 8; // levels should always end with a wall with a width of 8px
 
   progress->total = total;
 }

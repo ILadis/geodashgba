@@ -5,6 +5,8 @@
 #include <vector.h>
 #include <hit.h>
 
+typedef enum Type Type;
+
 typedef struct Object {
   enum Type {
     TYPE_FLOOR,
@@ -14,6 +16,8 @@ typedef struct Object {
     TYPE_PIT,
     TYPE_SPIKE,
     TYPE_PAD,
+    TYPE_GOAL,
+    TYPE_GOAL_WALL,
     TYPE_COUNT,
   } type;
   Bounds hitbox, viewbox;
@@ -59,6 +63,14 @@ bool
 Object_CreateSpike(
     Object *object,
     Direction direction);
+
+bool
+Object_CreateGoal(Object *object);
+
+bool
+Object_CreateGoalWall(
+    Object *object,
+    int height);
 
 static inline Properties*
 Object_GetProperties(Object *object) {

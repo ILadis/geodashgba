@@ -6,7 +6,7 @@
 #include <vector.h>
 
 typedef struct Dynamics {
-  int friction;
+  Vector friction;
   Vector gravity;
   Vector limits;
 } Dynamics;

@@ -38,7 +38,7 @@ Particle_NewInstance(
   Body *body = &particle->body;
 
   static const Dynamics dynamics = (Dynamics) {
-    .friction = 0,
+    .friction = { 0, 0 },
     .gravity  = { 0, 0 },
     .limits   = { 5000, 5000 },
   };

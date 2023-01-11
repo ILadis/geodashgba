@@ -53,6 +53,7 @@ Object_Draw(
   extern void Object_DrawPit(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawSpike(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawPad(Object *object, GBA_TileMapRef *target);
+  extern void Object_DrawGoalWall(Object *object, GBA_TileMapRef *target);
 
   const void (*draw[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
     [TYPE_DISK] = Object_DrawDisk,
@@ -61,6 +62,7 @@ Object_Draw(
     [TYPE_PIT] = Object_DrawPit,
     [TYPE_SPIKE] = Object_DrawSpike,
     [TYPE_PAD] = Object_DrawPad,
+    [TYPE_GOAL_WALL] = Object_DrawGoalWall,
   };
 
   if (draw[object->type] != NULL) {

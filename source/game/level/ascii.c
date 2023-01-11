@@ -227,6 +227,27 @@ AsciiLevel_AddSpike(
   }
 }
 
+static void
+AsciiLevel_AddGoal(Level *level) {
+  Object object = {0};
+  if (Object_CreateGoal(&object)) {
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
+AsciiLevel_AddGoalWall(Level *level) {
+  Object object = {0};
+  Vector offset = Vector_Of(+1, 0);
+
+  int height = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_DOWN, '|') + 1;
+
+  if (Object_CreateGoalWall(&object, height)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
 int
 AsciiLevel_GetChunkCount(Level *level) {
   int count = 0;
@@ -308,6 +329,12 @@ AsciiLevel_GetChunk(
         break;
       case '>':
         AsciiLevel_AddSpike(level, DIRECTION_RIGHT);
+        break;
+      case 'G':
+        AsciiLevel_AddGoal(level);
+        break;
+      case '|':
+        AsciiLevel_AddGoalWall(level);
         break;
       }
     }

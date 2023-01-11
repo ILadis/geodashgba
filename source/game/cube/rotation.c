@@ -15,9 +15,6 @@ Cube_CalculateRotationVelocity(
     .state  = cube->state,
   };
 
-  State state = cube->state.current;
-  cube->state.current = STATE_UNKNOWN;
-
   int sign = Math_signum(shadow.body.velocity.x);
   if (sign == 0) {
     return 0;
@@ -41,8 +38,6 @@ Cube_CalculateRotationVelocity(
   else if (frames >= 24) alpha = 128;
 
   int velocity = sign * Math_div(alpha, frames);
-
-  cube->state.current = state;
 
   return velocity;
 }

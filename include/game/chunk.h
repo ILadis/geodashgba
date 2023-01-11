@@ -56,6 +56,11 @@ Chunk_AddObject(
     Chunk *chunk,
     Object *object);
 
+Object*
+Chunk_FindObjectByTyoe(
+    Chunk *chunk,
+    Type type);
+
 bool
 Chunk_CheckHits(
     Chunk *chunk,

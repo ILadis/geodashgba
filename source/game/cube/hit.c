@@ -70,7 +70,12 @@ Cube_HitCallback(
   // detailed hit check using cube shape
   if (!Object_IsHit(object, shape)) return;
 
-  if (object->deadly) {
+  if (object->type == TYPE_GOAL) {
+    cube->state.current = STATE_VICTORY;
+    cube->success = true;
+  }
+
+  else if (object->deadly) {
     Cube_HaltMovement(cube);
     cube->state.current = STATE_DESTROYED;
   }
@@ -132,10 +137,9 @@ Cube_ApplyHit(
 {
   cube->state.previous = cube->state.current;
 
-  if (Cube_InState(cube, STATE_DESTROYED)) {
-    cube->state.current = STATE_DESTROYED;
-  } else {
-    cube->state.current = STATE_AIRBORNE;
+  if (Cube_IsMoving(cube)) {
+    // assume airbone state before checking hits
+    cube->state.current = Cube_InState(cube, STATE_VICTORY) ? STATE_VICTORY : STATE_AIRBORNE;
 
     Cube_ApplyShape(cube);
 
