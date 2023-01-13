@@ -30,6 +30,16 @@ AsciiLevel_GetSymbolAt(
   return true;
 }
 
+static inline char
+AsciiLevel_GetCurrentSymbol(Level *level) {
+  Vector *cursor = &level->cursor;
+
+  char symbol;
+  AsciiLevel_GetSymbolAt(level, cursor->x, cursor->y, &symbol);
+
+  return symbol;
+}
+
 static Vector
 AsciiLevel_GetCursorPosition(Level *level) {
   Vector *cursor = &level->cursor;
@@ -88,8 +98,12 @@ AsciiLevel_CountConsecutiveSymbols(
   Vector cursor = level->cursor;
   int count = 0;
 
+  if (symbol == '\0') {
+    symbol = AsciiLevel_GetCurrentSymbol(level);
+  }
+
   char next;
-  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &next)) {
+  while (AsciiLevel_NextSymbol(level, directon, &next)) {
     if (next != symbol) break;
     else count++;
   }
@@ -174,7 +188,7 @@ AsciiLevel_AddPit(Level *level) {
   Object object = {0};
   Vector offset = Vector_Of(0, +1);
 
-  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '.') + 1;
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
 
   if (Object_CreatePit(&object, width)) {
     Object_Move(&object, &offset);
@@ -184,7 +198,7 @@ AsciiLevel_AddPit(Level *level) {
 
 static void
 AsciiLevel_AddDisk(Level *level) {
-  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '-') + 1;
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
 
   Object object = {0};
   if (Object_CreateDisk(&object, width)) {
@@ -197,12 +211,7 @@ AsciiLevel_AddOffsetDisk(
     Level *level,
     Direction direction)
 {
-  const char symbols[] = {
-    [DIRECTION_UP]   = '~',
-    [DIRECTION_DOWN] = '_',
-  };
-
-  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, symbols[direction]) + 1;
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
 
   Object object = {0};
   if (Object_CreateOffsetDisk(&object, direction, width)) {
@@ -245,7 +254,7 @@ AsciiLevel_AddGoalWall(Level *level) {
   Object object = {0};
   Vector offset = Vector_Of(+1, 0);
 
-  int height = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_DOWN, '|') + 1;
+  int height = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_DOWN, '\0') + 1;
 
   if (Object_CreateGoalWall(&object, height)) {
     Object_Move(&object, &offset);

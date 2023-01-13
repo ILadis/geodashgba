@@ -166,6 +166,42 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   }
 }
 
+test(GetChunk_ShouldReturnAddedObjects) {
+  // arrange
+  const int offset = 432;
+
+  Level level1 = Level_FromLayout(
+    "i      ~  <xxx",
+    "x      -      ",
+    "x^^ ..._  <xxx",
+  );
+
+  unsigned char buffer[1024] = {0};
+  Level level2 = Level_FromBuffer(buffer);
+
+  Chunk chunk1 = {0};
+  Chunk_AssignIndex(&chunk1, 0);
+
+  Chunk chunk2 = {0};
+  Chunk_AssignIndex(&chunk2, 0);
+
+  // act
+  Level_GetChunk(&level1, &chunk1);
+  Level_AddChunk(&level2, &chunk1);
+  Level_GetChunk(&level2, &chunk2);
+
+  // assert
+  assert(chunk1.count == chunk2.count);
+
+  for (int i = 0; i < chunk1.count; i++) {
+    assert(chunk1.objects[i].type == chunk2.objects[i].type);
+    assert(chunk1.objects[i].solid == chunk2.objects[i].solid);
+    assert(chunk1.objects[i].deadly == chunk2.objects[i].deadly);
+    assert(chunk1.objects[i].hitbox.center.x == chunk2.objects[i].hitbox.center.x);
+    assert(chunk1.objects[i].hitbox.center.y == chunk2.objects[i].hitbox.center.y);
+  }
+}
+
 test(GetChunkCount_ShouldReturnExpectedChunkCount) {
   // arrange
   const unsigned char buffer[] = { 0x00, 0x00 };
@@ -192,4 +228,5 @@ suite(
   GetChunk_ShouldCreateBoxesAtExpectedPositions,
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
   GetChunk_ShouldReturnEqualObjectsForSameLevelData,
+  GetChunk_ShouldReturnAddedObjects,
   GetChunkCount_ShouldReturnExpectedChunkCount);

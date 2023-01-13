@@ -11,7 +11,11 @@ void
 Camera_Reset(Camera *camera) {
   camera->position = Vector_Of(0, 0);
   camera->viewport = Bounds_Of(120, 80, 120, 80);
-  camera->frame = Bounds_Of(54, 96, 22, 40);
+  camera->frame.center = Vector_Of(54, 96);
+  camera->frame.threshold[DIRECTION_UP] = 40;
+  camera->frame.threshold[DIRECTION_DOWN] = 10;
+  camera->frame.threshold[DIRECTION_LEFT] = 22;
+  camera->frame.threshold[DIRECTION_RIGHT] = 22;
   camera->limit.lower = Vector_Of(0, 0);
   camera->limit.upper = Vector_Of(0, 0);
   camera->target = NULL;
@@ -47,15 +51,21 @@ Camera_MoveBy(
 static inline Vector
 Camera_GetTargetDelta(Camera *camera) {
   const Vector *target = camera->target;
-  Bounds *frame = &camera->frame;
+  Vector *frame = &camera->frame.center;
 
-  int dx = target->x - frame->center.x;
-  int dy = target->y - frame->center.y;
+  int dx = target->x - frame->x;
+  int dy = target->y - frame->y;
 
   Vector delta = Vector_Of(0, 0);
 
-  int px = Math_abs(dx) - frame->size.x;
-  int py = Math_abs(dy) - frame->size.y;
+  Direction horizontal = dx < 0 ? DIRECTION_LEFT : DIRECTION_RIGHT;
+  Direction vertical   = dy < 0 ? DIRECTION_UP   : DIRECTION_DOWN;
+
+  int tx = camera->frame.threshold[horizontal];
+  int ty = camera->frame.threshold[vertical];
+
+  int px = Math_abs(dx) - tx;
+  int py = Math_abs(dy) - ty;
 
   if (px > 0) {
     int sx = Math_signum(dx);
@@ -64,7 +74,7 @@ Camera_GetTargetDelta(Camera *camera) {
 
   if (py > 0) {
     int sy = Math_signum(dy);
-    delta.y = sy * py;
+    delta.y = sy * py; // TODO smooth out using bezier
   }
 
   return delta;

@@ -8,7 +8,11 @@
 
 typedef struct Camera {
   Vector position;
-  Bounds viewport, frame;
+  Bounds viewport;
+  struct {
+    Vector center;
+    int threshold[4];
+  } frame;
   struct {
     Vector lower;
     Vector upper;
