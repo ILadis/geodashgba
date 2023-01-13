@@ -10,10 +10,11 @@ Object_CreateBoxWithPole(
     Object *object,
     int height)
 {
-  int size = --height * 8;
-  if (height < 0) {
+  if (height < 1) {
     return false;
   }
+
+  int size = --height * 8;
 
   Bounds hitbox  = Bounds_Of(8, 32 + size, 8,  8 + size);
   Bounds viewbox = Bounds_Of(8, 20 + size, 8, 20 + size);

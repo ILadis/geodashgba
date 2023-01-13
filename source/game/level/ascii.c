@@ -197,7 +197,12 @@ AsciiLevel_AddOffsetDisk(
     Level *level,
     Direction direction)
 {
-  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '~') + 1;
+  const char symbols[] = {
+    [DIRECTION_UP]   = '~',
+    [DIRECTION_DOWN] = '_',
+  };
+
+  int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, symbols[direction]) + 1;
 
   Object object = {0};
   if (Object_CreateOffsetDisk(&object, direction, width)) {
@@ -314,6 +319,9 @@ AsciiLevel_GetChunk(
         break;
       case '~':
         AsciiLevel_AddOffsetDisk(level, DIRECTION_UP);
+        break;
+      case '_':
+        AsciiLevel_AddOffsetDisk(level, DIRECTION_DOWN);
         break;
       case 'T':
         AsciiLevel_AddPad(level);

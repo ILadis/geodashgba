@@ -9,7 +9,7 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   Level level = Level_FromLayout(
     "       ",
     "       ",
-    "__...__",
+    "  ...  ",
   );
 
   Chunk chunk = {0};
@@ -25,6 +25,29 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   assert(chunk.objects[0].hitbox.center.y == 46 + offset);
 }
 
+test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
+  // arrange
+  const int offset = 432;
+
+  Level level = Level_FromLayout(
+    "   i   ",
+    "   x   ",
+    "   x   ",
+  );
+
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, 0),
+
+  // act
+  Level_GetChunk(&level, &chunk);
+
+  // assert
+  assert(chunk.count == 1);
+  assert(chunk.objects[0].type = TYPE_BOX_WITH_POLE);
+  assert(chunk.objects[0].hitbox.center.x == 56);
+  assert(chunk.objects[0].hitbox.center.y == 32 + offset);
+}
+
 test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
   // arrange
   const int offset = 432;
@@ -32,7 +55,7 @@ test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
   Level level = Level_FromLayout(
     "x     x",
     "   x   ",
-    "x_____x",
+    "x     x",
   );
 
   Chunk chunk = {0};
@@ -117,7 +140,7 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
 
   Level level1 = Level_FromLayout(
     "           ",
-    "_________^_",
+    "         ^ ",
   );
 
   Level level2 = Level_FromBuffer(buffer);
@@ -149,7 +172,7 @@ test(GetChunkCount_ShouldReturnExpectedChunkCount) {
 
   Level level1 = Level_FromLayout(
     "                              ",
-    "______________________________",
+    "                              ",
   );
 
   Level level2 = Level_FromBuffer(buffer);
@@ -165,6 +188,7 @@ test(GetChunkCount_ShouldReturnExpectedChunkCount) {
 
 suite(
   GetChunk_ShouldCreatePitsAtExpectedPositions,
+  GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition,
   GetChunk_ShouldCreateBoxesAtExpectedPositions,
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
   GetChunk_ShouldReturnEqualObjectsForSameLevelData,
