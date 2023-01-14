@@ -4,12 +4,17 @@
 typedef struct Properties {
   int width;
   int height;
+  enum Variant {
+    BOX_VARIANT_REGULAR,
+    BOX_VARIANT_GRID,
+  } variant;
 } align4 Properties;
 
-bool
+static inline bool
 Object_CreateBox(
     Object *object,
-    int width, int height)
+    int width, int height,
+    enum Variant variant)
 {
   if (width < 1 || height < 1) {
     return false;
@@ -30,6 +35,77 @@ Object_CreateBox(
 
   Properties *props = Object_GetProperties(object);
   props->width = width;
+  props->height = height;
+  props->variant = variant;
+
+  return true;
+}
+
+bool
+Object_CreateRegularBox(
+    Object *object,
+    int width, int height)
+{
+  return Object_CreateBox(object, width, height, BOX_VARIANT_REGULAR);
+}
+
+bool
+Object_CreateGridBox(
+    Object *object,
+    int width, int height)
+{
+  return Object_CreateBox(object, width, height, BOX_VARIANT_GRID);
+}
+
+bool
+Object_CreateBoxWithPole(
+    Object *object,
+    int height)
+{
+  if (height < 1) {
+    return false;
+  }
+
+  int size = --height * 8;
+
+  Bounds hitbox  = Bounds_Of(8, 32 + size, 8,  8 + size);
+  Bounds viewbox = Bounds_Of(8, 20 + size, 8, 20 + size);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = false;
+  object->type = TYPE_BOX_WITH_POLE;
+
+  Properties *props = Object_GetProperties(object);
+  props->height = height;
+
+  return true;
+}
+
+bool
+Object_CreateBoxWithChains(
+    Object *object,
+    int height)
+{
+  if (height < 1) {
+    return false;
+  }
+
+  int size = --height * 8;
+
+  Bounds hitbox  = Bounds_Of(8, 32 + size, 8,  8 + size);
+  Bounds viewbox = Bounds_Of(8, 20 + size, 8, 20 + size);
+
+  object->hitbox  = hitbox;
+  object->viewbox = viewbox;
+
+  object->solid = true;
+  object->deadly = false;
+  object->type = TYPE_BOX_WITH_CHAINS;
+
+  Properties *props = Object_GetProperties(object);
   props->height = height;
 
   return true;
@@ -139,8 +215,37 @@ static const GBA_TileMapRef boxes[][3] = {
   },
 };
 
+static const GBA_TileMapRef block = {
+  .width = 2, .height = 2,
+  .tiles = (GBA_Tile[]) {
+    { .tileId = 18, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 18, .vFlip = 0, .hFlip = 1 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
 static void
-Object_DrawBoxes(
+Object_DrawRegularBoxes(
+    Object *object,
+    GBA_TileMapRef *target,
+    int width, int height)
+{
+  Vector lower = Bounds_Lower(&object->viewbox);
+  Vector upper = Bounds_Upper(&object->viewbox);
+
+  Vector_Rshift(&lower, 3);
+  Vector_Rshift(&upper, 3);
+
+  for (int y = lower.y; y < upper.y; y += 2) {
+    for (int x = lower.x; x < upper.x; x += 2) {
+      GBA_TileMapRef_Blit(target, x, y, &block);
+    }
+  }
+}
+
+static void
+Object_DrawGridBoxes(
     Object *object,
     GBA_TileMapRef *target,
     int width, int height)
@@ -272,8 +377,12 @@ Object_DrawBox(
   int width = props->width;
   int height = props->height;
 
-  int size = width * height;
+  enum Variant variant = props->variant;
+  if (variant == BOX_VARIANT_REGULAR) {
+    return Object_DrawRegularBoxes(object, target, width, height);
+  }
 
+  int size = width * height;
   if (size == 1) {
     Object_Draw1x1Box(object, target);
   } else if (size == height) {
@@ -281,6 +390,100 @@ Object_DrawBox(
   } else if (size == width) {
     Object_DrawHbox(object, target, width);
   } else {
-    Object_DrawBoxes(object, target, width, height);
+    Object_DrawGridBoxes(object, target, width, height);
+  }
+}
+
+static const GBA_TileMapRef pole = {
+  .width = 2, .height = 5,
+  .tiles = (GBA_Tile[]) {
+    // pole
+    { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 23, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 30, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 31, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 38, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 39, .vFlip = 0, .hFlip = 0 },
+    // block
+    { .tileId = 18, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 18, .vFlip = 0, .hFlip = 1 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
+void
+Object_DrawBoxWithPole(
+    Object *object,
+    GBA_TileMapRef *target)
+{
+  Vector position = Bounds_Lower(&object->viewbox);
+
+  int tx = position.x / 8;
+  int ty = position.y / 8;
+
+  const GBA_TileMapRef *tiles = &pole;
+  GBA_TileMapRef_Blit(target, tx, ty, tiles);
+  ty += tiles->height;
+
+  Properties *props = Object_GetProperties(object);
+  int height = props->height;
+
+  if (height-- > 0) {
+    for (int y = 0; y < height; y++) {
+      const GBA_TileMapRef *tiles = &vbox[y != 0];
+      GBA_TileMapRef_Blit(target, tx, ty, tiles);
+      ty += tiles->height;
+    }
+
+    GBA_TileMapRef_Blit(target, tx, ty, &vbox[2]);
+  }
+}
+
+static const GBA_TileMapRef chains = {
+  .width = 2, .height = 5,
+  .tiles = (GBA_Tile[]) {
+    // chains
+    { .tileId = 88, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 89, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 90, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 91, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 92, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 93, .vFlip = 0, .hFlip = 0 },
+    // block
+    { .tileId = 18, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 18, .vFlip = 0, .hFlip = 1 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 0 },
+    { .tileId = 26, .vFlip = 0, .hFlip = 1 },
+  }
+};
+
+void
+Object_DrawBoxWithChains(
+    Object *object,
+    GBA_TileMapRef *target)
+{
+  Vector position = Bounds_Lower(&object->viewbox);
+
+  int tx = position.x / 8;
+  int ty = position.y / 8;
+
+  const GBA_TileMapRef *tiles = &chains;
+  GBA_TileMapRef_Blit(target, tx, ty, tiles);
+  ty += tiles->height;
+
+  Properties *props = Object_GetProperties(object);
+  int height = props->height;
+
+  if (height > 0) {
+    const GBA_TileMapRef tiles = {
+      .width = 2, .height = 2,
+      .tiles = &chains.tiles[6],
+    };
+
+    for (int y = 0; y < height; y++) {
+      GBA_TileMapRef_Blit(target, tx, ty, &tiles);
+      ty += tiles.height;
+    }
   }
 }

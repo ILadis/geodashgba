@@ -13,6 +13,7 @@ typedef struct Object {
     TYPE_DISK,
     TYPE_BOX,
     TYPE_BOX_WITH_POLE,
+    TYPE_BOX_WITH_CHAINS,
     TYPE_PIT,
     TYPE_SPIKE,
     TYPE_PAD,
@@ -45,12 +46,22 @@ bool
 Object_CreatePad(Object *object);
 
 bool
-Object_CreateBox(
+Object_CreateRegularBox(
+    Object *object,
+    int width, int height);
+
+bool
+Object_CreateGridBox(
     Object *object,
     int width, int height);
 
 bool
 Object_CreateBoxWithPole(
+    Object *object,
+    int height);
+
+bool
+Object_CreateBoxWithChains(
     Object *object,
     int height);
 

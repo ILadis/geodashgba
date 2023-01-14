@@ -113,6 +113,44 @@ AsciiLevel_CountConsecutiveSymbols(
   return count;
 }
 
+static void
+AsciiLevel_CountWidthAndHeightOfSymbols(
+    Level *level,
+    int *width, int *height,
+    char symbol)
+{
+  Vector cursor = level->cursor;
+
+  if (symbol == '\0') {
+    symbol = AsciiLevel_GetCurrentSymbol(level);
+  }
+
+  char next;
+  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &next)) {
+    if (next != symbol) break;
+    else (*width)++;
+  }
+
+  level->cursor = cursor;
+
+  while (AsciiLevel_NextSymbol(level, DIRECTION_DOWN, &next)) {
+    if (next != symbol) break;
+
+    int length = 1;
+    while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &next)) {
+      if (next != symbol) break;
+      else length++;
+    }
+
+    if (length >= *width) (*height)++;
+    else break;
+
+    level->cursor.x = cursor.x;
+  }
+
+  level->cursor = cursor;
+}
+
 static inline void
 AsciiLevel_AddObjectToChunk(
     Level *level,
@@ -148,37 +186,48 @@ AsciiLevel_AddBoxWithPole(Level *level) {
 }
 
 static void
-AsciiLevel_AddBox(Level *level) {
+AsciiLevel_AddBoxWithChains(Level *level) {
+  Object object = {0};
+  Vector offset = Vector_Of(0, -1);
+
+  int height = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_DOWN, 'x');
+
+  if (Object_CreateBoxWithChains(&object, height)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+
   Vector cursor = level->cursor;
-  int width = 1, height = 1;
 
   char symbol;
   while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
-    if (symbol != 'x') break;
-    else width++;
-  }
-
-  level->cursor = cursor;
-
-  while (AsciiLevel_NextSymbol(level, DIRECTION_DOWN, &symbol)) {
-    if (symbol != 'x') break;
-
-    int length = 1;
-    while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
-      if (symbol != 'x') break;
-      else length++;
+    if (symbol == ':') {
+      AsciiLevel_AddBoxWithChains(level);
+      break;
     }
-
-    if (length == width) height++;
-    else break;
-
-    level->cursor.x = cursor.x;
   }
 
   level->cursor = cursor;
+}
+
+static void
+AsciiLevel_AddGridBox(Level *level) {
+  int width = 1, height = 1;
+  AsciiLevel_CountWidthAndHeightOfSymbols(level, &width, &height, '\0');
 
   Object object = {0};
-  if (Object_CreateBox(&object, width, height)) {
+  if (Object_CreateGridBox(&object, width, height)) {
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
+AsciiLevel_AddRegularBox(Level *level) {
+  int width = 1, height = 1;
+  AsciiLevel_CountWidthAndHeightOfSymbols(level, &width, &height, '\0');
+
+  Object object = {0};
+  if (Object_CreateRegularBox(&object, width, height)) {
     AsciiLevel_AddObjectToChunk(level, &object);
   }
 }
@@ -317,8 +366,14 @@ AsciiLevel_GetChunk(
       case 'i':
         AsciiLevel_AddBoxWithPole(level);
         break;
+      case ':':
+        AsciiLevel_AddBoxWithChains(level);
+        break;
       case 'x':
-        AsciiLevel_AddBox(level);
+        AsciiLevel_AddGridBox(level);
+        break;
+      case 'o':
+        AsciiLevel_AddRegularBox(level);
         break;
       case '.':
         AsciiLevel_AddPit(level);
