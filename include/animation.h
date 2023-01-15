@@ -13,7 +13,7 @@ typedef struct Animation {
   int value;
 } Animation;
 
-#define Animation_From(from, to, timing) (Animation) { timing, false, 0, from, to, 0 }
+#define Animation_From(from, to, timing) (Animation) { timing, false, 0, from, to, from }
 
 short
 Timing_EaseOut(short time);
@@ -40,6 +40,13 @@ bool
 Animation_Tick(
     Animation *animation,
     short dtime);
+
+static inline void
+Animation_Restart(Animation *animation) {
+  animation->time = 0;
+  animation->value = animation->from;
+  animation->running = true;
+}
 
 static inline void
 Animation_Cancel(Animation *animation) {

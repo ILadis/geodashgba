@@ -9,12 +9,18 @@
 
 typedef struct Selector {
   LevelId id;
-  Animation scroll;
+  Animation scroll, move;
+  GBA_Sprite *arrows[2];
   bool redraw;
 } Selector;
 
 Selector*
-Selector_GetInstance(bool redraw);
+Selector_GetInstance();
+
+void
+Selector_SetVisible(
+    Selector *selector,
+    bool visible);
 
 void
 Selector_GoForward(Selector *selector);

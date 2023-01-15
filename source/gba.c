@@ -389,6 +389,38 @@ GBA_Sprite_SetRotation(
 }
 
 void
+GBA_Sprite_SetVFlip(
+    GBA_Sprite *sprite,
+    bool flip)
+{
+  u16 attr1 = sprite->attr1;
+
+  if (flip) {
+    attr1 |=  (1 << 13);
+  } else {
+    attr1 &= ~(1 << 13);
+  }
+
+  sprite->attr1 = attr1;
+}
+
+void
+GBA_Sprite_SetHFlip(
+    GBA_Sprite *sprite,
+    bool flip)
+{
+  u16 attr1 = sprite->attr1;
+
+  if (flip) {
+    attr1 |=  (1 << 12);
+  } else {
+    attr1 &= ~(1 << 12);
+  }
+
+  sprite->attr1 = attr1;
+}
+
+void
 GBA_Sprite_SetPaletteBank(
     GBA_Sprite *sprite,
     int bank)

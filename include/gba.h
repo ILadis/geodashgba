@@ -443,6 +443,16 @@ GBA_Sprite_SetRotation(
     int alpha);
 
 void
+GBA_Sprite_SetVFlip(
+    GBA_Sprite *sprite,
+    bool flip);
+
+void
+GBA_Sprite_SetHFlip(
+    GBA_Sprite *sprite,
+    bool flip);
+
+void
 GBA_Sprite_SetPaletteBank(
     GBA_Sprite *sprite,
     int bank);

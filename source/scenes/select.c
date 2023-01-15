@@ -14,11 +14,11 @@ static void
 Scene_DoEnter() {
   static bool once = true;
 
-  GBA_Sprite_ResetAll();
-  GBA_EnableSprites();
-
   if (once) {
     GBA_System *system = GBA_GetSystem();
+
+    GBA_Sprite_ResetAll();
+    GBA_EnableSprites();
 
     // used for tilemaps
     GBA_Memcpy(&system->tileSets8[0][0], tilesTiles, tilesTilesLen);
@@ -32,7 +32,8 @@ Scene_DoEnter() {
     once = false;
   }
 
-  Selector_GetInstance(true);
+  Selector *selector = Selector_GetInstance();
+  Selector_SetVisible(selector, true);
 
   Level *level = Level_GetById(LEVEL_EMPTY);
   Course *course = Course_GetInstance();
@@ -90,7 +91,9 @@ Scene_DoExit() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
-  Selector *selector = Selector_GetInstance(false);
+  Selector *selector = Selector_GetInstance();
+  Selector_SetVisible(selector, false);
+
   Level *level = Selector_GetLevel(selector);
 
   Course *course = Course_GetInstance();

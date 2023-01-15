@@ -11,9 +11,6 @@
 
 static void
 Scene_DoEnter() {
-  GBA_Sprite_ResetAll();
-  GBA_EnableSprites();
-
   Course *course = Course_GetInstance();
 
   Progress *progress = Progress_GetInstance();

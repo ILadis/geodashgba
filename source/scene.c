@@ -57,8 +57,6 @@ Scene_StageFadeout(Scene *scene) {
   }
 
   else if (fade == 0b11111) {
-    scene->exit();
-
     Scene_StageReplace(scene);
     scene->stage = STAGE_FADEIN;
   }

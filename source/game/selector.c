@@ -2,14 +2,27 @@
 #include <game/selector.h>
 
 Selector*
-Selector_GetInstance(bool redraw) {
+Selector_GetInstance() {
   static Selector selector = {0};
-
-  if (redraw) {
-    selector.redraw = true;
-  }
-
   return &selector;
+}
+
+void
+Selector_SetVisible(
+    Selector *selector,
+    bool visible)
+{
+  selector->redraw = visible;
+
+  if (!visible) {
+    for (int i = 0; i < length(selector->arrows); i++) {
+      GBA_Sprite *sprite = selector->arrows[i];
+      if (sprite != NULL) {
+        GBA_Sprite_Release(sprite);
+        selector->arrows[i] = NULL;
+      }
+    }
+  }
 }
 
 static inline void
@@ -48,6 +61,10 @@ Selector_GoBackward(Selector *selector) {
 void
 Selector_Update(Selector *selector) {
   Animation_Tick(&selector->scroll, 4);
+
+  if (!Animation_Tick(&selector->move, 6)) {
+    Animation_Restart(&selector->move);
+  }
 }
 
 static inline void
@@ -143,6 +160,60 @@ Selector_DrawLevelBox(
   }
 }
 
+static inline void
+Selector_DrawArrows(
+    Selector *selector,
+    Direction direction)
+{
+  static const GBA_Sprite base = {
+    .colorMode = 0,
+    .paletteBank = 0,
+    .shape = 2, // 16x32
+    .size  = 2,
+    .tileId = 8,
+    .gfxMode = 0,
+    .objMode = 0,
+    .priority = 0,
+  };
+
+  GBA_Sprite *sprite = selector->arrows[direction];
+
+  if (sprite == NULL) {
+    sprite = GBA_Sprite_Allocate();
+    sprite->attr0 = base.attr0;
+    sprite->attr1 = base.attr1;
+    sprite->attr2 = base.attr2;
+
+    Animation move = Animation_From(0, 8, Timing_EaseOut);
+    Animation_Start(&move);
+
+    selector->move = move;
+    selector->arrows[direction] = sprite;
+
+    GBA_Sprite_SetHFlip(sprite, direction == DIRECTION_RIGHT);
+  }
+
+  const Vector *sign = Vector_FromDirection(direction);
+  int dx = Animation_CurrentValue(&selector->move);
+  dx *= sign->x;
+
+  static const Vector positions[] = {
+    [DIRECTION_LEFT]  = Vector_Of(13, 56),
+    [DIRECTION_RIGHT] = Vector_Of(211, 56),
+  };
+
+  const Vector *position = &positions[direction];
+  GBA_Sprite_SetPosition(sprite, position->x + dx, position->y);
+
+  static const LevelId bounds[] = {
+    [DIRECTION_LEFT]  = 0,
+    [DIRECTION_RIGHT] = LEVEL_COUNT - 1,
+  };
+
+  bool visible = selector->id != bounds[direction];
+  GBA_Sprite_SetObjMode(sprite, visible ? 0 : 2);
+}
+
 void
 Selector_Draw(Selector *selector) {
   if (selector->redraw) {
@@ -155,9 +226,10 @@ Selector_Draw(Selector *selector) {
     Selector_DrawLevelBox(selector, &bounds2);
   }
 
+  Selector_DrawArrows(selector, DIRECTION_LEFT);
+  Selector_DrawArrows(selector, DIRECTION_RIGHT);
   Selector_DrawLevelIndicator(selector);
 
-//int scroll = selector->scroll.delta + selector->scroll.offset;
   int scroll = Animation_CurrentValue(&selector->scroll);
   GBA_OffsetBackgroundLayer(2, scroll, 0);
 
