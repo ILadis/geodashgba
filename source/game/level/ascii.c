@@ -291,6 +291,17 @@ AsciiLevel_AddSpike(
 }
 
 static void
+AsciiLevel_AddTinySpike(Level *level) {
+  Object object = {0};
+  Vector offset = Vector_Of(0, +1);
+
+  if (Object_CreateTinySpike(&object)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddGoal(Level *level) {
   Object object = {0};
   if (Object_CreateGoal(&object)) {
@@ -377,6 +388,9 @@ AsciiLevel_GetChunk(
         break;
       case '.':
         AsciiLevel_AddPit(level);
+        break;
+      case ',':
+        AsciiLevel_AddTinySpike(level);
         break;
       case '-':
         AsciiLevel_AddDisk(level);

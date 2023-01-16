@@ -115,7 +115,7 @@ Binv1Level_ResetCursor(
       return false;
     }
 
-    int offset = count * 51;
+    int offset = count * 55;
     if (!Binv1Level_AdvanceCursor(level, offset)) {
       // no more data to read
       return false;

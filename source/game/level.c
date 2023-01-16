@@ -26,7 +26,7 @@ static Level course02 = Level_FromLayout(
   "                                      i                <x                                      -                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx         ~~~~~~~        ~                          -              i   x   x          i   x   x   x   x               ___                                                                                         i   x~                   :  :                           _       x     ~                                                                                      T         |",
   "                                  i   x                                          ^         -                                           v             v     v                           ----                                -           x   x   x          x   x   x   x   x               xxx    ___                            --                                                i   x   x   ~                xoox                       _             x          ^     ~~~                                          ~           ^      ^      ~~~x         |",
   "                              i   x   x                           ^        xxxxxxxxxxxxx                                                                                                                                      x~~~~x   x   x   x xxxxxx   x   x   x   x   x               xxx    xxx ~              --      --                                                    x   x   x      ~             vvvv                   _                   x      ~ ~ ~       -   ___                           x~~~      ~      ~ ~ ~~~~ ~ ~~      x         |",
-  "             ^      ^^       ^x...x...x       ^^   xxxxxxxx..xxxxxxxxxxx...xxxxxxxxxxxxx.......................o~~~~~~~~xxxxxxxxxxxxxxx~xxxxxxxxxxxxx~xxxxx~xxxx~~--__  ^^           T  ^^^^..................................x....x...x...x...x.xxxxxx...x...x...x...x...x...............xxx....xxx...~       ^^x.....xxx.........xxx^^       ^^     ^^^      ^      ^     ^^x...x...x...x.........~    ^^           ^xx....-----..........................x.......................^^      ^^^    x~...~...~~~x............~......................x         |",
+  "             ^      ,^      ^^x...x...x       ^^   xxxxxxxx..xxxxxxxxxxx...xxxxxxxxxxxxx.......................o~~~~~~~~xxxxxxxxxxxxxxx~xxxxxxxxxxxxx~xxxxx~xxxx~~--__  ^^           T  ^^^^..................................x....x...x...x...x.xxxxxx...x...x...x...x...x...............xxx....xxx...~       ^^x.....xxx.........xxx^^       ^^     ^^^      ^      ^     ^^x...x...x...x.........~    ^^           ^xx....-----..........................x.......................^^      ^^^    x~...~...~~~x............~......................x         |",
 );
 
 static Level course03 = Level_FromLayout(
@@ -41,10 +41,25 @@ static Level course03 = Level_FromLayout(
   "                                   i   x             ~           i   x   x                 ~                                 ~           ~                 x~~~~x     ^  T               ~~~~      ~     -    ^  i   x   x     x  i   x   x         x   x                                   x   x   x    x     ~                      x~~~~~~~~~~x                   x                         x  x                               x                     -     --      T            i   ~ x   T x   ~~    T          x       x       x        ^        ^        ~                        ~~~~~~~              vv             vvvv           x       x       x      x   x  x   x          x   x      T         |",
   "               T^^^^      ^^     ^^x...x         T^^^^^^^      ^^x...x...x^^^    ^^    ^       ^          T   T   T      ^       ^^o^^^      T^^^^x~~~~x...x....x..x~~~~~x....................~~...........x~~x..x...x...x.....x..x...x...x.....x...x...x..x~~x^^^    ^    ^^    ^^x....x...x...x...x....x............................x..........x...................x^^^^^^     ^^    ^^      x  x...............................x^      ^^    ^x~~x.................x^^^^      ^^x.....x...x.x........xx^^^^     ^x      ^x      ^x~~~~~~~~~~~x..~~~~.~~~~...................................      ^   ^         ^    ^          ^^     ^x      ^x      ^x~~x...x...x..x...x..........x...x....~xx^^       |",
 );
+
+static Level course04 = Level_FromLayout(
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "               *    ",
+    "             ,,,,,  ",
+  );
 #else
 extern Level course01;
 extern Level course02;
 extern Level course03;
+extern Level course04;
 #endif
 
 Level*
@@ -53,6 +68,7 @@ Level_GetById(LevelId id) {
     [LEVEL_EMPTY] = &course01,
     [LEVEL_STEREO_MADNESS] = &course02,
     [LEVEL_BACK_ON_TRACK] = &course03,
+    [LEVEL_POLARGEIST] = &course04,
   };
 
   Level *level = NULL;

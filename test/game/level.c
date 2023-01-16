@@ -109,12 +109,12 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
   // assert
   assert(chunk.count == 9);
   assert(chunk.objects[1].hitbox.center.x ==  32);
-  assert(chunk.objects[1].hitbox.center.y ==  56 + offset);
+  assert(chunk.objects[1].hitbox.center.y == 104 + offset);
   assert(chunk.objects[1].hitbox.size.x   ==  32);
-  assert(chunk.objects[1].hitbox.size.y   ==   8);
-  assert(chunk.objects[2].hitbox.center.x == 120);
+  assert(chunk.objects[1].hitbox.size.y   ==  56);
+  assert(chunk.objects[2].hitbox.center.x == 152);
   assert(chunk.objects[2].hitbox.center.y == 112 + offset);
-  assert(chunk.objects[2].hitbox.size.x   == 120);
+  assert(chunk.objects[2].hitbox.size.x   ==  88);
   assert(chunk.objects[2].hitbox.size.y   ==  48);
   assert(chunk.objects[4].hitbox.center.x == 144);
   assert(chunk.objects[4].hitbox.center.y ==  40 + offset);
@@ -129,13 +129,13 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
 test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   // arrange
   const unsigned char buffer[] = {
-    0x01, 0x05, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
+    0x01, 0x06, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00,
     0x98, 0x00, 0x00, 0x00, 0xd0, 0x01, 0x00, 0x00,
     0x90, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
     0xa0, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   };
 
   Level level1 = Level_FromLayout(

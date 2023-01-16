@@ -23,7 +23,7 @@ typedef struct Object {
   } type;
   Bounds hitbox, viewbox;
   bool solid, deadly;
-  char align4 properties[32];
+  char align4 properties[36];
 } Object;
 
 typedef struct Properties Properties;
@@ -74,6 +74,9 @@ bool
 Object_CreateSpike(
     Object *object,
     Direction direction);
+
+bool
+Object_CreateTinySpike(Object *object);
 
 bool
 Object_CreateGoal(Object *object);
