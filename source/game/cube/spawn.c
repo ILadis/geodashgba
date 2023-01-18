@@ -8,6 +8,12 @@ Cube_ApplySpawn(
     Cube *cube,
     Course *course)
 {
+  static const Dynamics dynamics = {
+    .friction = { 0, 0 },
+    .gravity  = { 0, 0 },
+    .limits   = { 5000, 5000 },
+  };
+
   const Vector *spawn = Course_GetSpawn(course);
 
   if (Cube_InState(cube, STATE_UNKNOWN)) {
@@ -20,16 +26,16 @@ Cube_ApplySpawn(
     cube->timer = 90;
 
     const Vector *position = Cube_GetPosition(cube);
-    int count;
 
-    count = 10;
-    while (count-- > 0) Particle_NewInstance(position, 16, 0);
-
-    count = 10;
-    while (count-- > 0) Particle_NewInstance(position, 16, 5);
-
-    count = 10;
-    while (count-- > 0) Particle_NewInstance(position, 16, 8);
+    const int delays[] = {0, 5, 8};
+    for (int i = 0; i < length(delays); i++) {
+      int count = 10;
+      while (count-- > 0) {
+        Particle *particle = Particle_NewInstance(position, &dynamics, 16, delays[i]);
+        Particle_RandomVelocity(particle);
+        Particle_RandomSize(particle);
+      }
+    }
   }
   else if (Cube_InState(cube, STATE_DESTROYED)) {
     int timer = cube->timer -= 1;

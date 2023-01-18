@@ -174,7 +174,7 @@ Binv1Level_GetChunk(
       Binv1Level_ReadInt8(level, &solid);
       Binv1Level_ReadInt8(level, &deadly);
 
-      object->type = (enum Type) type;
+      object->type = type;
       object->solid = solid == 1;
       object->deadly = deadly == 1;
 

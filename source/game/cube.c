@@ -1,5 +1,6 @@
 
 #include <game/cube.h>
+#include <game/particle.h>
 
 Cube*
 Cube_GetInstance() {
@@ -81,6 +82,25 @@ Cube_Update(
 
     Body_SetDynamics(body, &dynamics);
     Body_SetVelocity(body, -150, -800);
+  }
+
+  else if (Cube_InState(cube, STATE_GROUNDED) && Cube_IsMoving(cube)) {
+    static const Dynamics dynamics = {
+      .friction = { 0, 0 },
+      .gravity  = { 0, 50 },
+      .limits   = { 800, 800 },
+    };
+
+    static int timer = 0;
+    Vector position = cube->hitbox.center;
+    position.x -= 6;
+    position.y += 6;
+
+    if (timer++ % 8 == 0) {
+      Particle *particle = Particle_NewInstance(&position, &dynamics, 16, 0);
+      Particle_SetVelocity(particle, 0, -500);
+      Particle_SetSize(particle, PARTICLE_SIZE_SMALL);
+    }
   }
 }
 

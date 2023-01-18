@@ -89,7 +89,7 @@ Scene_StageFadein(Scene *scene) {
 
 void
 Scene_Play(Scene *scene) {
-  Stage stage = scene->stage;
+  enum Stage stage = scene->stage;
 
   switch (stage) {
   case STAGE_ENTER:

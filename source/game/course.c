@@ -36,7 +36,7 @@ Course_CalculateBounds(Course *course) {
   Level_GetChunk(level, &last);
 
   int dx = 0;
-  Object *wall = Chunk_FindObjectByTyoe(&last, TYPE_GOAL_WALL);
+  Object *wall = Chunk_FindObjectByType(&last, TYPE_GOAL_WALL);
   if (wall != NULL) {
     const Bounds *bounds = Chunk_GetBounds(&last);
 

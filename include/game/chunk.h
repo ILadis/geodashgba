@@ -57,7 +57,7 @@ Chunk_AddObject(
     Object *object);
 
 Object*
-Chunk_FindObjectByTyoe(
+Chunk_FindObjectByType(
     Chunk *chunk,
     Type type);
 

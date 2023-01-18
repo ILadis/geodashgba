@@ -31,34 +31,48 @@ Particle_DrawAll() {
 Particle*
 Particle_NewInstance(
     const Vector *position,
+    const Dynamics *dynamics,
     int life, int delay)
 {
   Particle *particle = Prefab_NewInstance(prefabs);
 
   Body *body = &particle->body;
-
-  static const Dynamics dynamics = (Dynamics) {
-    .friction = { 0, 0 },
-    .gravity  = { 0, 0 },
-    .limits   = { 5000, 5000 },
-  };
-
   // body is using 8w fixed-point integer
-  Body_SetDynamics(body, &dynamics);
+  Body_SetDynamics(body, dynamics);
   Body_SetPosition(body, (position->x << 8) + 4, (position->y << 8) + 4);
 
-  int angle = Math_rand();
-  int velocity = 1500;
-
-  int dx = (Math_cos(angle) * velocity) >> 8;
-  int dy = (Math_sin(angle) * velocity) >> 8;
-
-  Body_SetVelocity(body, dx, dy);
-
+  particle->size = PARTICLE_SIZE_SMALL;
   particle->life = life;
   particle->delay = delay;
 
   return particle;
+}
+
+void
+Particle_RandomVelocity(Particle *particle) {
+  Body *body = &particle->body;
+
+  int rand = Math_rand();
+  int velocity = 1500;
+
+  int dx = (Math_cos(rand) * velocity) >> 8;
+  int dy = (Math_sin(rand) * velocity) >> 8;
+
+  Body_SetVelocity(body, dx, dy);
+}
+
+void
+Particle_RandomSize(Particle *particle) {
+  static const enum Size sizes[] = {
+    PARTICLE_SIZE_SMALL, PARTICLE_SIZE_SMALL, PARTICLE_SIZE_SMALL,
+    PARTICLE_SIZE_MEDIUM, PARTICLE_SIZE_MEDIUM, PARTICLE_SIZE_MEDIUM,
+    PARTICLE_SIZE_LARGE, PARTICLE_SIZE_LARGE
+  };
+
+  int rand = Math_rand();
+  int index = rand % length(sizes);
+
+  particle->size = sizes[index];
 }
 
 static bool
@@ -111,11 +125,7 @@ Particle_LoadSprite(Particle *particle) {
   if (sprite == NULL) {
     particle->sprite = sprite = GBA_Sprite_Allocate();
 
-    // TODO find better way to specify/choose tile id
-    static int tileId = 4;
-    base.tileId = tileId++;
-    if (tileId > 6) tileId = 4;
-
+    base.tileId = particle->size;
     sprite->attr0 = base.attr0;
     sprite->attr1 = base.attr1;
     sprite->attr2 = base.attr2;

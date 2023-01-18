@@ -4,21 +4,19 @@
 #include <gba.h>
 #include <types.h>
 
-typedef enum Stage {
-  STAGE_ENTER,
-  STAGE_PLAY,
-  STAGE_REPLACE,
-  STAGE_FADEOUT,
-  STAGE_FADEIN,
-} Stage;
-
 typedef struct Scene {
+  enum Stage {
+    STAGE_ENTER,
+    STAGE_PLAY,
+    STAGE_REPLACE,
+    STAGE_FADEOUT,
+    STAGE_FADEIN,
+  } stage;
   void (*enter)(void);
   void (*play)(void);
   void (*exit)(void);
   int fade;
   const struct Scene *next;
-  enum Stage stage;
 } Scene;
 
 Scene*

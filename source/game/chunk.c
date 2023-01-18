@@ -53,7 +53,7 @@ Chunk_AddObject(
 }
 
 Object*
-Chunk_FindObjectByTyoe(
+Chunk_FindObjectByType(
     Chunk *chunk,
     Type type)
 {
