@@ -17,6 +17,7 @@ typedef struct Object {
     TYPE_PIT,
     TYPE_SPIKE,
     TYPE_PAD,
+    TYPE_RING,
     TYPE_GOAL,
     TYPE_GOAL_WALL,
     TYPE_COUNT,
@@ -44,6 +45,9 @@ Object_CreateOffsetDisk(
 
 bool
 Object_CreatePad(Object *object);
+
+bool
+Object_CreateRing(Object *object);
 
 bool
 Object_CreateRegularBox(

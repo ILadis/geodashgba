@@ -280,6 +280,14 @@ AsciiLevel_AddPad(Level *level) {
 }
 
 static void
+AsciiLevel_AddRing(Level *level) {
+  Object object = {0};
+  if (Object_CreateRing(&object)) {
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddSpike(
     Level *level,
     Direction direction)
@@ -403,6 +411,9 @@ AsciiLevel_GetChunk(
         break;
       case 'T':
         AsciiLevel_AddPad(level);
+        break;
+      case '@':
+        AsciiLevel_AddRing(level);
         break;
       case '^':
         AsciiLevel_AddSpike(level, DIRECTION_UP);

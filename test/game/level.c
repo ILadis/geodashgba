@@ -25,6 +25,38 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   assert(chunk.objects[0].hitbox.center.y == 46 + offset);
 }
 
+test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
+  // arrange
+  const int offset = 432;
+
+  Level level = Level_FromLayout(
+    "               ",
+    "              @",
+    "            ,,,",
+  );
+
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, 0),
+
+  // act
+  Level_GetChunk(&level, &chunk);
+
+  // assert
+  assert(chunk.count == 4);
+  assert(chunk.objects[0].type = TYPE_SPIKE);
+  assert(chunk.objects[0].hitbox.center.x == 200);
+  assert(chunk.objects[0].hitbox.center.y == 44 + offset);
+  assert(chunk.objects[1].type = TYPE_SPIKE);
+  assert(chunk.objects[1].hitbox.center.x == 216);
+  assert(chunk.objects[1].hitbox.center.y == 44 + offset);
+  assert(chunk.objects[2].type = TYPE_RING);
+  assert(chunk.objects[2].hitbox.center.x == 232);
+  assert(chunk.objects[2].hitbox.center.y == 24 + offset);
+  assert(chunk.objects[3].type = TYPE_SPIKE);
+  assert(chunk.objects[3].hitbox.center.x == 232);
+  assert(chunk.objects[3].hitbox.center.y == 44 + offset);
+}
+
 test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
   // arrange
   const int offset = 432;
@@ -224,6 +256,7 @@ test(GetChunkCount_ShouldReturnExpectedChunkCount) {
 
 suite(
   GetChunk_ShouldCreatePitsAtExpectedPositions,
+  GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions,
   GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition,
   GetChunk_ShouldCreateBoxesAtExpectedPositions,
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
