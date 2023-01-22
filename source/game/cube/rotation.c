@@ -12,6 +12,7 @@ Cube_CalculateRotationVelocity(
   Cube shadow = (Cube) {
     .body   = cube->body,
     .hitbox = cube->hitbox,
+    .shape  = cube->shape,
     .state  = cube->state,
   };
 

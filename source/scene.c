@@ -53,7 +53,7 @@ Scene_StageFadeout(Scene *scene) {
 
   if (fade == 0) {
     system->blendControl->value = blend.value;
-    system->blendFace->ey = 0;
+    system->blendFace->value = 0;
   }
 
   else if (fade == 0b11111) {
@@ -63,7 +63,7 @@ Scene_StageFadeout(Scene *scene) {
 
   else {
     scene->play();
-    system->blendFace->ey = fade;
+    system->blendFace->value = fade;
   }
 }
 
@@ -83,7 +83,7 @@ Scene_StageFadein(Scene *scene) {
 
   else {
     scene->play();
-    system->blendFace->ey = fade;
+    system->blendFace->value = fade;
   }
 }
 
