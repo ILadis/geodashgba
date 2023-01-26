@@ -49,13 +49,13 @@ int main(int argc, char *argv[]) {
     x += step;
 
     fprintf(out, "0x%04X", fixed);
-    fputs(",", out);
+    fprintf(out, ",");
 
     if (size % 8 == 0) fputs("\n", out);
     if (size % 64 == 0 && size > 0) fputs("\n", out);
   }
 
-  fputs("};", out);
+  fprintf(out, "};");
   fclose(out);
 
   return 0;

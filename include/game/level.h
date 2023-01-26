@@ -30,21 +30,27 @@ typedef struct Level {
   int limit;
 } Level;
 
-#define layout(line, args...) ((const char[][sizeof(line)]) { line, ##args })
-
-#define Level_FromLayout(line, args...) ((Level) { \
+#define Level_ToLayout(line, lines...) ((const char[][sizeof(line)]) { line, ##lines })
+#define Level_FromLayout(line, lines...) ((Level) { \
   .format = FORMAT_ASCII, \
-  .buffer = { (void *) layout(line, ##args) }, \
+  .buffer = { (void *) Level_ToLayout(line, ##lines) }, \
   .size = { \
     .x = sizeof(line), \
-    .y = length(layout(line, ##args)), \
+    .y = length(Level_ToLayout(line, ##lines)), \
   } \
 })
 
-#define Level_FromBuffer(buf) ((Level) { \
+#define Level_ToBinv1(byte, bytes...) ((const unsigned char[]) { byte, ##bytes })
+#define Level_FromData(byte, bytes...) ((Level) { \
   .format = FORMAT_BINV1, \
-  .buffer = { (void *) buf }, \
-  .size = { length(buf) } \
+  .buffer = { (void *) Level_ToBinv1(byte, ##bytes) }, \
+  .size = { length(Level_ToBinv1(byte, ##bytes)) } \
+})
+
+#define Level_AllocateNew(length) ((Level) { \
+  .format = FORMAT_BINV1, \
+  .buffer = { (void *) ((unsigned char[length]) {0}) }, \
+  .size = { length } \
 })
 
 Level*

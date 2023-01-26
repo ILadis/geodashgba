@@ -158,6 +158,19 @@ Selector_DrawLevelBox(
     while (tx < upper.x - 1) GBA_TileMapRef_BlitTile(&target, tx++, ty, &tile);
     GBA_TileMapRef_BlitTile(&target, tx, ty, &edges[3]);
   }
+
+  static bool flag = true;
+  if (flag) {
+    extern const Font hudFont;
+
+    Printer *printer = &selector->printer;
+    Printer_SetFont(printer, &hudFont);
+    Printer_SetCanvas(printer, &target);
+    Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 8);
+    Printer_PutChar(printer, 3, 2);
+
+    flag = false;
+  }
 }
 
 static inline void

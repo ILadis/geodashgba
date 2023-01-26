@@ -4,5 +4,6 @@
 .vscode/
 assets/
 tools/lvl2bin
+tools/ppm2font
 tools/bezlut
 tools/sinlut

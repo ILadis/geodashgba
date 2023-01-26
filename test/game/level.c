@@ -160,22 +160,20 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
 
 test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   // arrange
-  const unsigned char buffer[] = {
+  Level level1 = Level_FromLayout(
+    "           ",
+    "         ^ ",
+  );
+
+  Level level2 = Level_FromData(
     0x01, 0x06, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00,
     0x98, 0x00, 0x00, 0x00, 0xd0, 0x01, 0x00, 0x00,
     0x90, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
     0xa0, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  };
-
-  Level level1 = Level_FromLayout(
-    "           ",
-    "         ^ ",
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   );
-
-  Level level2 = Level_FromBuffer(buffer);
 
   Chunk chunk1 = {0}, chunk2 = {0};
   Chunk_AssignIndex(&chunk1, 0);
@@ -208,8 +206,7 @@ test(GetChunk_ShouldReturnAddedObjects) {
     "x^^ ..._  <xxx",
   );
 
-  unsigned char buffer[1024] = {0};
-  Level level2 = Level_FromBuffer(buffer);
+  Level level2 = Level_AllocateNew(1024);
 
   Chunk chunk1 = {0};
   Chunk_AssignIndex(&chunk1, 0);
@@ -236,14 +233,12 @@ test(GetChunk_ShouldReturnAddedObjects) {
 
 test(GetChunkCount_ShouldReturnExpectedChunkCount) {
   // arrange
-  const unsigned char buffer[] = { 0x00, 0x00 };
-
   Level level1 = Level_FromLayout(
     "                              ",
     "                              ",
   );
 
-  Level level2 = Level_FromBuffer(buffer);
+  Level level2 = Level_FromData(0x00, 0x00);
 
   // act
   int count1 = Level_GetChunkCount(&level1);

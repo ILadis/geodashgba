@@ -2,18 +2,6 @@
 #include <text.h>
 
 void
-Printer_Init(Printer *printer, const Font *font, GBA_TileMapRef *tileMap) {
-  printer->font = font;
-  printer->tileMap = *tileMap;
-}
-
-void
-Printer_SetCursor(Printer *printer, int x, int y) {
-  printer->cursor.x = x;
-  printer->cursor.y = y;
-}
-
-void
 Printer_PutChar(
     Printer *printer,
     int letter,
@@ -23,8 +11,8 @@ Printer_PutChar(
   const Glyph *glyph = font->glyphs[letter];
   if (glyph == NULL) return;
 
-  int cx = printer->cursor.x;
-  int cy = printer->cursor.y;
+  int px = printer->cursor.x;
+  int py = printer->cursor.y;
 
   for (int y = 0; y < font->height; y++) {
     // TODO support glyphs wider than 8 pixels (char is only 8 bits)
@@ -32,7 +20,7 @@ Printer_PutChar(
 
     for (int x = 0; x < glyph->width; x++, row >>= 1) {
       if (row & 1) {
-        GBA_TileMapRef_SetPixel(&printer->tileMap, cx + x, cy + y, color);
+        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, color);
       }
     }
   }
