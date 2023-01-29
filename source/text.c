@@ -25,7 +25,7 @@ Printer_PutChar(
     }
   }
 
-  printer->cursor.x += glyph->width;
+  printer->cursor.x += glyph->width + 1; // spacing
 }
 
 void
@@ -47,5 +47,5 @@ Printer_ClearChar(
     }
   }
 
-  printer->cursor.x += glyph->width;
+  printer->cursor.x += glyph->width + 1; // spacing
 }

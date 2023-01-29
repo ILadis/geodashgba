@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
       fprintf(out, "static const Glyph glyph%ld = {\n", font.size);
       fprintf(out, "  .data = (unsigned char[]) {\n");
 
-      msb = font.width - 2; font.size++;
+      msb = font.width - 1; font.size++;
     }
 
     for (int x = 0; x < image.width; x++) {
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
     if (++y % font.height == 0) {
       fprintf(out, "  },\n");
-      fprintf(out, "  .width = %ld,\n", msb + 2);
+      fprintf(out, "  .width = %ld,\n", msb + 1);
       fprintf(out, "};\n");
     }
   }
