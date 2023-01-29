@@ -58,7 +58,7 @@ assets:
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/backgrounds.tmx assets/tiles/backgrounds.c || true
-	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/overlays.tmx assets/tiles/overlays.c || true
+	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/snippets.tmx assets/tiles/snippets.c || true
 	@tools/sinlut > assets/sinlut.c
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/ppm2font 5x5 hud < graphics/font.ppm > assets/font.c

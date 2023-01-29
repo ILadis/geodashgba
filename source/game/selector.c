@@ -123,41 +123,14 @@ Selector_DrawLevelBox(
     Selector *selector,
     const Bounds *bounds)
 {
+  extern const GBA_TileMapRef selectLevelBoxTileMap;
+
   Vector lower = Bounds_Lower(bounds);
-  Vector upper = Bounds_Upper(bounds);
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
-  const GBA_Tile tile = { .tileId = 79 };
-  const GBA_Tile edges[] = {
-    { .tileId = 71, .vFlip = 0, .hFlip = 0 }, // top left
-    { .tileId = 71, .vFlip = 0, .hFlip = 1 }, // top right
-    { .tileId = 71, .vFlip = 1, .hFlip = 0 }, // bottom left
-    { .tileId = 71, .vFlip = 1, .hFlip = 1 }, // bottom right
-  };
-
-  int ty = lower.y;
-
-  { // top
-    int tx = lower.x;
-    GBA_TileMapRef_BlitTile(&target, tx++, ty, &edges[0]);
-    while (tx < upper.x - 1) GBA_TileMapRef_BlitTile(&target, tx++, ty, &tile);
-    GBA_TileMapRef_BlitTile(&target, tx, ty, &edges[1]);
-  }
-
-  for (ty++; ty < upper.y - 1; ty++) {
-    for (int tx = lower.x; tx < upper.x; tx++) {
-      GBA_TileMapRef_BlitTile(&target, tx, ty, &tile);
-    }
-  }
-
-  { // bottom
-    int tx = lower.x;
-    GBA_TileMapRef_BlitTile(&target, tx++, ty, &edges[2]);
-    while (tx < upper.x - 1) GBA_TileMapRef_BlitTile(&target, tx++, ty, &tile);
-    GBA_TileMapRef_BlitTile(&target, tx, ty, &edges[3]);
-  }
+  GBA_TileMapRef_Blit(&target, lower.x, lower.y, &selectLevelBoxTileMap);
 
   static bool flag = true;
   if (flag) {
@@ -166,8 +139,10 @@ Selector_DrawLevelBox(
     Printer *printer = &selector->printer;
     Printer_SetFont(printer, &hudFont);
     Printer_SetCanvas(printer, &target);
-    Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 8);
+    Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 16);
     Printer_PutChar(printer, 3, 2);
+    Printer_PutChar(printer, 4, 2);
+    Printer_PutChar(printer, 5, 2);
 
     flag = false;
   }
