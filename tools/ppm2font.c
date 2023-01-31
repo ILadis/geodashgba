@@ -1,7 +1,8 @@
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 
 typedef union Color {
@@ -26,15 +27,15 @@ int main(int argc, char **argv) {
   }
 
   struct {
+    const char *name;
     int width, height;
     int size;
-    const char *name;
   } font = {0};
 
   font.name = argv[2];
   sscanf(argv[1], "%dx%d", &font.width, &font.height);
 
-  // glyph width is optional for a variable width font
+  // width is optional for a variable width font
   if (font.height <= 0) {
     fprintf(log, "Invalid font height given.\n");
     return 1;
@@ -68,56 +69,83 @@ int main(int argc, char **argv) {
   fprintf(out, "\n");
   fprintf(out, "#include <text.h>\n");
 
-  int msb = 0;
-  for (int y = 0; y < image.height;) {
-    char byte[] = "00000000";
+  while (true) {
+    long offset = ftell(in);
+    int width = font.width;
 
-    if (y % font.height == 0) {
-      fprintf(out, "\n");
-      fprintf(out, "static const Glyph glyph%ld = {\n", font.size);
-      fprintf(out, "  .data = (unsigned char[]) {\n");
+    // look ahead and determine width of next glyph
+    for (int y = 0; y < font.height; y++) {
+      for (int x = 0; x < image.width; x++) {
+        Color color;
+        pixel(in, image.depth, &color);
 
-      msb = font.width - 1; font.size++;
-    }
-
-    for (int x = 0; x < image.width; x++) {
-      int i = x % 8;
-
-      Color color;
-      pixel(in, image.depth, &color);
-
-      if (i == 0) {
-        fprintf(out, x == 0 ? "    " : ", ");
-        strcpy(byte, "00000000");
-      }
-
-      char *bit = &byte[7 - i];
-      if (color.value != 0xFFFFFF) {
-        if (x > msb) msb = x;
-        *bit = '1';
-      }
-
-      if (i == 7) {
-        fprintf(out, "0b%s", byte);
+        if (color.value != 0xFFFFFF && x >= width) {
+          width = x + 1;
+        }
       }
     }
 
-    fprintf(out, image.width % 8 == 0 ? ",\n" : "0b%s,\n", byte);
+    // stop if look ahead did not complete
+    if (feof(in)) break;
 
-    if (++y % font.height == 0) {
+    struct {
+      const char *name;
+      const Color color;
+    } fields[] = {
+    //{ "data",       { 0x000000 } },
+      { "outline",    { 0xFF0000 } },
+      { "highlight",  { 0x00FF00 } },
+      { "background", { 0x0000FF } },
+    };
+
+    fprintf(out, "\n");
+    fprintf(out, "static const Glyph glyph%d = {\n", font.size++);
+
+    for (int j = 0; j < 3; j++) {
+      fseek(in, offset, SEEK_SET);
+      fprintf(out, "  .%s = (const unsigned char[]) {\n", fields[j].name);
+
+      for (int y = 0; y < font.height; y++) {
+        char byte[] = "00000000";
+
+        for (int x = 0; x < image.width; x++) {
+          int index = x % 8;
+
+          Color color;
+          pixel(in, image.depth, &color);
+
+          if (index == 0 && x < width) {
+            fprintf(out, x == 0 ? "    " : ", ");
+            strcpy(byte, "00000000");
+          }
+
+          char *bit = &byte[7 - index];
+          if (color.value == fields[j].color.value) {
+            *bit = '1';
+          }
+
+          if (index == 7 && x < width) {
+            fprintf(out, "0b%s", byte);
+          }
+        }
+
+        fprintf(out, width % 8 == 0 ? ",\n" : "0b%s,\n", byte);
+      }
+
       fprintf(out, "  },\n");
-      fprintf(out, "  .width = %ld,\n", msb + 1);
-      fprintf(out, "};\n");
     }
+
+    fprintf(out, "  .width = %d,\n", width);
+    fprintf(out, "};\n");
   }
 
   fprintf(out, "\n");
   fprintf(out, "const Font %sFont = {\n", font.name);
-  fprintf(out, "  .height = %ld,\n", font.height);
+  fprintf(out, "  .height = %d,\n", font.height);
   fprintf(out, "  .glyphs = {\n");
 
   for (int i = 0; i < font.size; i++) {
-      fprintf(out, "    [%ld] = &glyph%ld,\n", i, i);
+    fprintf(out, "    [%d] = &glyph%d,\n", i, i);
   }
 
   fprintf(out, "  },\n");

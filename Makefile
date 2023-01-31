@@ -61,7 +61,7 @@ assets:
 	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/snippets.tmx assets/tiles/snippets.c || true
 	@tools/sinlut > assets/sinlut.c
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
-	@tools/ppm2font 4x5 hud < graphics/font.ppm > assets/font.c
+	@tools/ppm2font 0x15 hud < graphics/font.ppm > assets/font.c
 	@tools/lvl2bin > assets/levels.c
 
 tests: $(TESTS)

@@ -27,13 +27,13 @@ int main(int argc, char **argv) {
         }
       }
       else {
-        fprintf(log, "Level #%ld, wrote %ld chunk(s)\n", id, --index);
+        fprintf(log, "Level #%d, wrote %d chunk(s)\n", id, --index);
         break;
       }
     }
 
     fprintf(fp, "\n");
-    fprintf(fp, "Level course%02ld = Level_FromData(", id);
+    fprintf(fp, "Level course%02d = Level_FromData(", id);
 
     int length = out.cursor.x;
     const unsigned char *buffer = out.buffer.read;

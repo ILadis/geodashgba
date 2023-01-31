@@ -4,13 +4,15 @@
 #include <gba.h>
 
 typedef struct Glyph {
-  int width;
-  unsigned char *data;
+  const int width;
+  const unsigned char *outline;
+  const unsigned char *highlight;
+  const unsigned char *background;
 } Glyph;
 
 typedef struct Font {
-  int height;
-  const Glyph *glyphs[128];
+  const int height;
+  const Glyph *glyphs[64];
 } Font;
 
 typedef struct Printer {
@@ -44,15 +46,8 @@ Printer_SetCursor(
   printer->cursor.y = y;
 }
 
-// TODO consider foreground / background color to avoid Printer_ClearChar
 void
 Printer_PutChar(
-    Printer *printer,
-    int letter,
-    int color);
-
-void
-Printer_ClearChar(
     Printer *printer,
     int letter,
     int color);

@@ -8,44 +8,41 @@ Printer_PutChar(
     int color)
 {
   const Font *font = printer->font;
-  const Glyph *glyph = font->glyphs[letter];
+  const Glyph *glyph = font->glyphs[letter - 'A'];
   if (glyph == NULL) return;
 
   int px = printer->cursor.x;
   int py = printer->cursor.y;
 
-  for (int y = 0; y < font->height; y++) {
-    // TODO support glyphs wider than 8 pixels (char is only 8 bits)
-    unsigned char row = glyph->data[y];
-
-    for (int x = 0; x < glyph->width; x++, row >>= 1) {
-      if (row & 1) {
-        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, color);
-      }
-    }
-  }
-
-  printer->cursor.x += glyph->width + 1; // spacing
-}
-
-void
-Printer_ClearChar(
-    Printer *printer,
-    int letter,
-    int color)
-{
-  const Font *font = printer->font;
-  const Glyph *glyph = font->glyphs[letter];
-  if (glyph == NULL) return;
-
-  int cx = printer->cursor.x;
-  int cy = printer->cursor.y;
+  int index = 0;
 
   for (int y = 0; y < font->height; y++) {
+    unsigned char outline = 0, highlight = 0, background = 0;
+
     for (int x = 0; x < glyph->width; x++) {
-      GBA_TileMapRef_SetPixel(&printer->tileMap, cx + x, cy + y, color);
+      if (x % 8 == 0) {
+        outline = glyph->outline[index];
+        highlight = glyph->highlight[index];
+        background = glyph->background[index++];
+      }
+
+      if (outline & 1) {
+        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, 16);
+      }
+
+      if (highlight & 1) {
+        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, color + 1);
+      }
+
+      if (background & 1) {
+        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, 22);
+      }
+
+      outline >>= 1;
+      highlight >>= 1;
+      background >>= 1;
     }
   }
 
-  printer->cursor.x += glyph->width + 1; // spacing
+  printer->cursor.x += glyph->width + 1;
 }

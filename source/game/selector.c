@@ -132,20 +132,28 @@ Selector_DrawLevelBox(
 
   GBA_TileMapRef_Blit(&target, lower.x, lower.y, &selectLevelBoxTileMap);
 
-  static bool flag = true;
-  if (flag) {
-    extern const Font hudFont;
+  extern const Font hudFont;
 
-    Printer *printer = &selector->printer;
-    Printer_SetFont(printer, &hudFont);
-    Printer_SetCanvas(printer, &target);
-    Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 16);
-    Printer_PutChar(printer, 3, 2);
-    Printer_PutChar(printer, 4, 2);
-    Printer_PutChar(printer, 5, 2);
+  Printer *printer = &selector->printer;
+  Printer_SetFont(printer, &hudFont);
+  Printer_SetCanvas(printer, &target);
+  Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 16);
 
-    flag = false;
-  }
+  Printer_PutChar(printer, 'S', 22);
+  Printer_PutChar(printer, 'T', 22);
+  Printer_PutChar(printer, 'E', 22);
+  Printer_PutChar(printer, 'R', 22);
+  Printer_PutChar(printer, 'E', 22);
+  Printer_PutChar(printer, 'O', 22);
+
+  printer->cursor.x += 8;
+  Printer_PutChar(printer, 'M', 22);
+  Printer_PutChar(printer, 'A', 22);
+  Printer_PutChar(printer, 'D', 22);
+  Printer_PutChar(printer, 'N', 22);
+  Printer_PutChar(printer, 'E', 22);
+  Printer_PutChar(printer, 'S', 22);
+  Printer_PutChar(printer, 'S', 22);
 }
 
 static inline void
