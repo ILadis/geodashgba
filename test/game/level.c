@@ -2,6 +2,62 @@
 #include <game/level.h>
 #include "../test.h"
 
+test(GetName_ShouldReturnExpectedLevelName) {
+  // arrange
+  Level level = Level_FromLayout(
+    "{a:Author}   ",
+    "{n:Test}     ",
+    "{d:5}        ",
+    "             ",
+  );
+
+  // act
+  char name[5] = {0};
+  Level_GetName(&level, name);
+
+  // assert
+  assert(name[0] == 'T');
+  assert(name[1] == 'e');
+  assert(name[2] == 's');
+  assert(name[3] == 't');
+  assert(name[4] == '\0');
+}
+
+test(GetName_ShouldReturnSetName) {
+  // arrange
+  Level level = Level_AllocateNew(1024);
+  Level_SetName(&level, "Test");
+
+  // act
+  char name[5] = {0};
+  Level_GetName(&level, name);
+
+  // assert
+  assert(name[0] == 'T');
+  assert(name[1] == 'e');
+  assert(name[2] == 's');
+  assert(name[3] == 't');
+  assert(name[4] == '\0');
+}
+
+test(GetChunkCount_ShouldReturnExpectedChunkCount) {
+  // arrange
+  Level level1 = Level_FromLayout(
+    "                              ",
+    "                              ",
+  );
+
+  Level level2 = Level_FromData(0x00, 0x00, 0x00);
+
+  // act
+  int count1 = Level_GetChunkCount(&level1);
+  int count2 = Level_GetChunkCount(&level2);
+
+  // assert
+  assert(count1 == 2);
+  assert(count2 == 2);
+}
+
 test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   // arrange
   const int offset = 432;
@@ -166,6 +222,9 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   );
 
   Level level2 = Level_FromData(
+    // meta data
+    0x00,
+    // chunk data
     0x01, 0x06, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00,
@@ -231,25 +290,30 @@ test(GetChunk_ShouldReturnAddedObjects) {
   }
 }
 
-test(GetChunkCount_ShouldReturnExpectedChunkCount) {
+test(GetChunk_ShouldNotReturnObjectsFromMetaDataSection) {
   // arrange
-  Level level1 = Level_FromLayout(
-    "                              ",
-    "                              ",
+  Level level = Level_FromLayout(
+    "{a:^^   :}   ",
+    "{n:xx i x}   ",
+    "{d:   x  }   ",
+    "             ",
+    "             ",
   );
 
-  Level level2 = Level_FromData(0x00, 0x00);
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, 0);
 
   // act
-  int count1 = Level_GetChunkCount(&level1);
-  int count2 = Level_GetChunkCount(&level2);
+  Level_GetChunk(&level, &chunk);
 
   // assert
-  assert(count1 == 2);
-  assert(count2 == 2);
+  assert(chunk.count == 0);
 }
 
 suite(
+  GetName_ShouldReturnExpectedLevelName,
+  GetName_ShouldReturnSetName,
+  GetChunkCount_ShouldReturnExpectedChunkCount,
   GetChunk_ShouldCreatePitsAtExpectedPositions,
   GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions,
   GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition,
@@ -257,4 +321,4 @@ suite(
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
   GetChunk_ShouldReturnEqualObjectsForSameLevelData,
   GetChunk_ShouldReturnAddedObjects,
-  GetChunkCount_ShouldReturnExpectedChunkCount);
+  GetChunk_ShouldNotReturnObjectsFromMetaDataSection);

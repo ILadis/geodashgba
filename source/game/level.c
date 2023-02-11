@@ -3,7 +3,7 @@
 
 #ifdef NOGBA
 static Level course01 = Level_FromLayout(
-  "                             |",
+  "{n:Playground}               |",
   "                             |",
   "                             |",
   "                             |",
@@ -78,6 +78,39 @@ Level_GetById(LevelId id) {
   }
 
   return level;
+}
+
+void
+Level_GetName(
+    Level *level,
+    char *name)
+{
+  extern void AsciiLevel_GetName(Level *level, char *name);
+  extern void Binv1Level_GetName(Level *level, char *name);
+
+  const void (*get[])(Level *level, char *name) = {
+    [FORMAT_ASCII] = AsciiLevel_GetName,
+    [FORMAT_BINV1] = Binv1Level_GetName,
+  };
+
+  return get[level->format](level, name);
+}
+
+
+void
+Level_SetName(
+    Level *level,
+    char *name)
+{
+  extern void AsciiLevel_SetName(Level *level, char *name);
+  extern void Binv1Level_SetName(Level *level, char *name);
+
+  const void (*set[])(Level *level, char *name) = {
+    [FORMAT_ASCII] = AsciiLevel_SetName,
+    [FORMAT_BINV1] = Binv1Level_SetName,
+  };
+
+  return set[level->format](level, name);
 }
 
 int

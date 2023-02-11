@@ -56,6 +56,16 @@ typedef struct Level {
 Level*
 Level_GetById(LevelId id);
 
+void
+Level_GetName(
+    Level *level,
+    char *name);
+
+void
+Level_SetName(
+    Level *level,
+    char *name);
+
 int
 Level_GetChunkCount(Level *level);
 

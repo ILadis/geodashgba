@@ -51,7 +51,7 @@ AsciiLevel_GetCursorPosition(Level *level) {
   };
 
   Chunk *chunk = level->chunk;
-  const Bounds *bounds = Chunk_GetBounds(chunk);
+  const Bounds *bounds = bounds = Chunk_GetBounds(chunk);
 
   int dy = (bounds->size.y >> 2) - size->y*2;
   // allign at bottom of chunk bounds
@@ -62,6 +62,11 @@ AsciiLevel_GetCursorPosition(Level *level) {
 
 static bool
 AsciiLevel_IsCursorOccupied(Level *level) {
+  Chunk *chunk = level->chunk;
+  if (chunk == NULL) {
+    return false;
+  }
+
   Vector position = AsciiLevel_GetCursorPosition(level);
 
   int x = position.x * 8 + 8;
@@ -70,7 +75,32 @@ AsciiLevel_IsCursorOccupied(Level *level) {
   Bounds hitbox = Bounds_Of(x, y, 8, 8);
 
   Unit unit = Unit_Of(&hitbox, NULL);
-  return Chunk_CheckHits(level->chunk, &unit, NULL);
+  return Chunk_CheckHits(chunk, &unit, NULL);
+}
+
+static bool
+AsciiLevel_NextSymbol(
+    Level *level,
+    Direction direction,
+    char *symbol);
+
+static bool
+AsciiLevel_IsCursorInMetaDataSection(Level *level) {
+  Vector cursor = level->cursor;
+
+  char symbol;
+  AsciiLevel_GetSymbolAt(level, 0, cursor.y, &symbol);
+
+  if (symbol == '{') {
+    while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
+      if (symbol == '}') break;
+    }
+  }
+
+  bool result = cursor.x < level->cursor.x;
+  level->cursor = cursor;
+
+  return result;
 }
 
 static bool
@@ -330,12 +360,59 @@ AsciiLevel_AddGoalWall(Level *level) {
   }
 }
 
+static int
+AsciiLevel_GetMetaData(
+    Level *level,
+    char key)
+{
+  int y = 0, x = 0;
+
+  level->limit = 0;
+  level->chunk = NULL;
+
+  char symbol;
+  while (AsciiLevel_GetSymbolAt(level, 0, y++, &symbol)) {
+    if (symbol != '{') return -1;
+
+    AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol);
+    if (symbol != key) continue;
+
+    AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol);
+    if (symbol == ':') break;
+  }
+
+  x = level->cursor.x;
+
+  while (AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &symbol)) {
+    if (symbol == '}') break;
+  }
+
+  int length = (level->cursor.x - x) - 1;
+  level->cursor.x = x;
+
+  return length;
+}
+
+void
+AsciiLevel_GetName(
+    Level *level,
+    char *name)
+{
+  int length = AsciiLevel_GetMetaData(level, 'n');
+  while (length-- > 0) {
+    AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, name++);
+  }
+
+  *name = '\0';
+}
+
 int
 AsciiLevel_GetChunkCount(Level *level) {
   int count = 0;
   Chunk chunk = {0};
 
   level->limit = 0;
+  level->chunk = NULL;
 
   do {
     Chunk_AssignIndex(&chunk, count);
@@ -379,6 +456,10 @@ AsciiLevel_GetChunk(
     for (int y = lower.y; y < upper.y; y++) {
       if (!AsciiLevel_GetSymbolAt(level, x, y, &symbol)) {
         break; // continue with next x
+      }
+
+      if (AsciiLevel_IsCursorInMetaDataSection(level)) {
+        continue;
       }
 
       switch (symbol) {
@@ -440,11 +521,19 @@ AsciiLevel_GetChunk(
   return true;
 }
 
+void
+AsciiLevel_SetName(
+    Level *level,
+    char *name)
+{
+  // not implemented
+}
+
 bool
 AsciiLevel_AddChunk(
     Level *level,
     Chunk *chunk)
 {
-  // currently unsupported
+  // not implemented
   return false;
 }
