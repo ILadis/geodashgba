@@ -43,6 +43,7 @@ Selector_Goto(
     Animation scroll = Animation_From(from, to, Timing_EaseOut);
     Animation_Start(&scroll);
 
+    selector->redraw = true;
     selector->scroll = scroll;
     selector->id = next;
   }
@@ -131,6 +132,7 @@ Selector_DrawLevelBox(
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
   GBA_TileMapRef_Blit(&target, lower.x, lower.y, &selectLevelBoxTileMap);
+  // TODO clear canvas (remove previously printed text)
 
   extern const Font hudFont;
 
@@ -139,7 +141,13 @@ Selector_DrawLevelBox(
   Printer_SetCanvas(printer, &target);
   Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 16);
 
-  Printer_PutChar(printer, 'S', 22);
+  Level *level = Selector_GetLevel(selector);
+
+  char name[15];
+  Level_GetName(level, name);
+  Printer_PutChar(printer, name[0], 22);
+
+  /*
   Printer_PutChar(printer, 'T', 22);
   Printer_PutChar(printer, 'E', 22);
   Printer_PutChar(printer, 'R', 22);
@@ -154,6 +162,7 @@ Selector_DrawLevelBox(
   Printer_PutChar(printer, 'E', 22);
   Printer_PutChar(printer, 'S', 22);
   Printer_PutChar(printer, 'S', 22);
+  */
 }
 
 static inline void
@@ -191,7 +200,6 @@ Selector_DrawArrows(
 
   const Vector *sign = Vector_FromDirection(direction);
   int dx = Animation_CurrentValue(&selector->move);
-  dx *= sign->x;
 
   static const Vector positions[] = {
     [DIRECTION_LEFT]  = Vector_Of(13, 56),
@@ -199,7 +207,7 @@ Selector_DrawArrows(
   };
 
   const Vector *position = &positions[direction];
-  GBA_Sprite_SetPosition(sprite, position->x + dx, position->y);
+  GBA_Sprite_SetPosition(sprite, position->x + dx * sign->x, position->y);
 
   static const LevelId bounds[] = {
     [DIRECTION_LEFT]  = 0,
@@ -212,6 +220,9 @@ Selector_DrawArrows(
 
 void
 Selector_Draw(Selector *selector) {
+  Selector_DrawArrows(selector, DIRECTION_LEFT);
+  Selector_DrawArrows(selector, DIRECTION_RIGHT);
+
   if (selector->redraw) {
     Selector_DrawOverlay(selector);
 
@@ -220,11 +231,9 @@ Selector_Draw(Selector *selector) {
 
     Bounds bounds2 = Bounds_Of(15 + 32, 9, 11, 3);
     Selector_DrawLevelBox(selector, &bounds2);
-  }
 
-  Selector_DrawArrows(selector, DIRECTION_LEFT);
-  Selector_DrawArrows(selector, DIRECTION_RIGHT);
-  Selector_DrawLevelIndicator(selector);
+    Selector_DrawLevelIndicator(selector);
+  }
 
   int scroll = Animation_CurrentValue(&selector->scroll);
   GBA_OffsetBackgroundLayer(2, scroll, 0);

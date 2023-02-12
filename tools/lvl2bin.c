@@ -15,6 +15,10 @@ int main(int argc, char **argv) {
 
     if (in == NULL) break;
 
+    char name[15];
+    Level_GetName(in, name);
+    Level_SetName(&out, name);
+
     int index = 0;
     while (true) {
       Chunk chunk = {0};
