@@ -124,6 +124,7 @@ Selector_DrawLevelBox(
     Selector *selector,
     const Bounds *bounds)
 {
+  // TODO add secondary level box tile map
   extern const GBA_TileMapRef selectLevelBoxTileMap;
 
   Vector lower = Bounds_Lower(bounds);
@@ -132,7 +133,14 @@ Selector_DrawLevelBox(
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
   GBA_TileMapRef_Blit(&target, lower.x, lower.y, &selectLevelBoxTileMap);
-  // TODO clear canvas (remove previously printed text)
+
+  GBA_System *system = GBA_GetSystem();
+  GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
+
+  int color = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
+  for (int tileId = 128; tileId <= 167; tileId++) {
+    GBA_TileMapRef_FillTile(&target, tileId, color);
+  }
 
   extern const Font hudFont;
 
@@ -145,24 +153,7 @@ Selector_DrawLevelBox(
 
   char name[15];
   Level_GetName(level, name);
-  Printer_PutChar(printer, name[0], 22);
-
-  /*
-  Printer_PutChar(printer, 'T', 22);
-  Printer_PutChar(printer, 'E', 22);
-  Printer_PutChar(printer, 'R', 22);
-  Printer_PutChar(printer, 'E', 22);
-  Printer_PutChar(printer, 'O', 22);
-
-  printer->cursor.x += 8;
-  Printer_PutChar(printer, 'M', 22);
-  Printer_PutChar(printer, 'A', 22);
-  Printer_PutChar(printer, 'D', 22);
-  Printer_PutChar(printer, 'N', 22);
-  Printer_PutChar(printer, 'E', 22);
-  Printer_PutChar(printer, 'S', 22);
-  Printer_PutChar(printer, 'S', 22);
-  */
+  Printer_WriteLine(printer, name, 22);
 }
 
 static inline void

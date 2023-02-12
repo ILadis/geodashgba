@@ -399,6 +399,11 @@ GBA_TileMapRef_Blit(
     const GBA_TileMapRef *source);
 
 void
+GBA_TileMapRef_FillTile(
+    GBA_TileMapRef *tileMap,
+    int tileId, int color);
+
+void
 GBA_TileMapRef_SetPixel(
     GBA_TileMapRef *tileMap,
     int px, int py, int color);

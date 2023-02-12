@@ -1,15 +1,20 @@
 
 #include <text.h>
 
-void
+static void
 Printer_PutChar(
     Printer *printer,
     int letter,
     int color)
 {
   const Font *font = printer->font;
-  const Glyph *glyph = font->glyphs[letter - 'A'];
-  if (glyph == NULL) return;
+  const Glyph *glyph = font->glyphs[letter];
+
+  static const Glyph fallback = {0};
+
+  if (glyph == NULL) {
+    glyph = &fallback;
+  }
 
   int px = printer->cursor.x;
   int py = printer->cursor.y;
@@ -45,4 +50,34 @@ Printer_PutChar(
   }
 
   printer->cursor.x += glyph->width + 1;
+}
+
+void
+Printer_WriteLine(
+    Printer *printer,
+    char *line,
+    int color)
+{
+  const Font *font = printer->font;
+  const int limit = length(font->glyphs);
+
+  do {
+    char letter = *(line++);
+    if (letter == '\0') {
+      break;
+    }
+
+    if (letter >= 'a' && letter <= 'z') {
+      letter = 'A' + (letter - 'a');
+    }
+
+    int index = letter - 'A';
+    if (index < 0 || index > limit) {
+      continue;
+    }
+
+    Printer_PutChar(printer, index, color);
+  } while (true);
+
+  // TODO increase cursor y
 }

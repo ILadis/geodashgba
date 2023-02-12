@@ -47,9 +47,9 @@ Printer_SetCursor(
 }
 
 void
-Printer_PutChar(
+Printer_WriteLine(
     Printer *printer,
-    int letter,
+    char *line,
     int color);
 
 #endif

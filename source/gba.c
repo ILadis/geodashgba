@@ -181,6 +181,21 @@ GBA_TileMapRef_Blit(
 }
 
 void
+GBA_TileMapRef_FillTile(
+    GBA_TileMapRef *tileMap,
+    int tileId, int color)
+{
+  GBA_Bitmap8 *bitmap = &tileMap->bitmaps[tileId];
+
+  u8 pixel = color & 0xFF;
+  u32 pixels = pixel << 24 | pixel << 16 | pixel << 8 | pixel;
+
+  for (int i = 0; i < 16; i++) {
+    bitmap->data[i] = pixels;
+  }
+}
+
+void
 GBA_TileMapRef_SetPixel(
     GBA_TileMapRef *tileMap,
     int px, int py, int color)
