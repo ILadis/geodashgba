@@ -88,17 +88,17 @@ Binv1Level_WriteValue(
   // big endian is unsupported
 }
 
-static inline void
+static inline bool
 Binv1Level_WriteInt8(Level *level, int value) {
-  Binv1Level_WriteValue(level, &value, 1);
-}
-
-static inline void
-Binv1Level_WriteInt16(Level *level, int value) {
-  Binv1Level_WriteValue(level, &value, 2);
+  return Binv1Level_WriteValue(level, &value, 1);
 }
 
 static inline bool
+Binv1Level_WriteInt16(Level *level, int value) {
+  return Binv1Level_WriteValue(level, &value, 2);
+}
+
+static inline void
 Binv1Level_ResetCursor(Level *level) {
   level->chunk = NULL;
   level->cursor.x = 0;
@@ -142,17 +142,18 @@ Binv1Level_GetMetaData(
 {
   Binv1Level_ResetCursor(level);
 
+  // TODO limit further reading to size of header
   int header = 0;
   Binv1Level_ReadInt8(level, &header);
 
   while (true) {
-    int tag;
+    int tag = 0;
     if (!Binv1Level_ReadInt8(level, &tag)) {
       // no more data to read
       return -1;
     }
 
-    int length;
+    int length = 0;
     if (!Binv1Level_ReadInt8(level, &length)) {
       // no more data to read
       return -1;
@@ -173,12 +174,8 @@ Binv1Level_GetName(
 {
   int length = Binv1Level_GetMetaData(level, 'n');
   while (length-- > 0) {
-    int symbol;
-    Binv1Level_ReadInt8(level, &symbol);
-
-    *(name++) = (char) (symbol & 0xFF); // FIXME improve this
+    Binv1Level_ReadInt8(level, (int*) name++);
   }
-
   *name = '\0';
 }
 
@@ -260,7 +257,7 @@ Binv1Level_WriteMetaData(
   Binv1Level_ResetCursor(level);
 
   int length = 0;
-  while (value[length++] != '\0');
+  while (value[length] != '\0') length++;
 
   int header = 0;
   Binv1Level_ReadInt8(level, &header);
