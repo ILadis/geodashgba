@@ -51,14 +51,15 @@ tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
 	@gcc tools/bezlut.c -o tools/bezlut -lm
 	@gcc tools/ppm2font.c -o tools/ppm2font
+	@gcc tools/tmx2tiles.c -o tools/tmx2tiles
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -g -I. -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
-	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/backgrounds.tmx assets/tiles/backgrounds.c || true
-	@tiled --export-map 'GBA Tilemap C-Source file' tools/editor/maps/snippets.tmx assets/tiles/snippets.c || true
+	@tools/tmx2tiles < tools/editor/maps/backgrounds.tmx > assets/tiles/backgrounds.c
+	@tools/tmx2tiles < tools/editor/maps/snippets.tmx > assets/tiles/snippets.c
 	@tools/sinlut > assets/sinlut.c
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/ppm2font 0x15 hud < graphics/font.ppm > assets/font.c
