@@ -16,7 +16,7 @@ typedef struct Font {
 } Font;
 
 typedef struct Printer {
-  GBA_TileMapRef tileMap;
+  GBA_TileMapRef *tileMap;
   const Font *font;
   struct { int x, y; } cursor;
 } Printer;
@@ -34,7 +34,7 @@ Printer_SetCanvas(
     Printer *printer,
     GBA_TileMapRef *tileMap)
 {
-  printer->tileMap = *tileMap;
+  printer->tileMap = tileMap;
 }
 
 static inline void

@@ -19,6 +19,7 @@ Printer_PutChar(
   int px = printer->cursor.x;
   int py = printer->cursor.y;
 
+  GBA_TileMapRef *tileMap = printer->tileMap;
   int index = 0;
 
   for (int y = 0; y < font->height; y++) {
@@ -32,15 +33,15 @@ Printer_PutChar(
       }
 
       if (outline & 1) {
-        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, 16);
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, 16);
       }
 
       if (highlight & 1) {
-        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, color + 1);
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, color + 1);
       }
 
       if (background & 1) {
-        GBA_TileMapRef_SetPixel(&printer->tileMap, px + x, py + y, 22);
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, 22);
       }
 
       outline >>= 1;
