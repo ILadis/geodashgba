@@ -46,6 +46,11 @@ Printer_SetCursor(
   printer->cursor.y = y;
 }
 
+int
+Printer_GetTextWidth(
+    Printer *printer,
+    char *text);
+
 void
 Printer_WriteLine(
     Printer *printer,

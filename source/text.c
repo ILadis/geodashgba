@@ -1,20 +1,64 @@
 
 #include <text.h>
 
-static void
-Printer_PutChar(
+static inline const Glyph*
+Printer_GetGlyph(
     Printer *printer,
-    int letter,
+    char letter)
+{
+  const Font *font = printer->font;
+  static const Glyph fallback = {0};
+  const int limit = length(font->glyphs);
+
+  if (letter == '\0') {
+    return NULL;
+  }
+
+  if (letter >= 'a' && letter <= 'z') {
+    letter = 'A' + (letter - 'a');
+  }
+
+  int index = letter - 'A';
+  if (index < 0 || index > limit) {
+    return &fallback;
+  }
+
+  const Glyph *glyph = font->glyphs[index];
+  if (glyph == NULL) {
+    return &fallback;
+  }
+
+  return glyph;
+}
+
+int
+Printer_GetTextWidth(
+    Printer *printer,
+    char *text)
+{
+  int width = 0;
+
+  do {
+    char letter = *(text++);
+    const Glyph *glyph = Printer_GetGlyph(printer, letter);
+
+    if (glyph == NULL) {
+      break;
+    }
+
+    width += glyph->width + 1;
+  } while (true);
+
+  return width;
+}
+
+static void
+Printer_PrintGlyph(
+    Printer *printer,
+    const Glyph *glyph,
     int color)
 {
   const Font *font = printer->font;
-  const Glyph *glyph = font->glyphs[letter];
-
-  static const Glyph fallback = {0};
-
-  if (glyph == NULL) {
-    glyph = &fallback;
-  }
 
   int px = printer->cursor.x;
   int py = printer->cursor.y;
@@ -56,28 +100,18 @@ Printer_PutChar(
 void
 Printer_WriteLine(
     Printer *printer,
-    char *line,
+    char *text,
     int color)
 {
-  const Font *font = printer->font;
-  const int limit = length(font->glyphs);
-
   do {
-    char letter = *(line++);
-    if (letter == '\0') {
+    char letter = *(text++);
+    const Glyph *glyph = Printer_GetGlyph(printer, letter);
+
+    if (glyph == NULL) {
       break;
     }
 
-    if (letter >= 'a' && letter <= 'z') {
-      letter = 'A' + (letter - 'a');
-    }
-
-    int index = letter - 'A';
-    if (index < 0 || index > limit) {
-      continue;
-    }
-
-    Printer_PutChar(printer, index, color);
+    Printer_PrintGlyph(printer, glyph, color);
   } while (true);
 
   // TODO increase cursor y

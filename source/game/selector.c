@@ -147,12 +147,17 @@ Selector_DrawLevelBox(
   Printer *printer = &selector->printer;
   Printer_SetFont(printer, &hudFont);
   Printer_SetCanvas(printer, &target);
-  Printer_SetCursor(printer, lower.x * 8 + 8, lower.y * 8 + 16);
 
   Level *level = Selector_GetLevel(selector);
 
   char name[15];
   Level_GetName(level, name);
+
+  int width = Printer_GetTextWidth(printer, name);
+  int dx = (160 - width) / 2;
+
+  Printer_SetCursor(printer, lower.x * 8 + 8 + dx, lower.y * 8 + 16);
+
   Printer_WriteLine(printer, name, 22);
 }
 
