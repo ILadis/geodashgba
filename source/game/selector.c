@@ -38,12 +38,11 @@ Selector_Goto(
     Animation_Cancel(animation);
 
     int from = Animation_CurrentValue(animation);
-    int to = from + vector->x * 256;
+    int to = from + vector->x * 512;
 
     Animation scroll = Animation_From(from, to, Timing_EaseOut);
     Animation_Start(&scroll);
 
-    selector->redraw = true;
     selector->scroll = scroll;
     selector->id = next;
   }
@@ -61,7 +60,15 @@ Selector_GoBackward(Selector *selector) {
 
 void
 Selector_Update(Selector *selector) {
+  int last = Animation_CurrentValue(&selector->scroll);
+
   Animation_Tick(&selector->scroll, 4);
+  int next = Animation_CurrentValue(&selector->scroll);
+
+  int threshold = selector->scroll.from + (selector->scroll.to - selector->scroll.from)/2;
+  if ((last < threshold && next >= threshold) || (last > threshold && next <= threshold)) {
+    selector->redraw = true;
+  }
 
   if (!Animation_Tick(&selector->move, 6)) {
     Animation_Restart(&selector->move);
@@ -120,19 +127,14 @@ Selector_DrawLevelIndicator(Selector *selector) {
 }
 
 static inline void
-Selector_DrawLevelBox(
-    Selector *selector,
-    const Bounds *bounds)
-{
-  // TODO add secondary level box tile map
+Selector_DrawLevelBox(Selector *selector) {
   extern const GBA_TileMapRef selectLevelBoxTileMap;
-
-  Vector lower = Bounds_Lower(bounds);
+  const Vector position = Vector_Of(4, 6);
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
-  GBA_TileMapRef_Blit(&target, lower.x, lower.y, &selectLevelBoxTileMap);
+  GBA_TileMapRef_Blit(&target, position.x, position.y, &selectLevelBoxTileMap);
 
   GBA_System *system = GBA_GetSystem();
   GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
@@ -156,8 +158,7 @@ Selector_DrawLevelBox(
   int width = Printer_GetTextWidth(printer, name);
   int dx = (160 - width) / 2;
 
-  Printer_SetCursor(printer, lower.x * 8 + 8 + dx, lower.y * 8 + 16);
-
+  Printer_SetCursor(printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
   Printer_WriteLine(printer, name, 22);
 }
 
@@ -221,13 +222,7 @@ Selector_Draw(Selector *selector) {
 
   if (selector->redraw) {
     Selector_DrawOverlay(selector);
-
-    Bounds bounds1 = Bounds_Of(15, 9, 11, 3);
-    Selector_DrawLevelBox(selector, &bounds1);
-
-    Bounds bounds2 = Bounds_Of(15 + 32, 9, 11, 3);
-    Selector_DrawLevelBox(selector, &bounds2);
-
+    Selector_DrawLevelBox(selector);
     Selector_DrawLevelIndicator(selector);
   }
 

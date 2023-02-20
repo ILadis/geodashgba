@@ -9,11 +9,11 @@ typedef struct Animation {
   Timing timing;
   bool running;
   short time;
-  int from, to;
+  int from, to, delta;
   int value;
 } Animation;
 
-#define Animation_From(from, to, timing) (Animation) { timing, false, 0, from, to, from }
+#define Animation_From(from, to, timing) (Animation) { timing, false, 0, from, to, to - from, from }
 
 short
 Timing_EaseOut(short time);

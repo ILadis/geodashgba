@@ -19,16 +19,19 @@ Animation_Tick(
     return false;
   }
 
-  int delta = animation->to - animation->from;
-  short time = animation->time + dtime;
+  int value = animation->from;
+  int delta = animation->delta;
 
-  short value;
+  short time = animation->time;
+
   if (time >= FRAMES) {
     time = 0;
     running = false;
-    value = delta;
-  } else {
-    value = (animation->timing(time) * delta) >> 8;
+    value = animation->to;
+  }
+  else {
+    time += dtime;
+    value += (animation->timing(time) * delta) >> 8;
   }
 
   animation->time = time;
