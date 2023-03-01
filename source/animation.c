@@ -22,7 +22,7 @@ Animation_Tick(
   int value = animation->from;
   int delta = animation->delta;
 
-  short time = animation->time;
+  short time = animation->time + dtime;
 
   if (time >= FRAMES) {
     time = 0;
@@ -30,7 +30,6 @@ Animation_Tick(
     value = animation->to;
   }
   else {
-    time += dtime;
     value += (animation->timing(time) * delta) >> 8;
   }
 
