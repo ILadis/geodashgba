@@ -57,9 +57,9 @@ Course_ResetAndLoad(
     Course *course,
     Level *level)
 {
+  course->prepare.chunk = NULL;
   course->redraw = true;
   course->index = 0;
-  course->offset = Vector_Of(0, 0);
 
   if (level != NULL) {
     course->level = level;
@@ -125,26 +125,16 @@ Course_DrawBackground(
     Camera *camera)
 {
   extern const GBA_TileMapRef courseBackgroundTileMap;
-  static const GBA_BackgroundControl layers[] = {
-   { // background layer
-      .size = 1, // 512x256
-      .colorMode = 1,
-      .tileSetIndex = 0,
-      .tileMapIndex = 8,
-      .priority = 3,
-    },
-    { // objects layer
-      .size = 3, // 512x512
-      .colorMode = 1,
-      .tileSetIndex = 0,
-      .tileMapIndex = 14,
-      .priority = 2,
-    }
+  static const GBA_BackgroundControl layer = {
+    .size = 1, // 512x256
+    .colorMode = 1,
+    .tileSetIndex = 0,
+    .tileMapIndex = 8,
+    .priority = 3,
   };
 
   if (course->redraw) {
-    GBA_EnableBackgroundLayer(0, layers[0]);
-    GBA_EnableBackgroundLayer(1, layers[1]);
+    GBA_EnableBackgroundLayer(0, layer);
 
     GBA_TileMapRef target;
     GBA_TileMapRef_FromBackgroundLayer(&target, 0);
@@ -153,11 +143,8 @@ Course_DrawBackground(
 
   Vector *position = Camera_GetPosition(camera);
 
-  course->offset.x = position->x;
-  course->offset.y = position->y;
-
-  GBA_OffsetBackgroundLayer(0, course->offset.x >> 1, course->offset.y >> 1);
-  GBA_OffsetBackgroundLayer(1, course->offset.x, course->offset.y);
+  GBA_OffsetBackgroundLayer(0, position->x >> 1, position->y >> 1);
+  GBA_OffsetBackgroundLayer(1, position->x, position->y);
 }
 
 static inline const GBA_Tile*
@@ -180,13 +167,11 @@ Course_FloorTile(
 }
 
 static inline void
-Course_DrawChunk(
+Course_DrawFloor(
     Course *course,
-    Chunk *chunk)
+    Chunk *chunk,
+    GBA_TileMapRef *target)
 {
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
   const Bounds *bounds = Chunk_GetBounds(chunk);
   Vector lower = Bounds_Lower(bounds);
   Vector upper = Bounds_Upper(bounds);
@@ -194,18 +179,78 @@ Course_DrawChunk(
   Vector_Rshift(&lower, 3);
   Vector_Rshift(&upper, 3);
 
-  for (int y = 0; y < target.height; y++) {
+  for (int y = 0; y < target->height; y++) {
     for (int x = lower.x; x < upper.x; x++) {
       const GBA_Tile *tile = Course_FloorTile(course, y);
-      GBA_TileMapRef_BlitTile(&target, x, y, tile);
+      GBA_TileMapRef_BlitTile(target, x, y, tile);
     }
   }
+}
 
-  int count = chunk->count;
-  for (int i = 0; i < count; i++) {
-    Object *object = &chunk->objects[i];
-    Object_Draw(object, &target);
+static inline bool
+Course_PrepareChunk(
+    Course *course,
+    Chunk *chunk)
+{
+  const int mapIndexes[] = { 10, 14 };
+  int mapIndex = course->prepare.mapIndex;
+
+  if (course->prepare.chunk != chunk) {
+    course->prepare.chunk = chunk;
+    course->prepare.step = -2;
+    course->prepare.mapIndex = mapIndexes[chunk->index % 2];
+
+    return false;
   }
+
+  GBA_System *system = GBA_GetSystem();
+
+  GBA_TileMapRef shadow = {
+    .width = 64, .height = 64,
+    .tiles = system->tileMaps[mapIndex]
+  };
+
+  int step = course->prepare.step++;
+  switch (step) {
+  case -2:
+    GBA_Tile *tiles = system->tileMaps[mapIndex == 10 ? 14 : 10];
+    GBA_Memcpy(shadow.tiles, tiles, sizeof(GBA_Tile) * shadow.width * shadow.height);
+    break;
+
+  case -1:
+    Course_DrawFloor(course, chunk, &shadow);
+    break;
+
+  default:
+    int count = chunk->count;
+    if (step < count) {
+      Object *object = &chunk->objects[step];
+      Object_Draw(object, &shadow);
+    }
+    else return true;
+  }
+
+  return false;
+}
+
+static inline void
+Course_DrawChunk(
+    Course *course,
+    Chunk *chunk)
+{
+  static GBA_BackgroundControl layer = {
+    .size = 3, // 512x512
+    .colorMode = 1,
+    .tileSetIndex = 0,
+    .priority = 2,
+  };
+
+  while (!Course_PrepareChunk(course, chunk));
+
+  int mapIndex = course->prepare.mapIndex;
+  layer.tileMapIndex = mapIndex;
+
+  GBA_EnableBackgroundLayer(1, layer);
 }
 
 static inline void
@@ -238,7 +283,8 @@ Course_Draw(
 
   Chunk *next = Course_GetChunkAt(course, index + 1);
   if (Chunk_InViewport(next, camera)) {
-    Course_LoadChunk(course, index + 2);
+    Chunk *pending = Course_LoadChunk(course, index + 2);
+    Course_PrepareChunk(course, pending);
   }
 
   Course_DrawBackground(course, camera);

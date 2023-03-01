@@ -12,10 +12,14 @@
 #include <game/camera.h>
 
 typedef struct Course {
-  Vector offset, spawn;
+  Vector spawn;
   Bounds bounds;
   Level *level;
   Chunk chunks[4];
+  struct {
+    Chunk *chunk;
+    int mapIndex, step;
+  } prepare;
   int floor, index;
   bool redraw;
 } Course;
