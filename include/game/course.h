@@ -32,6 +32,11 @@ Course_ResetAndLoad(
     Course *course,
     Level *level);
 
+void
+Course_ResetTo(
+    Course *course,
+    const Vector *position);
+
 static inline const Vector*
 Course_GetSpawn(Course *course) {
   return &course->spawn;

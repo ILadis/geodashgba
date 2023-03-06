@@ -27,7 +27,7 @@ Cube_ApplySpawn(
 
     const Vector *position = Cube_GetPosition(cube);
 
-    const int delays[] = {0, 5, 8};
+    const int delays[] = { 0, 5, 8 };
     for (int i = 0; i < length(delays); i++) {
       int count = 10;
       while (count-- > 0) {
@@ -46,10 +46,10 @@ Cube_ApplySpawn(
         Scene_FadeReplaceWith(current, entry);
       }
       else {
+        // TODO reset cube to last placed flag instead (if present)
         Cube_SetPosition(cube, spawn);
         Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
-        // TODO workaround to force redraw after camera resets to spawn
-        Course_ResetAndLoad(course, NULL);
+        Course_ResetTo(course, spawn);
       }
     }
   }

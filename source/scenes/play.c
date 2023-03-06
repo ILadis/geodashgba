@@ -75,8 +75,8 @@ Scene_DoPlay() {
     while (debug);
   }
 
-  Cube_Draw(cube, camera);
   Course_Draw(course, camera);
+  Cube_Draw(cube, camera);
   Progress_Draw(progress);
   Particle_DrawAll();
 
@@ -94,9 +94,6 @@ Scene_DoExit() {
 
   Cube *cube = Cube_GetInstance();
   Cube_Reset(cube);
-
-  Course *course = Course_GetInstance();
-  Course_ResetAndLoad(course, NULL);
 
   Particle_ResetAll();
 }

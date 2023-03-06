@@ -22,7 +22,7 @@ Course_LoadChunk(
   return chunk;
 }
 
-static inline Bounds
+static inline void
 Course_CalculateBounds(Course *course) {
   Bounds bounds = Bounds_Of(120, 256, 120, 256);
   Level *level = course->level;
@@ -49,7 +49,15 @@ Course_CalculateBounds(Course *course) {
   bounds.center.x -= dx;
   bounds.size.x -= dx;
 
-  return bounds;
+  course->bounds = bounds;
+}
+
+static inline void
+Course_ResetChunks(Course *course) {
+  const Chunk empty = {0};
+  for (int i = 0; i < length(course->chunks); i++) {
+    course->chunks[i] = empty;
+  }
 }
 
 void
@@ -60,16 +68,10 @@ Course_ResetAndLoad(
   course->prepare.chunk = NULL;
   course->redraw = true;
   course->index = 0;
+  course->level = level;
 
-  if (level != NULL) {
-    course->level = level;
-    course->bounds = Course_CalculateBounds(course);
-  }
-
-  Chunk empty = {0};
-  for (int i = 0; i < length(course->chunks); i++) {
-    course->chunks[i] = empty;
-  }
+  Course_CalculateBounds(course);
+  Course_ResetChunks(course);
 
   // load two chunks
   Chunk *current = Course_LoadChunk(course, 0);
@@ -80,6 +82,28 @@ Course_ResetAndLoad(
 
   course->floor = floor.y;
   course->spawn = Vector_Of(20, floor.y - 7);
+}
+
+void
+Course_ResetTo(
+    Course *course,
+    const Vector *position)
+{
+  Chunk *current = Course_GetChunkAt(course, course->index);
+
+  const Bounds *bounds = Chunk_GetBounds(current);
+  int width = bounds->size.x * 2;
+
+  int index = Math_div(position->x, width);
+  Course_ResetChunks(course);
+
+  // load two chunks
+  Course_LoadChunk(course, index);
+  Course_LoadChunk(course, index + 1);
+
+  course->prepare.chunk = NULL;
+  course->redraw = true;
+  course->index = index;
 }
 
 static inline void
