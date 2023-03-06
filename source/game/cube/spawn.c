@@ -38,7 +38,7 @@ Cube_ApplySpawn(
     }
   }
   else if (Cube_InState(cube, STATE_DESTROYED)) {
-    int timer = cube->timer -= 1;
+    int timer = --cube->timer;
     if (timer == 0) {
       if (cube->success) {
         extern const Scene *entry;
