@@ -2,6 +2,7 @@
 #include <scene.h>
 #include <game/cube.h>
 #include <game/particle.h>
+#include <game/checkpoint.h>
 
 void
 Cube_ApplySpawn(
@@ -15,6 +16,12 @@ Cube_ApplySpawn(
   };
 
   const Vector *spawn = Course_GetSpawn(course);
+
+  Checkpoint *checkpoint = Checkpoint_GetInstance();
+  const Vector *position = Checkpoint_GetLastPosition(checkpoint);
+  if (position != NULL) {
+    spawn = position;
+  }
 
   if (Cube_InState(cube, STATE_UNKNOWN)) {
     Cube_SetPosition(cube, spawn);
@@ -46,7 +53,6 @@ Cube_ApplySpawn(
         Scene_FadeReplaceWith(current, entry);
       }
       else {
-        // TODO reset cube to last placed flag instead (if present)
         Cube_SetPosition(cube, spawn);
         Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
         Course_ResetTo(course, spawn);

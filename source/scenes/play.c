@@ -4,6 +4,7 @@
 
 #include <game/camera.h>
 #include <game/cube.h>
+#include <game/checkpoint.h>
 #include <game/course.h>
 #include <game/level.h>
 #include <game/progress.h>
@@ -40,12 +41,19 @@ Scene_DoPlay() {
   GBA_Input_PollStates(input);
 
   Cube *cube = Cube_GetInstance();
+  Checkpoint *checkpoint = Checkpoint_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
   Progress *progress = Progress_GetInstance();
 
   if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
     Cube_Jump(cube, 1400);
+  }
+
+  if (GBA_Input_IsHit(input, GBA_KEY_R)) {
+    Checkpoint_AddPosition(checkpoint, Cube_GetPosition(cube));
+  } else if (GBA_Input_IsHit(input, GBA_KEY_L)) {
+    Checkpoint_RemoveLastPosition(checkpoint);
   }
 
   if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
@@ -77,6 +85,7 @@ Scene_DoPlay() {
 
   Course_Draw(course, camera);
   Cube_Draw(cube, camera);
+  Checkpoint_Draw(checkpoint, camera);
   Progress_Draw(progress);
   Particle_DrawAll();
 
@@ -94,6 +103,9 @@ Scene_DoExit() {
 
   Cube *cube = Cube_GetInstance();
   Cube_Reset(cube);
+
+  Checkpoint *checkpoint = Checkpoint_GetInstance();
+  Checkpoint_Reset(checkpoint);
 
   Particle_ResetAll();
 }
