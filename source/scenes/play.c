@@ -36,9 +36,8 @@ Scene_DoEnter() {
 static void
 Scene_DoPlay() {
   static bool debug = false;
-  GBA_Input *input = GBA_GetInput();
 
-  GBA_Input_PollStates(input);
+  GBA_Input_PollStates();
 
   Cube *cube = Cube_GetInstance();
   Checkpoint *checkpoint = Checkpoint_GetInstance();
@@ -46,24 +45,24 @@ Scene_DoPlay() {
   Course *course = Course_GetInstance();
   Progress *progress = Progress_GetInstance();
 
-  if (GBA_Input_IsPressed(input, GBA_KEY_A)) {
+  if (GBA_Input_IsPressed(GBA_KEY_A)) {
     Cube_Jump(cube, 1400);
   }
 
-  if (GBA_Input_IsHit(input, GBA_KEY_R)) {
+  if (GBA_Input_IsHit(GBA_KEY_R)) {
     Checkpoint_AddPosition(checkpoint, Cube_GetPosition(cube));
-  } else if (GBA_Input_IsHit(input, GBA_KEY_L)) {
+  } else if (GBA_Input_IsHit(GBA_KEY_L)) {
     Checkpoint_RemoveLastPosition(checkpoint);
   }
 
-  if (GBA_Input_IsHit(input, GBA_KEY_SELECT)) {
+  if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
     debug = true;
   }
 
   if (debug) {
-    if (GBA_Input_IsHeld(input, GBA_KEY_LEFT)) {
+    if (GBA_Input_IsHeld(GBA_KEY_LEFT)) {
       Cube_Accelerate(cube, DIRECTION_LEFT, 160);
-    } else if (GBA_Input_IsHeld(input, GBA_KEY_RIGHT)) {
+    } else if (GBA_Input_IsHeld(GBA_KEY_RIGHT)) {
       Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
     } else {
       Cube_Accelerate(cube, DIRECTION_RIGHT, 0);
@@ -89,7 +88,7 @@ Scene_DoPlay() {
   Progress_Draw(progress);
   Particle_DrawAll();
 
-  if (GBA_Input_IsHit(input, GBA_KEY_B)) {
+  if (GBA_Input_IsHit(GBA_KEY_B)) {
     extern const Scene *entry;
     Scene *current = Scene_GetCurrent();
     Scene_FadeReplaceWith(current, entry);

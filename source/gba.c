@@ -47,12 +47,6 @@ GBA_GetSystem() {
   return &system;
 }
 
-GBA_Input*
-GBA_GetInput() {
-  GBA_System *system = GBA_GetSystem();
-  return &system->input;
-}
-
 void
 GBA_EnableMode(int mode) {
   GBA_System *system = GBA_GetSystem();
@@ -478,13 +472,29 @@ GBA_Sprite_GetAffine(GBA_Sprite *sprite) {
 }
 
 int
+GBA_Palette_FindColor(GBA_Color color) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_Palette *palette = system->backgroundPalette;
+
+  const int size = sizeof(GBA_Palette) / sizeof(GBA_Color);
+  for (int index = 0; index < size; index++) {
+    GBA_Color next = (*palette)[index];
+
+    if (GBA_Color_Equals(next, color)) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+int
 GBA_Bitmap8_GetPixel(
     GBA_Bitmap8 *bitmap,
     int px, int py)
 {
   px &= 0b111; // bitmaps are 8x8 pixels
   py &= 0b111;
-
 
   int offset = py * 8 + px;
 
@@ -598,8 +608,9 @@ GBA_Bitmap_DrawLine(
 }
 
 void
-GBA_Input_PollStates(GBA_Input *input) {
+GBA_Input_PollStates() {
   GBA_System *system = GBA_GetSystem();
+  GBA_Input *input = &system->input;
   GBA_Keypad *keypad = system->keypad;
 
   input->previous.value = input->current.value;
@@ -607,26 +618,23 @@ GBA_Input_PollStates(GBA_Input *input) {
 }
 
 bool
-GBA_Input_IsPressed(
-    GBA_Input *input,
-    GBA_Key key)
-{
+GBA_Input_IsPressed(GBA_Key key) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_Input *input = &system->input;
   return (input->current.value & key) > 0;
 }
 
 bool
-GBA_Input_IsHit(
-    GBA_Input *input,
-    GBA_Key key)
-{
+GBA_Input_IsHit(GBA_Key key) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_Input *input = &system->input;
   return ((input->current.value &~ input->previous.value) & key) > 0;
 }
 
 bool
-GBA_Input_IsHeld(
-    GBA_Input *input,
-    GBA_Key key)
-{
+GBA_Input_IsHeld(GBA_Key key) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_Input *input = &system->input;
   return ((input->current.value & input->previous.value) & key) > 0;
 }
 

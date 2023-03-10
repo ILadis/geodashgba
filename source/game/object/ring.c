@@ -43,8 +43,7 @@ Object_HitRing(
     return true;
   }
 
-  GBA_Input *input = GBA_GetInput();
-  if (GBA_Input_IsHit(input, GBA_KEY_A)) {
+  if (GBA_Input_IsHit(GBA_KEY_A)) {
     props->triggered = true;
     Cube_Launch(cube, 1400);
   }

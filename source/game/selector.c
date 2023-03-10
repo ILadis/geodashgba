@@ -136,10 +136,15 @@ Selector_DrawLevelBox(Selector *selector) {
 
   GBA_TileMapRef_Blit(&target, position.x, position.y, &selectLevelBoxTileMap);
 
+  GBA_Color bgcolor = GBA_Color_From(0x100068);
+  int color = GBA_Palette_FindColor(bgcolor);
+
+/*
   GBA_System *system = GBA_GetSystem();
   GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
-
   int color = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
+*/
+
   for (int tileId = 128; tileId <= 167; tileId++) {
     GBA_TileMapRef_FillTile(&target, tileId, color);
   }

@@ -143,16 +143,16 @@ test(Input_IsHit_ShoudReturnTrueWhenQueriedKeyWasHitInLastKeypadPoll) {
 
   // act
   system->keypad->value = ~(GBA_KEY_B | GBA_KEY_LEFT);
-  GBA_Input_PollStates(input);
+  GBA_Input_PollStates();
 
   system->keypad->value = ~(GBA_KEY_A | GBA_KEY_DOWN);
-  GBA_Input_PollStates(input);
+  GBA_Input_PollStates();
 
   // assert
-  assert(GBA_Input_IsHit(input, GBA_KEY_A) == true);
-  assert(GBA_Input_IsHit(input, GBA_KEY_B) == false);
-  assert(GBA_Input_IsHit(input, GBA_KEY_DOWN) == true);
-  assert(GBA_Input_IsHit(input, GBA_KEY_LEFT) == false);
+  assert(GBA_Input_IsHit(GBA_KEY_A) == true);
+  assert(GBA_Input_IsHit(GBA_KEY_B) == false);
+  assert(GBA_Input_IsHit(GBA_KEY_DOWN) == true);
+  assert(GBA_Input_IsHit(GBA_KEY_LEFT) == false);
 }
 
 test(Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll) {
@@ -162,16 +162,16 @@ test(Input_IsHeld_ShoudReturnTrueWhenQueriedKeyWasHeldInLastKeypadPoll) {
 
   // act
   system->keypad->value = ~(GBA_KEY_B | GBA_KEY_LEFT);
-  GBA_Input_PollStates(input);
+  GBA_Input_PollStates();
 
   system->keypad->value = ~(GBA_KEY_B | GBA_KEY_LEFT);
-  GBA_Input_PollStates(input);
+  GBA_Input_PollStates();
 
   // assert
-  assert(GBA_Input_IsHeld(input, GBA_KEY_A) == false);
-  assert(GBA_Input_IsHeld(input, GBA_KEY_B) == true);
-  assert(GBA_Input_IsHeld(input, GBA_KEY_DOWN) == false);
-  assert(GBA_Input_IsHeld(input, GBA_KEY_LEFT) == true);
+  assert(GBA_Input_IsHeld(GBA_KEY_A) == false);
+  assert(GBA_Input_IsHeld(GBA_KEY_B) == true);
+  assert(GBA_Input_IsHeld(GBA_KEY_DOWN) == false);
+  assert(GBA_Input_IsHeld(GBA_KEY_LEFT) == true);
 }
 
 test(TileMapRef_BlitTile_ShouldWriteTileAtExpectedIndex) {

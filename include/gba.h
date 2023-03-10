@@ -205,6 +205,13 @@ typedef struct GBA_Color {
   .blue  = round(((rgb >>  0) & 0xFF) * (31/255.0)), \
 })
 
+static inline bool
+GBA_Color_Equals(GBA_Color color, GBA_Color other) {
+  return color.red == other.red
+      && color.green == other.green
+      && color.blue == other.blue;
+}
+
 typedef struct GBA_Sprite {
   union {
     u16 attr0;
@@ -274,6 +281,7 @@ typedef GBA_Tile GBA_TileMap[1024];
 /* GBA_Bitmap8: the pixel value is the palette-index for that pixel.
  * GBA_Bitmap4: the pixel value is the lower nybble of the palette-index (the upper nybble is stored in GBA_Tile/GBA_Sprite).
  */
+typedef GBA_Color GBA_Palette[256];
 
 typedef struct { u32 data[8];  } GBA_Bitmap4; // 4bpp (32 bytes)
 typedef struct { u32 data[16]; } GBA_Bitmap8; // 8bpp (64 bytes)
@@ -289,8 +297,8 @@ typedef GBA_Bitmap8 GBA_TileSet8[256];
 #define GBA_TILESETS4(ADDR) ((GBA_TileSet4 *) (ADDR))
 #define GBA_TILESETS8(ADDR) ((GBA_TileSet8 *) (ADDR))
 
-#define GBA_BACKGROUND_PALETTE(ADDR) ((GBA_Color *) (ADDR))
-#define GBA_SPRITE_PALETTE(ADDR)     ((GBA_Color *) (ADDR))
+#define GBA_BACKGROUND_PALETTE(ADDR) ((GBA_Palette *) (ADDR))
+#define GBA_SPRITE_PALETTE(ADDR)     ((GBA_Palette *) (ADDR))
 
 typedef struct GBA_DirectMemcpy {
   const void *src;
@@ -355,15 +363,12 @@ typedef struct GBA_System {
   GBA_Affine  *const affines;
   GBA_TileMap *const tileMaps;
 
-  GBA_Color *const backgroundPalette;
-  GBA_Color *const spritePalette;
+  GBA_Palette *const backgroundPalette;
+  GBA_Palette *const spritePalette;
 } GBA_System;
 
 GBA_System*
 GBA_GetSystem();
-
-GBA_Input*
-GBA_GetInput();
 
 void
 GBA_EnableMode(int mode);
@@ -472,6 +477,9 @@ GBA_Affine*
 GBA_Sprite_GetAffine(GBA_Sprite *sprite);
 
 int
+GBA_Palette_FindColor(GBA_Color color);
+
+int
 GBA_Bitmap8_GetPixel(
     GBA_Bitmap8 *bitmap,
     int px, int py);
@@ -500,22 +508,16 @@ GBA_Bitmap_DrawLine(
     GBA_Color color);
 
 void
-GBA_Input_PollStates(GBA_Input *input);
+GBA_Input_PollStates();
 
 bool
-GBA_Input_IsPressed(
-    GBA_Input *input,
-    GBA_Key key);
+GBA_Input_IsPressed(GBA_Key key);
 
 bool
-GBA_Input_IsHit(
-    GBA_Input *input,
-    GBA_Key key);
+GBA_Input_IsHit(GBA_Key key);
 
 bool
-GBA_Input_IsHeld(
-    GBA_Input *input,
-    GBA_Key key);
+GBA_Input_IsHeld(GBA_Key key);
 
 typedef enum mGBA_LogLevel {
   // mGBA cli log level mask:
