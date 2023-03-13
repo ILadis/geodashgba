@@ -133,17 +133,12 @@ Selector_DrawLevelBox(Selector *selector) {
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
-
   GBA_TileMapRef_Blit(&target, position.x, position.y, &selectLevelBoxTileMap);
 
-  GBA_Color bgcolor = GBA_Color_From(0x100068);
-  int color = GBA_Palette_FindColor(bgcolor);
-
-/*
+  // get color of tileId 79
   GBA_System *system = GBA_GetSystem();
   GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
   int color = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
-*/
 
   for (int tileId = 128; tileId <= 167; tileId++) {
     GBA_TileMapRef_FillTile(&target, tileId, color);
@@ -151,20 +146,20 @@ Selector_DrawLevelBox(Selector *selector) {
 
   extern const Font hudFont;
 
-  Printer *printer = &selector->printer;
-  Printer_SetFont(printer, &hudFont);
-  Printer_SetCanvas(printer, &target);
+  Printer printer = {0};
+  Printer_SetFont(&printer, &hudFont);
+  Printer_SetCanvas(&printer, &target);
 
   Level *level = Selector_GetLevel(selector);
 
   char name[15];
   Level_GetName(level, name);
 
-  int width = Printer_GetTextWidth(printer, name);
+  int width = Printer_GetTextWidth(&printer, name);
   int dx = (160 - width) / 2;
 
-  Printer_SetCursor(printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
-  Printer_WriteLine(printer, name, 22);
+  Printer_SetCursor(&printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
+  Printer_WriteLine(&printer, name, 22);
 }
 
 static inline void

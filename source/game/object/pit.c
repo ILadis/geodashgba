@@ -3,7 +3,6 @@
 
 typedef struct Properties {
   int width;
-  // TODO adjustable launch height
 } align4 Properties;
 
 bool

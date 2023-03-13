@@ -35,6 +35,7 @@ Printer_SetCanvas(
     GBA_TileMapRef *tileMap)
 {
   printer->tileMap = tileMap;
+  // TODO prepare canvas (set tile ids and apply background color)
 }
 
 static inline void
