@@ -93,9 +93,9 @@ int main(int argc, char **argv) {
       const Color color;
     } fields[] = {
     //{ "data",       { 0x000000 } },
+      { "fill",       { 0x0000FF } },
       { "outline",    { 0xFF0000 } },
       { "highlight",  { 0x00FF00 } },
-      { "background", { 0x0000FF } },
     };
 
     fprintf(out, "\n");

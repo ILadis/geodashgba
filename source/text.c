@@ -55,8 +55,7 @@ Printer_GetTextWidth(
 static void
 Printer_PrintGlyph(
     Printer *printer,
-    const Glyph *glyph,
-    int color)
+    const Glyph *glyph)
 {
   const Font *font = printer->font;
 
@@ -67,30 +66,34 @@ Printer_PrintGlyph(
   int index = 0;
 
   for (int y = 0; y < font->height; y++) {
-    unsigned char outline = 0, highlight = 0, background = 0;
+    unsigned char fill = 0, outline = 0, highlight = 0;
 
     for (int x = 0; x < glyph->width; x++) {
       if (x % 8 == 0) {
+        fill = glyph->fill[index];
         outline = glyph->outline[index];
-        highlight = glyph->highlight[index];
-        background = glyph->background[index++];
+        highlight = glyph->highlight[index++];
       }
 
-      if (outline & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, 16);
+      if (fill & 1) {
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.fill);
       }
 
-      if (highlight & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, color + 1);
+      else if (outline & 1) {
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.outline);
       }
 
-      if (background & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, 22);
+      else if (highlight & 1) {
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.highlight);
       }
 
+      else {
+        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.background);
+      }
+
+      fill >>= 1;
       outline >>= 1;
       highlight >>= 1;
-      background >>= 1;
     }
   }
 
@@ -100,8 +103,7 @@ Printer_PrintGlyph(
 void
 Printer_WriteLine(
     Printer *printer,
-    char *text,
-    int color)
+    char *text)
 {
   do {
     char letter = *(text++);
@@ -111,8 +113,8 @@ Printer_WriteLine(
       break;
     }
 
-    Printer_PrintGlyph(printer, glyph, color);
+    Printer_PrintGlyph(printer, glyph);
   } while (true);
 
-  // TODO increase cursor y
+  // TODO increase cursor y on new line character
 }

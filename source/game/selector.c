@@ -14,13 +14,29 @@ Selector_SetVisible(
 {
   selector->redraw = visible;
 
-  if (!visible) {
-    for (int i = 0; i < length(selector->arrows); i++) {
-      GBA_Sprite *sprite = selector->arrows[i];
-      if (sprite != NULL) {
-        GBA_Sprite_Release(sprite);
-        selector->arrows[i] = NULL;
-      }
+  if (visible) {
+    // get color of tileId 79
+    GBA_System *system = GBA_GetSystem();
+    GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
+    int background = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
+
+    extern const Font hudFont;
+
+    Printer *printer = &selector->printer;
+    Printer_SetFont(printer, &hudFont);
+
+    int fill = GBA_Palette_FindColor(GBA_Color_From(0xffffff)); // actual color is 0xf8f8f8
+    int outline = GBA_Palette_FindColor(GBA_Color_From(0x000008));
+
+    Printer_SetFillColor(printer, fill);
+    Printer_SetOutlineColor(printer, outline);
+    Printer_SetBackgroundColor(printer, background);
+  }
+  else for (int i = 0; i < length(selector->arrows); i++) {
+    GBA_Sprite *sprite = selector->arrows[i];
+    if (sprite != NULL) {
+      GBA_Sprite_Release(sprite);
+      selector->arrows[i] = NULL;
     }
   }
 }
@@ -135,31 +151,23 @@ Selector_DrawLevelBox(Selector *selector) {
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
   GBA_TileMapRef_Blit(&target, position.x, position.y, &selectLevelBoxTileMap);
 
-  // get color of tileId 79
-  GBA_System *system = GBA_GetSystem();
-  GBA_Bitmap8 *bitmap = &system->tileSets8[0][79];
-  int color = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
-
+  Printer *printer = &selector->printer;
+  int color = printer->colors.background;
   for (int tileId = 128; tileId <= 167; tileId++) {
     GBA_TileMapRef_FillTile(&target, tileId, color);
   }
-
-  extern const Font hudFont;
-
-  Printer printer = {0};
-  Printer_SetFont(&printer, &hudFont);
-  Printer_SetCanvas(&printer, &target);
 
   Level *level = Selector_GetLevel(selector);
 
   char name[15];
   Level_GetName(level, name);
 
-  int width = Printer_GetTextWidth(&printer, name);
+  int width = Printer_GetTextWidth(printer, name);
   int dx = (160 - width) / 2;
 
-  Printer_SetCursor(&printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
-  Printer_WriteLine(&printer, name, 22);
+  Printer_SetCanvas(printer, &target);
+  Printer_SetCursor(printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
+  Printer_WriteLine(printer, name);
 }
 
 static inline void

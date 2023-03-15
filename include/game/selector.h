@@ -12,6 +12,7 @@ typedef struct Selector {
   LevelId id;
   Animation scroll, move;
   GBA_Sprite *arrows[2];
+  Printer printer;
   bool redraw;
 } Selector;
 

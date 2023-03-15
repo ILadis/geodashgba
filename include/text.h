@@ -5,9 +5,9 @@
 
 typedef struct Glyph {
   const int width;
+  const unsigned char *fill;
   const unsigned char *outline;
   const unsigned char *highlight;
-  const unsigned char *background;
 } Glyph;
 
 typedef struct Font {
@@ -19,6 +19,12 @@ typedef struct Printer {
   GBA_TileMapRef *tileMap;
   const Font *font;
   struct { int x, y; } cursor;
+  struct {
+    int fill;
+    int outline;
+    int highlight;
+    int background;
+  } colors;
 } Printer;
 
 static inline void
@@ -35,7 +41,38 @@ Printer_SetCanvas(
     GBA_TileMapRef *tileMap)
 {
   printer->tileMap = tileMap;
-  // TODO prepare canvas (set tile ids and apply background color)
+}
+
+static inline void
+Printer_SetFillColor(
+    Printer *printer,
+    int color)
+{
+  printer->colors.fill = color;
+}
+
+static inline void
+Printer_SetOutlineColor(
+    Printer *printer,
+    int color)
+{
+  printer->colors.outline = color;
+}
+
+static inline void
+Printer_SetHighlightColor(
+    Printer *printer,
+    int color)
+{
+  printer->colors.highlight = color;
+}
+
+static inline void
+Printer_SetBackgroundColor(
+    Printer *printer,
+    int color)
+{
+  printer->colors.background = color;
 }
 
 static inline void
@@ -55,7 +92,6 @@ Printer_GetTextWidth(
 void
 Printer_WriteLine(
     Printer *printer,
-    char *line,
-    int color);
+    char *line);
 
 #endif
