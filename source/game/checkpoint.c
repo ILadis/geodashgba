@@ -33,7 +33,7 @@ Checkpoint_RemoveLastPosition(Checkpoint *checkpoint) {
     return false;
   }
 
-  int index = checkpoint->index - 1 % length(checkpoint->positions);
+  int index = (checkpoint->index - 1) % length(checkpoint->positions);
   Vector *last = checkpoint->last;
 
   last->x = 0;
