@@ -34,7 +34,7 @@ Hit_Combine(
   };
 }
 
-bool
+iwram bool
 Shape_Intersects(
     const Shape *shape,
     const Shape *other)
@@ -64,7 +64,7 @@ Shape_Intersects(
   return true;
 }
 
-Hit
+iwram Hit
 Raycast_Intersects(
     const Raycast *raycast,
     const Bounds *bounds)
@@ -133,7 +133,7 @@ Raycast_Intersects(
   return hit;
 }
 
-Hit
+iwram Hit
 Bounds_Intersects(
     const Bounds *bounds,
     const Bounds *other)
@@ -169,7 +169,7 @@ Bounds_Intersects(
   return hit;
 }
 
-Hit
+iwram Hit
 Bounds_Contains(
     const Bounds *bounds,
     const Vector *point)
@@ -274,7 +274,7 @@ Bounds_Embed(
   return Bounds_Combine(bounds, other, Math_max, Math_min);
 }
 
-Vector
+iwram Vector
 Shape_GetAxis(
     const Shape *shape,
     int index)
@@ -293,7 +293,7 @@ Shape_GetAxis(
   return axis;
 }
 
-Projection
+iwram Projection
 Shape_ProjectOnto(
     const Shape *shape,
     const Vector *axis)

@@ -3,7 +3,7 @@
 
 Course*
 Course_GetInstance() {
-  static Course course = {0};
+  static ewram Course course = {0};
   return &course;
 }
 
@@ -217,18 +217,22 @@ Course_PrepareChunk(
     Chunk *chunk)
 {
   const int mapIndexes[] = { 10, 14 };
-  int mapIndex = course->prepare.mapIndex;
+  enum Step {
+    STEP_PREPARE_SHADOW = -2,
+    STEP_DRAW_FLOOR = -1,
+  };
 
   if (course->prepare.chunk != chunk) {
     course->prepare.chunk = chunk;
-    course->prepare.step = -2;
+    course->prepare.step = STEP_PREPARE_SHADOW;
     course->prepare.mapIndex = mapIndexes[chunk->index % 2];
 
     return false;
   }
 
-  GBA_System *system = GBA_GetSystem();
+  int mapIndex = course->prepare.mapIndex;
 
+  GBA_System *system = GBA_GetSystem();
   GBA_TileMapRef shadow = {
     .width = 64, .height = 64,
     .tiles = system->tileMaps[mapIndex]
@@ -236,12 +240,12 @@ Course_PrepareChunk(
 
   int step = course->prepare.step++;
   switch (step) {
-  case -2:
-    GBA_Tile *tiles = system->tileMaps[mapIndex == 10 ? 14 : 10];
+  case STEP_PREPARE_SHADOW:
+    GBA_Tile *tiles = system->tileMaps[mapIndexes[(chunk->index + 1) % 2]];
     GBA_Memcpy(shadow.tiles, tiles, sizeof(GBA_Tile) * shadow.width * shadow.height);
     break;
 
-  case -1:
+  case STEP_DRAW_FLOOR:
     Course_DrawFloor(course, chunk, &shadow);
     break;
 
@@ -290,7 +294,7 @@ Course_DrawChunks(Course *course) {
   }
 }
 
-void
+iwram void
 Course_Draw(
     Course *course,
     Camera *camera)

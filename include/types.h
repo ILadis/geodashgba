@@ -18,6 +18,11 @@ typedef unsigned int   u32;
 #define align4 __attribute__((aligned(4)))
 #define packed __attribute__((__packed__))
 
+// can be applied on code and data
+#define ewram __attribute__((section(".ewram")))
+// can be applied on code
+#define iwram __attribute__((section(".iwram")))
+
 #define length(array) (sizeof(array) / sizeof(array[0]))
 #define round(value)  (value + 0.5 - (value < 0))
 
