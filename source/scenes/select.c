@@ -8,6 +8,7 @@
 #include <game/camera.h>
 #include <game/course.h>
 #include <game/level.h>
+#include <game/progress.h>
 #include <game/selector.h>
 
 static void
@@ -39,6 +40,11 @@ Scene_DoEnter() {
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
 
+  Progress *progress = Progress_GetInstance();
+  Progress_SetMode(progress, MODE_SELECTOR);
+  Progress_SetCourse(progress, course);
+  Progress_SetProgress(progress, 0);
+
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
@@ -56,14 +62,17 @@ Scene_DoEnter() {
 
 static void
 Scene_DoPlay() {
+  static int value = 0;
   GBA_Input_PollStates();
 
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
-  Selector *selector = Selector_GetInstance(false);
+  Selector *selector = Selector_GetInstance();
+  Progress *progress = Progress_GetInstance();
 
   Camera_Update(camera);
   Selector_Update(selector);
+  Progress_SetProgress(progress, value);
 
   if (GBA_Input_IsHit(GBA_KEY_LEFT)) {
     Selector_GoBackward(selector);
@@ -71,11 +80,18 @@ Scene_DoPlay() {
   else if (GBA_Input_IsHit(GBA_KEY_RIGHT)) {
     Selector_GoForward(selector);
   }
+  else if (GBA_Input_IsHeld(GBA_KEY_R)) {
+    value++;
+  }
+  else if (GBA_Input_IsHeld(GBA_KEY_L)) {
+    value--;
+  }
 
   GBA_VSync();
 
   Course_Draw(course, camera);
   Selector_Draw(selector);
+  Progress_Draw(progress);
 
   if (GBA_Input_IsHit(GBA_KEY_A)) {
     extern const Scene *play;

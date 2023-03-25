@@ -32,11 +32,16 @@ Selector_SetVisible(
     Printer_SetOutlineColor(printer, outline);
     Printer_SetBackgroundColor(printer, background);
   }
-  else for (int i = 0; i < length(selector->arrows); i++) {
-    GBA_Sprite *sprite = selector->arrows[i];
-    if (sprite != NULL) {
-      GBA_Sprite_Release(sprite);
-      selector->arrows[i] = NULL;
+  else {
+    GBA_DisableBackgroundLayer(2);
+    GBA_DisableBackgroundLayer(3);
+
+    for (int i = 0; i < length(selector->arrows); i++) {
+      GBA_Sprite *sprite = selector->arrows[i];
+      if (sprite != NULL) {
+        GBA_Sprite_Release(sprite);
+        selector->arrows[i] = NULL;
+      }
     }
   }
 }

@@ -15,6 +15,7 @@ Scene_DoEnter() {
   Course *course = Course_GetInstance();
 
   Progress *progress = Progress_GetInstance();
+  Progress_SetMode(progress, MODE_PLAY);
   Progress_SetCourse(progress, course);
 
   Camera *camera = Camera_GetInstance();
