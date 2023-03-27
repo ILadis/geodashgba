@@ -10,12 +10,12 @@
 
 typedef enum Mode {
   MODE_PLAY,
-  MODE_SELECTOR,
+  MODE_SELECT,
 } Mode;
 
 typedef struct Progress {
   int previous, current;
-  int total;
+  int best, total;
   enum Mode mode;
   bool redraw;
 } Progress;
@@ -37,13 +37,14 @@ Progress_SetMode(
   progress->redraw = true;
 }
 
-static inline void
+void
 Progress_SetProgress(
     Progress *progress,
-    int value)
-{
-  progress->previous = progress->current;
-  progress->current = Math_min(value, 1 << 8);
+    int value);
+
+static inline int
+Progress_GetProgress(Progress *progress) {
+  return progress->best;
 }
 
 void

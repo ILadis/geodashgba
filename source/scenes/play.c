@@ -8,6 +8,8 @@
 #include <game/course.h>
 #include <game/level.h>
 #include <game/progress.h>
+#include <game/selector.h>
+#include <game/records.h>
 #include <game/particle.h>
 
 static void
@@ -106,6 +108,15 @@ Scene_DoExit() {
 
   Checkpoint *checkpoint = Checkpoint_GetInstance();
   Checkpoint_Reset(checkpoint);
+
+  Progress *progress = Progress_GetInstance();
+  int best = Progress_GetProgress(progress);
+
+  Selector *selector = Selector_GetInstance();
+  LevelId id = Selector_GetLevelId(selector);
+
+  Records *records = Records_GetInstance();
+  Records_AddBestForLevel(records, id, best);
 
   Particle_ResetAll();
 }

@@ -30,6 +30,11 @@ Selector_GoForward(Selector *selector);
 void
 Selector_GoBackward(Selector *selector);
 
+static inline LevelId
+Selector_GetLevelId(Selector *selector) {
+  return selector->id;
+}
+
 static inline Level*
 Selector_GetLevel(Selector *selector) {
   return Level_GetById(selector->id);

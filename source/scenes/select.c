@@ -10,6 +10,7 @@
 #include <game/level.h>
 #include <game/progress.h>
 #include <game/selector.h>
+#include <game/records.h>
 
 static void
 Scene_DoEnter() {
@@ -41,7 +42,7 @@ Scene_DoEnter() {
   Course_ResetAndLoad(course, level);
 
   Progress *progress = Progress_GetInstance();
-  Progress_SetMode(progress, MODE_SELECTOR);
+  Progress_SetMode(progress, MODE_SELECT);
   Progress_SetCourse(progress, course);
   Progress_SetProgress(progress, 0);
 
@@ -62,17 +63,16 @@ Scene_DoEnter() {
 
 static void
 Scene_DoPlay() {
-  static int value = 0;
   GBA_Input_PollStates();
 
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
   Selector *selector = Selector_GetInstance();
   Progress *progress = Progress_GetInstance();
+  Records *records = Records_GetInstance();
 
   Camera_Update(camera);
   Selector_Update(selector);
-  Progress_SetProgress(progress, value);
 
   if (GBA_Input_IsHit(GBA_KEY_LEFT)) {
     Selector_GoBackward(selector);
@@ -80,11 +80,12 @@ Scene_DoPlay() {
   else if (GBA_Input_IsHit(GBA_KEY_RIGHT)) {
     Selector_GoForward(selector);
   }
-  else if (GBA_Input_IsHeld(GBA_KEY_R)) {
-    value++;
-  }
-  else if (GBA_Input_IsHeld(GBA_KEY_L)) {
-    value--;
+
+  // TODO workaround to draw progress when selector box is out of screen bounds
+  if (selector->redraw) {
+    LevelId id = Selector_GetLevelId(selector);
+    int best = Records_GetBestForLevel(records, id);
+    Progress_SetProgress(progress, best);
   }
 
   GBA_VSync();

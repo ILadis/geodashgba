@@ -11,7 +11,7 @@ static inline const Vector*
 Progress_GetPosition(Progress *progress) {
   static const Vector positions[] = {
     [MODE_PLAY] = Vector_Of(7, 1),
-    [MODE_SELECTOR] = Vector_Of(7, 12),
+    [MODE_SELECT] = Vector_Of(7, 12),
   };
 
   return &positions[progress->mode];
@@ -24,7 +24,7 @@ Progress_GetTileMap(Progress *progress) {
 
   static const GBA_TileMapRef *tileMaps[] = {
     [MODE_PLAY] = &progressPlayTileMap,
-    [MODE_SELECTOR] = &progressSelectorTileMap,
+    [MODE_SELECT] = &progressSelectorTileMap,
   };
 
   return tileMaps[progress->mode];
@@ -38,9 +38,20 @@ Progress_SetCourse(
   progress->redraw = true;
 
   const Bounds *bounds = Course_GetBounds(course);
-  int total = bounds->size.x * 2 - 8; // levels should always end with a wall with a width of 8px
+  int total = bounds->size.x * 2 - 16; // levels should always end with a wall with a width of 8px
 
   progress->total = total;
+  progress->best = 0;
+}
+
+void
+Progress_SetProgress(
+    Progress *progress,
+    int value)
+{
+  progress->previous = progress->current;
+  progress->current = Math_min(value, 1 << 8);
+  progress->best = Math_max(progress->best, progress->current);
 }
 
 void
@@ -60,13 +71,13 @@ Progress_DrawPixels(
     int value, bool state)
 {
   const Vector dimensions[] = {
-    [MODE_PLAY] = Vector_Of(122, 2),
-    [MODE_SELECTOR] = Vector_Of(125, 9),
+    [MODE_PLAY] = Vector_Of(123, 2),
+    [MODE_SELECT] = Vector_Of(125, 9),
   };
 
   const Vector offsets[] = {
     [MODE_PLAY] = Vector_Of(2, 3),
-    [MODE_SELECTOR] = Vector_Of(1, 6),
+    [MODE_SELECT] = Vector_Of(1, 6),
   };
 
   GBA_TileMapRef target;
@@ -86,7 +97,7 @@ Progress_DrawPixels(
   int py = offsets[progress->mode].y + position->y * 8;
 
   // TODO workaround to achieve rounded corners
-  if (progress->mode == MODE_SELECTOR) {
+  if (progress->mode == MODE_SELECT) {
     switch (width) {
       case   0: py += 2; height = 5; break;
       case   1: py += 1; height = 7; break;
@@ -121,18 +132,25 @@ Progress_DrawDelta(Progress *progress) {
 
 static inline void
 Progress_DrawBar(Progress *progress) {
-  static const GBA_BackgroundControl layer = {
-    .size = 0, // 256x256
-    .colorMode = 1,
-    .tileSetIndex = 0,
-    .tileMapIndex = 20,
-    .priority = 1,
+  static const GBA_BackgroundControl layers[] = {
+    [MODE_PLAY] = {
+      .size = 0, // 256x256
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 20,
+      .priority = 1,
+    },
+    // overlay layer (shared with selector)
+    [MODE_SELECT] = {
+      .size = 1, // 512x256
+      .colorMode = 1,
+      .tileSetIndex = 0,
+      .tileMapIndex = 21,
+      .priority = 1,
+    }
   };
 
-  // TODO worarkound to share background layer 2 when on selector scene
-  if (progress->mode == MODE_PLAY) {
-    GBA_EnableBackgroundLayer(2, layer);
-  }
+  GBA_EnableBackgroundLayer(2, layers[progress->mode]);
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
@@ -143,7 +161,7 @@ Progress_DrawBar(Progress *progress) {
   GBA_TileMapRef_Blit(&target, position->x, position->y, tileMap);
 
   int current = progress->current;
-  for (int value = 0; value < 1 << 8; value++) {
+  for (int value = 0; value <= 1 << 8; value++) {
     Progress_DrawPixels(progress, value, value < current);
   }
 
