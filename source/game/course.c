@@ -24,31 +24,29 @@ Course_LoadChunk(
 
 static inline void
 Course_CalculateBounds(Course *course) {
-  Bounds bounds = Bounds_Of(120, 256, 120, 256);
   Level *level = course->level;
-
   int count = Level_GetChunkCount(level);
-  bounds.center.x *= count;
-  bounds.size.x *= count;
 
-  Chunk last = {0};
-  Chunk_AssignIndex(&last, count - 1);
-  Level_GetChunk(level, &last);
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, count - 1);
+  Level_GetChunk(level, &chunk);
 
-  int dx = 0;
-  Object *wall = Chunk_FindObjectByType(&last, TYPE_GOAL_WALL);
+  Bounds zero = {0};
+  const Bounds *last = Chunk_GetBounds(&chunk);
+
+  int dx = 0, dy = 16;
+  Object *wall = Chunk_FindObjectByType(&chunk, TYPE_GOAL_WALL);
   if (wall != NULL) {
-    const Bounds *bounds = Chunk_GetBounds(&last);
-
-    Vector upper1 = Bounds_Upper(bounds);
+    Vector upper1 = Bounds_Upper(last);
     Vector upper2 = Bounds_Upper(&wall->hitbox);
 
     dx = (upper1.x - upper2.x) / 2;
   }
 
+  Bounds bounds = Bounds_Expand(&zero, last);
   bounds.center.x -= dx;
+  bounds.size.y += dy; // extra padding (for camera)
   bounds.size.x -= dx;
-
   course->bounds = bounds;
 }
 

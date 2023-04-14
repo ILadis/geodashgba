@@ -190,9 +190,9 @@ AsciiLevel_AddObjectToChunk(
   Object_Move(template, &position);
 
   Chunk *chunk = level->chunk;
-
   Unit unit = Unit_Of(&template->hitbox, template);
-  
+
+  // TODO use viewbox when checking for overlapping objects (or only check whitelisted/box object types)
   if (!Chunk_CheckHits(chunk, &unit, NULL)) {
     Object *object = Chunk_AllocateObject(chunk);
     if (object != NULL) {

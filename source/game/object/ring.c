@@ -9,7 +9,7 @@ typedef struct Properties {
 
 bool
 Object_CreateRing(Object *object) {
-  Bounds hitbox  = Bounds_Of(8, 8, 8, 12);
+  Bounds hitbox  = Bounds_Of(8, 8, 14, 14);
   Bounds viewbox = Bounds_Of(8, 8, 8, 8);
 
   object->hitbox  = hitbox;
@@ -38,7 +38,7 @@ Object_HitRing(
   }
 
   Cube *cube = Cube_GetInstance();
-  // TODO workaround to prevent shadow from triggering pads
+  // TODO workaround to prevent shadow from triggering rings
   if (&cube->shape != shape) {
     return true;
   }
@@ -47,7 +47,6 @@ Object_HitRing(
     props->triggered = true;
     Cube_Launch(cube, 1400);
   }
-
 
   return true;
 }

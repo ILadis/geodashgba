@@ -25,11 +25,10 @@ Grid_Reset(Grid *grid) {
   grid->count = 0;
 }
 
-static Cell*
-Grid_AllocateNew(
-    Grid *grid,
+static inline void
+Cell_SetSlotBounds(
     Cell *parent,
-    int offset)
+    int slot)
 {
   static const Vector directions[4] = {
     Vector_Of(-1, -1), // top left
@@ -38,15 +37,7 @@ Grid_AllocateNew(
     Vector_Of(+1, +1), // bottom right
   };
 
-  if (offset < 0 || offset > 3) {
-    return NULL;
-  }
-
-  const Vector *direction = &directions[offset];
-
-  int index = grid->count++;
-  Cell *cell = &grid->cells[index];
-
+  const Vector *direction = &directions[slot];
   Bounds *bounds = &parent->bounds;
 
   Vector size = {
@@ -63,21 +54,32 @@ Grid_AllocateNew(
   bool oddHeight = (bounds->size.y & 0x1) == 1;
 
   if (oddWidth) {
-    int adjust = (offset & 0b01) == 0;
+    int adjust = (slot & 0b01) == 0;
     center.x -=  adjust;
     size.x   += !adjust;
   }
 
   if (oddHeight) {
-    int adjust = (offset & 0b10) == 0;
+    int adjust = (slot & 0b10) == 0;
     center.y -=  adjust;
     size.y   += !adjust;
   }
 
+  Cell *cell = parent->cells[slot];
   cell->bounds.size = size;
   cell->bounds.center = center;
+}
 
-  parent->cells[offset] = cell;
+static Cell*
+Grid_AllocateNew(
+    Grid *grid,
+    Cell *parent,
+    int slot)
+{
+  int index = grid->count++;
+
+  Cell *cell = parent->cells[slot] = &grid->cells[index];
+  Cell_SetSlotBounds(parent, slot);
 
   return cell;
 }
@@ -120,8 +122,8 @@ Grid_Subdivide(
     return NULL;
   }
 
-  for (int i = 0; i < 4; i++) {
-    Cell *cell = Grid_AllocateNew(grid, parent, i);
+  for (int slot = 0; slot < 4; slot++) {
+    Cell *cell = Grid_AllocateNew(grid, parent, slot);
     Grid_RelocateUnits(grid, parent, cell);
   }
 
@@ -203,12 +205,29 @@ Grid_AddUnitToCell(
   return false;
 }
 
+static void
+Cell_RelocateSlotBounds(Cell *parent) {
+  for (int slot = 0; slot < 4; slot++) {
+    if (parent->cells[slot] != NULL) {
+      Cell_SetSlotBounds(parent, slot);
+      Cell_RelocateSlotBounds(parent->cells[slot]);
+    }
+  }
+}
+
 bool
 Grid_AddUnit(
     Grid *grid,
     Unit *unit)
 {
   Cell *root = &grid->root;
+
+  if (!Cell_UnitInBounds(root, unit)) {
+    const Bounds bounds = Bounds_Expand(&root->bounds, unit->bounds);
+    root->bounds = bounds;
+    Cell_RelocateSlotBounds(root);
+  }
+
   return Grid_AddUnitToCell(grid, root, unit);
 }
 

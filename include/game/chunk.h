@@ -14,6 +14,7 @@ typedef struct Chunk {
   Object objects[20];
   Cell cells[20];
   Grid grid;
+  Bounds bounds;
   int index, count;
 } Chunk;
 
@@ -31,7 +32,12 @@ HitCallback_Invoke(
 
 static inline const Bounds*
 Chunk_GetBounds(Chunk *chunk) {
-  return &chunk->grid.root.bounds;
+  /* Note: This previously returned the bounds of chunk-grid. But if the
+   * bounds of a grid grows (for example if an object hitbox is too large
+   * to fit), this would result in overlapping course chunks. That's why
+   * a separate fixed chunk bounds is currently needed.
+   */
+  return &chunk->bounds;
 }
 
 static inline bool

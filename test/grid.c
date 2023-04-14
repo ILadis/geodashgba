@@ -92,20 +92,6 @@ test(Subdivide_ShouldSubdivideCellGaplessWhenOddCellWidthAndHeightIsGiven) {
   assert(cells[3].bounds.size.y == 3);
 }
 
-test(AddUnit_ShouldNotAddUnitIfUnitBoundsAreNotEntirelyContainedWithinCell) {
-  // arrange
-  Grid *grid = Grid_Of(10, 10, 5, 5, 20);
-
-  Bounds bounds = Bounds_Of(13, 13, 4, 4);
-  Unit unit = Unit_Of(&bounds, NULL);
-
-  // act
-  bool result = Grid_AddUnit(grid, &unit);
-
-  // assert
-  assert(result == false);
-}
-
 test(AddUnit_ShouldAddUnitsToRootCellIfCapacityIsNotExceeded) {
   // arrange
   Grid *grid = Grid_Of(10, 10, 5, 5, 20);
@@ -232,6 +218,37 @@ test(AddUnit_ShouldSubdivideCellsWhenCapacityIsExceededAndRelocateUnits) {
   assert(root->cells[3]->units[2].bounds == &bounds1);
 }
 
+test(AddUnit_ShouldEnlargeGridIfUnitBoundsAreNotEntirelyContainedWithinRootCell) {
+  // arrange
+  Grid *grid = Grid_Of(10, 10, 5, 5, 20);
+  Cell *root = Grid_GetRoot(grid);
+
+  Grid_Subdivide(grid, Grid_Subdivide(grid, root));
+
+  Bounds bounds = Bounds_Of(13, 13, 4, 4);
+  Unit unit = Unit_Of(&bounds, NULL);
+
+  // act
+  bool result = Grid_AddUnit(grid, &unit);
+
+  // assert
+  assert(result == true);
+  assert(root->bounds.center.x == 11);
+  assert(root->bounds.center.y == 11);
+  assert(root->bounds.size.x == 6);
+  assert(root->bounds.size.y == 6);
+
+  assert(root->cells[0]->bounds.center.x == 8);
+  assert(root->cells[0]->bounds.center.y == 8);
+  assert(root->cells[0]->bounds.size.x == 3);
+  assert(root->cells[0]->bounds.size.y == 3);
+
+  assert(root->cells[0]->cells[0]->bounds.center.x == 6);
+  assert(root->cells[0]->cells[0]->bounds.center.y == 6);
+  assert(root->cells[0]->cells[0]->bounds.size.x == 1);
+  assert(root->cells[0]->cells[0]->bounds.size.y == 1);
+}
+
 test(GetUnits_ShouldReturnQueriedUnitsInInsertionOrder) {
   // arrange
   Grid *grid = Grid_Of(10, 10, 6, 6, 20);
@@ -345,10 +362,10 @@ suite(
   Subdivide_ShouldSubdivideCellGaplessWhenOddCellWidthIsGiven,
   Subdivide_ShouldSubdivideCellGaplessWhenOddCellHeightIsGiven,
   Subdivide_ShouldSubdivideCellGaplessWhenOddCellWidthAndHeightIsGiven,
-  AddUnit_ShouldNotAddUnitIfUnitBoundsAreNotEntirelyContainedWithinCell,
   AddUnit_ShouldAddUnitsToRootCellIfCapacityIsNotExceeded,
   AddUnit_ShouldAddUnitToMostFittingSubcell,
   AddUnit_ShouldReturnFalseIfThereIsNoCapacityLeftToAddCell,
   AddUnit_ShouldSubdivideCellsWhenCapacityIsExceededAndRelocateUnits,
+  AddUnit_ShouldEnlargeGridIfUnitBoundsAreNotEntirelyContainedWithinRootCell,
   GetUnits_ShouldReturnQueriedUnitsInInsertionOrder,
   GetUnits_ShouldReturnUnitsOfAllQueriedCells);

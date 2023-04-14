@@ -19,6 +19,7 @@ Chunk_AssignIndex(
   Bounds bounds = Bounds_Of(x, y, width/2, height/2);
   Grid_SetBounds(grid, &bounds);
 
+  chunk->bounds = bounds;
   chunk->index = index;
   chunk->count = 0;
 }
@@ -87,9 +88,7 @@ Chunk_CheckHits(
     Unit *other = Iterator_GetNext(&iterator);
     Object *object = other->object;
 
-    Bounds *bounds = &object->hitbox;
-
-    Hit hit = Bounds_Intersects(bounds, hitbox);
+    Hit hit = Bounds_Intersects(&object->hitbox, hitbox);
     if (Hit_IsHit(&hit)) {
       HitCallback_Invoke(callback, unit, object, &hit);
       result = true;
