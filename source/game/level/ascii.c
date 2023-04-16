@@ -318,6 +318,17 @@ AsciiLevel_AddRing(Level *level) {
 }
 
 static void
+AsciiLevel_AddPortal(Level *level) {
+  Object object = {0};
+  Vector offset = Vector_Of(0, -2);
+
+  if (Object_CreatePortal(&object)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddSpike(
     Level *level,
     Direction direction)
@@ -495,6 +506,9 @@ AsciiLevel_GetChunk(
         break;
       case '@':
         AsciiLevel_AddRing(level);
+        break;
+      case 'C':
+        AsciiLevel_AddPortal(level);
         break;
       case '^':
         AsciiLevel_AddSpike(level, DIRECTION_UP);

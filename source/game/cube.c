@@ -98,10 +98,11 @@ Cube_Draw(
   }
   else {
     int rotation = cube->rotation.angle;
+    int gravity = Math_signum(cube->body.dynamics->gravity.y);
 
     Vector position = {
       .x = cube->hitbox.center.x - 16,
-      .y = cube->hitbox.center.y - 17, // draw 1px higher because of contact with ground
+      .y = cube->hitbox.center.y - (16 + gravity), // draw 1px higher because of contact with ground
     };
 
     Camera_RelativeTo(camera, &position);

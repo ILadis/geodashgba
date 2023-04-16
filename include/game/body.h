@@ -20,6 +20,15 @@ typedef struct Body {
 const Dynamics*
 Dynamics_OfZero();
 
+static inline Dynamics
+Dynamics_OfInverseGravity(const Dynamics *dynamics) {
+  return (Dynamics) {
+    .friction = dynamics->friction,
+    .limits = dynamics->limits,
+    .gravity = Vector_Of(-dynamics->gravity.x, -dynamics->gravity.y)
+  };
+}
+
 static inline void
 Body_SetDynamics(
     Body *body,

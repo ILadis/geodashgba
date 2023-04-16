@@ -56,7 +56,7 @@ Cube_ApplyMovement(Cube *cube) {
   hitbox->center.x = position->x >> 8;
   hitbox->center.y = position->y >> 8;
 
-  cube->rotation.angle -= cube->rotation.velocity;
+  cube->rotation.angle += cube->rotation.velocity;
 
   if (Cube_EnteredState(cube, STATE_VICTORY)) {
     static const Dynamics dynamics = {

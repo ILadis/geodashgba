@@ -16,7 +16,10 @@ Cube_CalculateRotationVelocity(
     .state  = cube->state,
   };
 
-  int sign = Math_signum(shadow.body.velocity.x);
+  int sign = -1
+    * Math_signum(shadow.body.velocity.x)
+    * Math_signum(shadow.body.dynamics->gravity.y);
+
   if (sign == 0) {
     return 0;
   }

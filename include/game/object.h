@@ -18,6 +18,7 @@ typedef struct Object {
     TYPE_SPIKE,
     TYPE_PAD,
     TYPE_RING,
+    TYPE_PORTAL,
     TYPE_GOAL,
     TYPE_GOAL_WALL,
     TYPE_COUNT,
@@ -48,6 +49,9 @@ Object_CreatePad(Object *object);
 
 bool
 Object_CreateRing(Object *object);
+
+bool
+Object_CreatePortal(Object *object);
 
 bool
 Object_CreateRegularBox(

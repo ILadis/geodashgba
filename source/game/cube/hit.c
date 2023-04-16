@@ -31,8 +31,9 @@ Cube_RaycasFromMovement(Cube *cube) {
   int cx = body->position.x >> 8;
   int cy = body->position.y >> 8;
 
+  int gravity = Math_signum(cube->body.dynamics->gravity.y);
   if (cube->state.current == STATE_GROUNDED) {
-    cy--;
+    cy -= gravity;
   }
 
   return Raycast_Of(cx - vx, cy - vy, vx, vy, 8);
@@ -94,11 +95,13 @@ Cube_HitCallback(
     }
 
     else {
-      if (hit->delta.y < 0) {
-        Cube_ResolveHit(cube, hit->delta.y + 1); // +1 to stay in contact with ground
+      int gravity = Math_signum(cube->body.dynamics->gravity.y);
+      int delta = Math_signum(hit->delta.y);
+
+      if (gravity != delta) {
+        Cube_ResolveHit(cube, hit->delta.y + gravity); // +1 to stay in contact with ground
         cube->state.current = STATE_GROUNDED;
-      }
-      else if (hit->delta.y > 0) {
+      } else {
         Cube_ResolveHit(cube, hit->delta.y);
       }
     }
