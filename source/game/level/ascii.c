@@ -263,13 +263,16 @@ AsciiLevel_AddRegularBox(Level *level) {
 }
 
 static void
-AsciiLevel_AddPit(Level *level) {
+AsciiLevel_AddPit(
+    Level *level,
+    bool hanging)
+{
   Object object = {0};
-  Vector offset = Vector_Of(0, +1);
+  Vector offset = Vector_Of(0, hanging ? 0 : +1);
 
   int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
 
-  if (Object_CreatePit(&object, width)) {
+  if (Object_CreatePit(&object, width, hanging)) {
     Object_Move(&object, &offset);
     AsciiLevel_AddObjectToChunk(level, &object);
   }
@@ -320,7 +323,7 @@ AsciiLevel_AddRing(Level *level) {
 static void
 AsciiLevel_AddPortal(Level *level) {
   Object object = {0};
-  Vector offset = Vector_Of(0, -2);
+  Vector offset = Vector_Of(0, -4);
 
   if (Object_CreatePortal(&object)) {
     Object_Move(&object, &offset);
@@ -487,7 +490,10 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddRegularBox(level);
         break;
       case '.':
-        AsciiLevel_AddPit(level);
+        AsciiLevel_AddPit(level, false);
+        break;
+      case '`':
+        AsciiLevel_AddPit(level, true);
         break;
       case ',':
         AsciiLevel_AddTinySpike(level);

@@ -76,7 +76,8 @@ Object_CreateBoxWithChains(
 bool
 Object_CreatePit(
     Object *object,
-    int width);
+    int width,
+    bool hanging);
 
 bool
 Object_CreateSpike(
