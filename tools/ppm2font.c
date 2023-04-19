@@ -92,7 +92,6 @@ int main(int argc, char **argv) {
       const char *name;
       const Color color;
     } fields[] = {
-    //{ "data",       { 0x000000 } },
       { "fill",       { 0x0000FF } },
       { "outline",    { 0xFF0000 } },
       { "highlight",  { 0x00FF00 } },
@@ -129,7 +128,7 @@ int main(int argc, char **argv) {
           }
         }
 
-        fprintf(out, width % 8 == 0 ? ",\n" : "0b%s,\n", byte);
+        fprintf(out, width == 0 ? "    0b%s,\n" : width % 8 == 0 ? ",\n" : "0b%s,\n", byte);
       }
 
       fprintf(out, "  },\n");

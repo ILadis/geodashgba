@@ -1,5 +1,6 @@
 
 #include <gba.h>
+#include <text.h>
 
 #include <game/camera.h>
 #include <game/cube.h>
@@ -70,4 +71,30 @@ Debug_DrawHitboxes() {
     Bounds *hitbox = &object->hitbox;
     Debug_DrawHitbox(camera, hitbox, green);
   }
+}
+
+void
+Debug_PrintLine(char *message) {
+  static bool once = true;
+  static Printer printer = {0};
+
+  if (once) {
+    GBA_EnableMode(3);
+    GBA_Bitmap_FillRect(0, 0, 240, 160, (GBA_Color) {0});
+
+    extern const Font consoleFont;
+    Printer_SetFont(&printer, &consoleFont);
+    Printer_SetFillColor(&printer, 0xf21238);
+    Printer_SetBackgroundColor(&printer, 0x000000);
+
+    Printer_SetCanvas(&printer, NULL);
+    Printer_SetCursor(&printer, 0, 0);
+
+    once = false;
+  }
+
+  Printer_WriteLine(&printer, message);
+
+  int y = printer.cursor.y + printer.font->height;
+  Printer_SetCursor(&printer, 0, y);
 }

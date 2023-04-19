@@ -12,7 +12,7 @@ typedef struct Glyph {
 
 typedef struct Font {
   const int height;
-  const Glyph *glyphs[64];
+  const Glyph *glyphs[95];
 } Font;
 
 typedef struct Printer {

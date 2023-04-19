@@ -88,6 +88,15 @@ Scene_DoPlay() {
     Progress_SetProgress(progress, best);
   }
 
+  if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
+    extern void Debug_PrintLine(char *message);
+    Debug_PrintLine("Welcome to");
+    Debug_PrintLine("Debug Console \\'_'/");
+    Debug_PrintLine("0x1234 > 0b110011");
+    Debug_PrintLine("!_! -...- *++* ~~~");
+    while(true);
+  }
+
   GBA_VSync();
 
   Course_Draw(course, camera);

@@ -8,17 +8,14 @@ Printer_GetGlyph(
 {
   const Font *font = printer->font;
   static const Glyph fallback = {0};
+
   const int limit = length(font->glyphs);
 
   if (letter == '\0') {
     return NULL;
   }
 
-  if (letter >= 'a' && letter <= 'z') {
-    letter = 'A' + (letter - 'a');
-  }
-
-  int index = letter - 'A';
+  int index = letter - ' ';
   if (index < 0 || index > limit) {
     return &fallback;
   }
@@ -52,6 +49,20 @@ Printer_GetTextWidth(
   return width;
 }
 
+static inline void
+Printer_SetPixel(
+    Printer *printer,
+    int px, int py,
+    int color)
+{
+  GBA_TileMapRef *tileMap = printer->tileMap;
+  if (tileMap != NULL) {
+    GBA_TileMapRef_SetPixel(tileMap, px, py, color);
+  } else {
+    GBA_Bitmap_FillPixel(px, py, GBA_Color_From(color));
+  }
+}
+
 static void
 Printer_PrintGlyph(
     Printer *printer,
@@ -62,9 +73,7 @@ Printer_PrintGlyph(
   int px = printer->cursor.x;
   int py = printer->cursor.y;
 
-  GBA_TileMapRef *tileMap = printer->tileMap;
   int index = 0;
-
   for (int y = 0; y < font->height; y++) {
     unsigned char fill = 0, outline = 0, highlight = 0;
 
@@ -76,19 +85,19 @@ Printer_PrintGlyph(
       }
 
       if (fill & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.fill);
+        Printer_SetPixel(printer, px + x, py + y, printer->colors.fill);
       }
 
       else if (outline & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.outline);
+        Printer_SetPixel(printer, px + x, py + y, printer->colors.outline);
       }
 
       else if (highlight & 1) {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.highlight);
+        Printer_SetPixel(printer, px + x, py + y, printer->colors.highlight);
       }
 
       else {
-        GBA_TileMapRef_SetPixel(tileMap, px + x, py + y, printer->colors.background);
+        Printer_SetPixel(printer, px + x, py + y, printer->colors.background);
       }
 
       fill >>= 1;
