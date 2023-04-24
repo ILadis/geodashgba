@@ -8,6 +8,7 @@ geometry dash physics:
 
 sprite resources:
 - https://www.spriters-resource.com/mobile/geometrydash/
+- https://opengameart.org
 
 makefile automatic variables:
 - https://stackoverflow.com/a/37701195

@@ -1,5 +1,6 @@
 
 #include <gba.h>
+#include <everdrive.h>
 #include <scene.h>
 
 #include <assets/graphics/tiles.h>
@@ -90,10 +91,31 @@ Scene_DoPlay() {
 
   if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
     extern void Debug_PrintLine(char *message);
-    Debug_PrintLine("Welcome to");
-    Debug_PrintLine("Debug Console \\'_'/");
-    Debug_PrintLine("0x1234 > 0b110011");
-    Debug_PrintLine("!_! -...- *++* ~~~");
+    extern void Debug_PrintNewline();
+
+    Everdrive_UnlockSystem();
+
+    //u8 diskInit();
+    if (!Everdrive_CardInitialize() /*diskInit() != 0*/) {
+      Debug_PrintNewline();
+      Debug_PrintLine("diskInit failed");
+      while(true);
+    }
+
+    unsigned char buffer[512];
+    //u8 diskRead(u32 sd_addr, u8 *dst, u16 slen);
+    if (!Everdrive_CardReadBlock(0x2000, buffer) /*diskRead(0x2000, buffer, 1) != 0*/) {
+      Debug_PrintNewline();
+      Debug_PrintLine("Error reading from card");
+      while(true);
+    }
+
+    Debug_PrintLine((char *) &buffer[3]); //MSDOS...
+    Debug_PrintLine((char *) &buffer[0x47]); //print partition name
+    Debug_PrintLine((char *) &buffer[0x1AE]); //disk error message
+    Debug_PrintLine((char *) &buffer[0x1AE + 30]);
+    Debug_PrintLine((char *) &buffer[0x1AE + 60]);
+
     while(true);
   }
 

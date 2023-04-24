@@ -73,8 +73,8 @@ Debug_DrawHitboxes() {
   }
 }
 
-void
-Debug_PrintLine(char *message) {
+static Printer*
+Debug_GetPrinter() {
   static bool once = true;
   static Printer printer = {0};
 
@@ -84,7 +84,7 @@ Debug_PrintLine(char *message) {
 
     extern const Font consoleFont;
     Printer_SetFont(&printer, &consoleFont);
-    Printer_SetFillColor(&printer, 0xf21238);
+    Printer_SetFillColor(&printer, 0xF21238);
     Printer_SetBackgroundColor(&printer, 0x000000);
 
     Printer_SetCanvas(&printer, NULL);
@@ -93,8 +93,44 @@ Debug_PrintLine(char *message) {
     once = false;
   }
 
-  Printer_WriteLine(&printer, message);
+  return &printer;
+}
 
-  int y = printer.cursor.y + printer.font->height;
-  Printer_SetCursor(&printer, 0, y);
+void
+Debug_Print(char *message) {
+  Printer *printer = Debug_GetPrinter();
+  Printer_WriteLine(printer, message);
+}
+
+void
+Debug_PrintNewline() {
+  Printer *printer = Debug_GetPrinter();
+  int y = printer->cursor.y + printer->font->height;
+  Printer_SetCursor(printer, 0, y);
+}
+
+void
+Debug_PrintLine(char *message) {
+  Debug_Print(message);
+  Debug_PrintNewline();
+}
+
+void
+Debug_PrintHex8(unsigned char num) {
+  static char digits[] = "0123456789ABCDEF";
+  char message[3] = {0};
+
+  int upper = num >> 4;
+  message[0] = digits[upper];
+
+  int lower = num & 0x0f;
+  message[1] = digits[lower];
+
+  Debug_Print(message);
+}
+
+void
+Debug_PrintHex16(unsigned short num) {
+  Debug_PrintHex8(num >> 8);
+  Debug_PrintHex8(num & 0xff);
 }

@@ -230,8 +230,9 @@ GBA_Memcpy(void *dst, const void *src, int size) {
   GBA_DirectMemcpy copy = {0};
   copy.dst = dst;
   copy.src = src;
-  copy.numTransfers = size >> 2;
-  copy.chunkSize = 1; // copy words
+  // TODO revert this to copy word chunks
+  copy.numTransfers = size >> 1;
+  copy.chunkSize = 0; // copy half-words
   copy.enable = 1;
 
   dma3->dst = copy.dst;
