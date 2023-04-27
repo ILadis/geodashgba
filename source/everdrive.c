@@ -8,7 +8,14 @@ extern void Debug_PrintHex8(unsigned char num);
 extern void Debug_PrintHex16(unsigned short num);
 
 static bool log = false;
-static bool fast = false;
+
+#define withDisabledLog(block) \
+do { \
+  bool state = log; \
+  log = false; \
+  block; \
+  log = state; \
+} while(0);
 
 Everdrive_System*
 Everdrive_GetSystem() {
@@ -27,6 +34,8 @@ Everdrive_GetSystem() {
     .cardCommand = EVERDRIVE_CARD_COMMAND(MEM_IO + 0x0010),
     .cardData    = EVERDRIVE_CARD_DATA(MEM_IO + 0x0012),
     .cardControl = EVERDRIVE_CARD_CONTROL(MEM_IO + 0x0014),
+
+    .cardSpeed = EVERDRIVE_CARD_SPEED_SLOW,
   };
 
   return &system;
@@ -35,7 +44,7 @@ Everdrive_GetSystem() {
 void
 Everdrive_UnlockSystem() {
   Everdrive_System *system = Everdrive_GetSystem();
-  *(system->unlockKey) = 0x00A5;
+  *(system->unlockKey) = 0x00A5; // "magic" unlock key
 
   Everdrive_DeviceControl control = {
     .mapRegisters = 1,
@@ -52,12 +61,27 @@ Everdrive_CardSetMode(
 {
   Everdrive_System *system = Everdrive_GetSystem();
   Everdrive_CardControl control = {
-    .speed = fast ? 1 : 0,
+    .speed = system->cardSpeed,
     .mode = mode,
     .awaitF0 = awaitF0 ? 1 : 0,
     .startF0 = startF0 ? 1 : 0,
   };
 
+  system->cardControl->value = control.value;
+}
+
+static void
+Everdrive_CardSetSpeed(
+    Everdrive_CardMode mode,
+    Everdrive_CardSpeed speed)
+{
+  Everdrive_System *system = Everdrive_GetSystem();
+  Everdrive_CardControl control = {
+    .speed = speed,
+    .mode = mode,
+  };
+
+  system->cardSpeed = speed;
   system->cardControl->value = control.value;
 }
 
@@ -85,54 +109,26 @@ Everdrive_CardAwaitF0() {
   return -1;
 }
 
-static int
-Everdrive_CardReadData() {
-  Everdrive_System *system = Everdrive_GetSystem();
-
-  volatile Everdrive_CardData data = *(system->cardData);
-  volatile Everdrive_DeviceStatus status = {0};
-
-  do {
-    status = *(system->deviceStatus);
-  } while (status.cardBusy);
-
-  return data.lowByte & 0x00FF;
-}
-
-static unsigned int
-Everdrive_CardWriteData(unsigned int data) {
-  Everdrive_System *system = Everdrive_GetSystem();
-  system->cardData->value = data = (data | 0xFF00);
-
-  volatile Everdrive_DeviceStatus status = {0};
-
-  do {
-    status = *(system->deviceStatus);
-  } while (status.cardBusy);
-
-  return data;
-}
-
-static unsigned int
+static Everdrive_CardCommand
 Everdrive_CardReadCommand() {
   Everdrive_System *system = Everdrive_GetSystem();
 
-  volatile Everdrive_CardCommand command = *(system->cardCommand);
+  volatile Everdrive_CardCommand command = *(system->cardCommand) & 0x00FF;
   volatile Everdrive_DeviceStatus status = {0};
 
   do {
     status = *(system->deviceStatus);
   } while (status.cardBusy);
 
-  if (log) Debug_PrintHex8(command.value);
+  if (log) Debug_PrintHex8(command);
 
-  return command.value;
+  return command;
 }
 
-static unsigned int
-Everdrive_CardWriteCommand(unsigned int command) {
+static Everdrive_CardCommand
+Everdrive_CardWriteCommand(Everdrive_CardCommand command) {
   Everdrive_System *system = Everdrive_GetSystem();
-  system->cardCommand->value = command = (command & 0x00FF);
+  *(system->cardCommand) = command = (command & 0x00FF);
 
   if (log) Debug_PrintHex8(command);
 
@@ -147,10 +143,13 @@ Everdrive_CardWriteCommand(unsigned int command) {
 
 static void
 Everdrive_CardSendCommand(
-    Everdrive_CardCommands command,
-    u32 argument)
+    Everdrive_CardCommand command,
+    Everdrive_CardArgument argument)
 {
-  if (log) { Debug_PrintNewline(); Debug_Print(">"); }
+  if (log) {
+    Debug_PrintNewline();
+    Debug_Print(">");
+  }
 
   unsigned int checksum = 0;
   unsigned int commands[] = {
@@ -162,9 +161,7 @@ Everdrive_CardSendCommand(
   };
 
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
-
-  bool tmp = log; log = false;
-  Everdrive_CardWriteCommand(0xFF); log = tmp;
+  withDisabledLog(Everdrive_CardWriteCommand(0xFF));
 
   for (int i = 0; i < length(commands); i++) {
     checksum ^= Everdrive_CardWriteCommand(commands[i]);
@@ -177,6 +174,7 @@ Everdrive_CardSendCommand(
     }
   }
 
+  // TODO why no << 1 required?
   Everdrive_CardWriteCommand(checksum | 1);
 }
 
@@ -185,10 +183,9 @@ Everdrive_CardReceiveResponse(
     Everdrive_CardResponse response,
     unsigned int *buffer)
 {
-  if (log) { Debug_Print("<"); }
+  if (log) Debug_Print("<");
 
-  bool tmp = log; log = false;
-  Everdrive_CardReadCommand(); log = tmp;
+  withDisabledLog(Everdrive_CardReadCommand());
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE1, false, false);
 
   Everdrive_System *system = Everdrive_GetSystem();
@@ -197,117 +194,94 @@ Everdrive_CardReceiveResponse(
   while (true) {
     volatile Everdrive_CardControl control = *(system->cardControl);
 
-    if ((control.value & 0b11000000) == 0) {
-      Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
-      break;
-    }
-    else if (attempts-- < 0) {
-      return false;
-    }
+    if (control.start == 0 && control.transmission == 0) break;
+    if (attempts-- < 0) return false;
 
-    bool tmp = log; log = false;
-    Everdrive_CardReadCommand(); log = tmp;
+    withDisabledLog(Everdrive_CardReadCommand());
   }
+
+  Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
 
   if (buffer == NULL) {
     static unsigned int fallback[32];
     buffer = fallback;
   }
 
-  int index = 0;
   int length = response == EVERDRIVE_CARD_R2 ? 17 : 6;
+  int index = 0;
 
-  while (index < length-1) {
+  while (index < length) {
     buffer[index++] = Everdrive_CardReadCommand();
   }
-
-  volatile Everdrive_CardControl control = *(system->cardControl);
-  buffer[index++] = control.value & 0xFF;
 
   return true;
 }
 
 bool
 Everdrive_CardInitialize() {
-  // see: https://electronics.stackexchange.com/questions/602105/how-can-i-initialize-use-sd-cards-with-spi
-  // and: https://luckyresistor.me/cat-protector/software/sdcard-2/
-  // and: https://github.com/florianhumblot/Phat/blob/master/phat/SDDevice.cpp
-
-  // slow mode
-  fast = false;
-  Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
-
-  unsigned int response[16] = {0};
-
-  // wait for card
-  for (int i = 0; i < 40; i++) {
-    Everdrive_CardWriteData(0xFF);
-  }
+  unsigned int response[32] = {0};
+  Everdrive_CardSetSpeed(EVERDRIVE_CARD_MODE8, EVERDRIVE_CARD_SPEED_SLOW);
 
   log = true;
+  // CMD0 has no response
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD0, 0x00);
-  Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
 
-  // wait for card
-  for (int i = 0; i < 40; i++) {
-    Everdrive_CardWriteData(0xFF);
-  }
-
+  // CMD8 has no response on v1.x cards
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD8, 0x1AA);
   Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R7, response);
 
-  if (response[0] != 0x01 || (response[3] & 1) != 1) {
-    // unsupported card
-    // return false;
+  //           v-- command index      v-- voltage bits
+  if (response[0] != 0x08 || response[3]  != 1) {
+    // voltage not accepted or v1.x card
+    return false;
   }
 
   int attempts = 2048;
   while (attempts-- > 0) {
     Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD55, 0x00);
     Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
+    //            v-- card status (ACMD accepted)
     if ((response[3] & 1) != 1) { log = false; continue; }
 
-    Everdrive_CardSendCommand(EVERDRIVE_CARD_ACMD41, 0x40300000);
-    Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
+    //                                         HCS=1 --v v-- voltage 3.4-3.5V
+    Everdrive_CardSendCommand(EVERDRIVE_CARD_ACMD41, 0x40300000); // is OCR register
+    Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R3, response);
+    //            v----v-- card busy (must be 1) then check CCS (response[1] & 64 == 1)
     if ((response[1] & 128) == 0) { log = false; continue; }
 
     break;
   }
 
   if (attempts <= 0) {
-    // return false;
+    return false;
   }
 
   log = true;
+  // receive CID (card identification)
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD2, 0x00);
   Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R2, response);
 
+  // receive RCA (relative address register)
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD3, 0x00);
-  Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
-
-  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD7, 0x00);
-  Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, NULL);
+  Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R6, response);
 
   unsigned int rca = 0
+    // rca bits
     | ((response[1] & 0xFF) << 24)
-    | ((response[2] & 0xFF) << 16)
-    | ((response[3] & 0xFF) <<  8)
-    | ((response[4] & 0xFF) <<  0);
+    | ((response[2] & 0xFF) << 16);
 
-  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD9, rca);
-  Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R2, response);
-
+  // reached stand-by state, switch to transfer state
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD7, rca);
   Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
 
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD55, rca);
   Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
 
-  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD6, 2);
+  // sets bus width (use 4 bits for data line)
+  Everdrive_CardSendCommand(EVERDRIVE_CARD_ACMD6, 0x2);
   Everdrive_CardReceiveResponse(EVERDRIVE_CARD_R1, response);
 
-  fast = true;
-  Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
+  Everdrive_CardSetSpeed(EVERDRIVE_CARD_MODE8, EVERDRIVE_CARD_SPEED_FAST);
 
   return true;
 }
@@ -317,8 +291,6 @@ Everdrive_CardReadBlock(unsigned int address, void *buffer) {
   extern void GBA_Memcpy(void *dst, const void *src, int size);
 
   Everdrive_System *system = Everdrive_GetSystem();
-
-  fast = true;
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, address);
 
 // while (slen > 0)...

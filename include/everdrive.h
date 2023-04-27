@@ -39,41 +39,40 @@ typedef union Everdrive_DeviceStatus {
   };
 } Everdrive_DeviceStatus;
 
-typedef union Everdrive_CardCommand {
-  u16 value;
-} Everdrive_CardCommand;
+typedef u16 Everdrive_CardCommand;
+typedef u32 Everdrive_CardArgument;
 
-typedef enum Everdrive_CardCommands {
+enum {
+  // TODO use abbreviations
   EVERDRIVE_CARD_CMD0   = 0x40, // Software reset
-  EVERDRIVE_CARD_CMD1   = 0x41, // Brings card out of idle state
   EVERDRIVE_CARD_CMD2   = 0x42, // Reads the "card identification register" (CID)
   EVERDRIVE_CARD_CMD3   = 0x43, // Reads the "relative card address register" (RCA)
-  EVERDRIVE_CARD_CMD6   = 0x46,
   EVERDRIVE_CARD_CMD7   = 0x47, // Toggles card between stand-by and transfer states
   EVERDRIVE_CARD_CMD8   = 0x48, // Tell the SD card which voltages it must accept
-  EVERDRIVE_CARD_CMD9   = 0x49, // Reads the "card specific data" (CSD)
   EVERDRIVE_CARD_CMD12  = 0x4C, // Stop transmission on multiple block read
   EVERDRIVE_CARD_CMD17  = 0x51, // Reads single block
   EVERDRIVE_CARD_CMD18  = 0x52, // Reads multiple blocks
-  EVERDRIVE_CARD_CMD24  = 0x58, // Writes single block
-  EVERDRIVE_CARD_CMD25  = 0x59, // Writes multiple blocks
   EVERDRIVE_CARD_CMD55  = 0x77, // Next command set to be an application command
-  EVERDRIVE_CARD_CMD58  = 0x7A, // Reads the "operation condition register" (OCR)
+  EVERDRIVE_CARD_ACMD6  = 0x46, // Specify bus width (1 or 4 bits)
   EVERDRIVE_CARD_ACMD41 = 0x69, // Send operation condition
-} Everdrive_CardCommands;
+};
 
 typedef enum Everdrive_CardResponse {
+  // TODO map bit fields using unions
   EVERDRIVE_CARD_R1,
   EVERDRIVE_CARD_R2,
   EVERDRIVE_CARD_R3,
+  EVERDRIVE_CARD_R6,
   EVERDRIVE_CARD_R7,
 } Everdrive_CardResponse;
 
-// SPI modes
 typedef enum Everdrive_CardMode {
+  // wait for card response
   EVERDRIVE_CARD_MODE1 = 0,
   EVERDRIVE_CARD_MODE2 = 1,
+  // required for start/wait F0
   EVERDRIVE_CARD_MODE4 = 2,
+  // send or receive commands
   EVERDRIVE_CARD_MODE8 = 3,
 } Everdrive_CardMode;
 
@@ -93,7 +92,17 @@ typedef union Everdrive_CardControl {
     u16 awaitF0: 1;
     u16 startF0: 1;
   };
+  struct {
+    u16 commandIndex: 6;
+    u16 transmission: 1;
+    u16 start: 1;
+  };
 } Everdrive_CardControl;
+
+typedef enum Everdrive_CardSpeed {
+  EVERDRIVE_CARD_SPEED_SLOW = 0,
+  EVERDRIVE_CARD_SPEED_FAST = 1,
+} Everdrive_CardSpeed;
 
 #define EVERDRIVE_UNLOCK_KEY(ADDR)     ((Everdrive_UnlockKey *)     (ADDR))
 #define EVERDRIVE_DEVICE_CONTROL(ADDR) ((Everdrive_DeviceControl *) (ADDR))
@@ -112,6 +121,9 @@ typedef struct Everdrive_System {
   Everdrive_CardCommand *const volatile cardCommand;
   Everdrive_CardData *const volatile cardData;
   Everdrive_CardControl *const volatile cardControl;
+
+  // TODO add returned card RCA
+  Everdrive_CardSpeed cardSpeed;
 } Everdrive_System;
 
 Everdrive_System*

@@ -12,3 +12,6 @@ sprite resources:
 
 makefile automatic variables:
 - https://stackoverflow.com/a/37701195
+
+sd cards:
+- https://electronics.stackexchange.com/a/602106
