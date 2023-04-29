@@ -15,3 +15,8 @@ makefile automatic variables:
 
 sd cards:
 - https://electronics.stackexchange.com/a/602106
+
+fat:
+- https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
+- https://en.wikipedia.org/wiki/Master_boot_record
+- https://en.wikipedia.org/wiki/Partition_type
