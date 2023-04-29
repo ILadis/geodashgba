@@ -1,26 +1,34 @@
 
 #include <everdrive.h>
 
-extern void Debug_PrintLine(char *message);
-extern void Debug_Print(char *message);
-extern void Debug_PrintNewline();
-extern void Debug_PrintHex8(unsigned char num);
-extern void Debug_PrintHex16(unsigned short num);
-
-static bool log = false;
-
-#define withDisabledLog(block) \
-do { \
-  bool state = log; \
-  log = false; \
-  block; \
-  log = state; \
-} while(0);
-
 static void
 Everdrive_LogCallback(Everdrive_CardCommand command) {
-  if (log) {
+  extern void Debug_Print(char *message);
+  extern void Debug_PrintNewline();
+  extern void Debug_PrintHex8(unsigned char num);
+
+  static int index = 0, length = 0;
+  const int mask = 0b00111111;
+
+  if (length-- > 0) {
     Debug_PrintHex8(command);
+  }
+
+  else if (index == 0 && command != 0xFF) {
+    Debug_PrintNewline();
+    Debug_Print(">");
+    Debug_PrintHex8(command);
+
+    length = 5;
+    index = (command & mask);
+  }
+
+  else if (index != 0 && (index == command || command == mask)) {
+    Debug_Print("<");
+    Debug_PrintHex8(command);
+
+    length = index == 2 ? 16 : 5;
+    index = 0;
   }
 }
 
@@ -154,11 +162,9 @@ Everdrive_CardReceiveResponse(
     Everdrive_CardCommand command,
     Everdrive_CardResponse *response)
 {
-  if (log) Debug_Print("<");
-
   Everdrive_System *system = Everdrive_GetSystem();
 
-  withDisabledLog(Everdrive_CardReadCommand());
+  Everdrive_CardReadCommand();
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE1, false, false);
 
   int attempts = 2048;
@@ -168,7 +174,7 @@ Everdrive_CardReceiveResponse(
     if (control.start == 0 && control.transmission == 0) break;
     if (attempts-- < 0) return false;
 
-    withDisabledLog(Everdrive_CardReadCommand());
+    Everdrive_CardReadCommand();
   }
 
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
@@ -189,11 +195,6 @@ Everdrive_CardSendCommand(
     Everdrive_CardArgument argument,
     Everdrive_CardResponse *response)
 {
-  if (log) {
-    Debug_PrintNewline();
-    Debug_Print(">");
-  }
-
   Everdrive_CardCommand checksum = 0;
   Everdrive_CardCommand commands[] = {
     command,
@@ -204,7 +205,7 @@ Everdrive_CardSendCommand(
   };
 
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
-  withDisabledLog(Everdrive_CardWriteCommand(0xFF));
+  Everdrive_CardWriteCommand(0xFF);
 
   for (int i = 0; i < length(commands); i++) {
     checksum ^= Everdrive_CardWriteCommand(commands[i]);
@@ -232,7 +233,6 @@ Everdrive_CardInitialize() {
   Everdrive_CardResponse response;
   Everdrive_CardSetSpeed(EVERDRIVE_CARD_MODE8, EVERDRIVE_CARD_SPEED_SLOW);
 
-  log = true;
   // CMD0 has no response
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD0, 0x00, NULL);
 
