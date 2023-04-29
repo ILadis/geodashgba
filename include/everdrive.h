@@ -43,27 +43,75 @@ typedef u16 Everdrive_CardCommand;
 typedef u32 Everdrive_CardArgument;
 
 enum {
-  // TODO use abbreviations
-  EVERDRIVE_CARD_CMD0   = 0x40, // Software reset
-  EVERDRIVE_CARD_CMD2   = 0x42, // Reads the "card identification register" (CID)
-  EVERDRIVE_CARD_CMD3   = 0x43, // Reads the "relative card address register" (RCA)
+  EVERDRIVE_CARD_CMD0   = 0x40, // Resets all cards to idle state
+  EVERDRIVE_CARD_CMD2   = 0x42, // Asks any card to send their "card identification" (CID)
+  EVERDRIVE_CARD_CMD3   = 0x43, // Ask the card to publish a new "relative card address" (RCA)
   EVERDRIVE_CARD_CMD7   = 0x47, // Toggles card between stand-by and transfer states
   EVERDRIVE_CARD_CMD8   = 0x48, // Tell the SD card which voltages it must accept
   EVERDRIVE_CARD_CMD12  = 0x4C, // Stop transmission on multiple block read
   EVERDRIVE_CARD_CMD17  = 0x51, // Reads single block
   EVERDRIVE_CARD_CMD18  = 0x52, // Reads multiple blocks
   EVERDRIVE_CARD_CMD55  = 0x77, // Next command set to be an application command
-  EVERDRIVE_CARD_ACMD6  = 0x46, // Specify bus width (1 or 4 bits)
-  EVERDRIVE_CARD_ACMD41 = 0x69, // Send operation condition
+  EVERDRIVE_CARD_ACMD6  = 0x46, // Defines the data bus width (use a 1 or 4 bit bus)
+  EVERDRIVE_CARD_ACMD41 = 0x69, // Sends host capacity support information (HCS)
 };
 
-typedef enum Everdrive_CardResponse {
-  // TODO map bit fields using unions
-  EVERDRIVE_CARD_R1,
-  EVERDRIVE_CARD_R2,
-  EVERDRIVE_CARD_R3,
-  EVERDRIVE_CARD_R6,
-  EVERDRIVE_CARD_R7,
+typedef union Everdrive_CardResponse {
+  u8 data[17];
+  struct {
+    u8 commandIndex: 6;
+    u8 transmission: 1;
+    u8 start: 1;
+    u8 unmapped1: 8;
+    u8 unmapped2: 8;
+    u8 currentState: 4;
+    u8 readyForData: 1;
+    u8 cardStatus3: 3;
+    u8 unmapped3: 5;
+    u8 acmdAccepted: 1;
+    u8 unmapped4: 2;
+    u8 end: 1;
+    u8 crc7: 7;
+  } R1;
+  struct {
+    u8 commandIndex: 6;
+    u8 transmission: 1;
+    u8 start: 1;
+    u8 unmapped: 5;
+    u8 uhsIICard: 1;
+    u8 capacityStatus: 1;
+    u8 poweredUp: 1;
+    u8 voltageBits: 8;
+    u8 reserved1: 8;
+    u8 reserved2: 8;
+    u8 end: 1;
+    u8 crc7: 7;
+  } R3;
+  struct {
+    u8 commandIndex: 6;
+    u8 transmission: 1;
+    u8 start: 1;
+    u8 reserved1: 8;
+    u8 reserved2: 8;
+    u8 voltageAccepted: 4;
+    u8 pcieResponse: 1;
+    u8 pcieSupport: 1;
+    u8 reserved3: 2;
+    u8 echoBack: 8;
+    u8 end: 1;
+    u8 crc7: 7;
+  } R7;
+  struct {
+    u8 commandIndex: 6;
+    u8 transmission: 1;
+    u8 start: 1;
+    u8 rca1: 8;
+    u8 rca2: 8;
+    u8 unmapped1: 8;
+    u8 unmapped2: 8;
+    u8 end: 1;
+    u8 crc7: 7;
+  } R6;
 } Everdrive_CardResponse;
 
 typedef enum Everdrive_CardMode {
@@ -122,8 +170,10 @@ typedef struct Everdrive_System {
   Everdrive_CardData *const volatile cardData;
   Everdrive_CardControl *const volatile cardControl;
 
-  // TODO add returned card RCA
+  Everdrive_CardArgument cardAddress; // Holds "relative card address" (RCA)
   Everdrive_CardSpeed cardSpeed;
+
+  void (*cardCallback)(Everdrive_CardCommand command);
 } Everdrive_System;
 
 Everdrive_System*

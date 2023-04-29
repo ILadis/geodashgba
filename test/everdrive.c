@@ -1,0 +1,62 @@
+
+#include <everdrive.h>
+#include "test.h"
+
+test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR1) {
+  // arrange
+  Everdrive_CardResponse response = {{ 0x37, 0x00, 0x00, 0x01, 0x20, 0x83 }};
+
+  // assert
+  assert(sizeof(response.R1) == 6);
+  assert(response.R1.commandIndex == 55);
+  assert(response.R1.acmdAccepted == 1);
+  assert(response.R1.readyForData == 0);
+  assert(response.R1.currentState == 1);
+  assert(response.R1.crc7 == 0x41);
+  assert(response.R1.end == 1);
+}
+
+test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR3) {
+  // arrange
+  Everdrive_CardResponse response = {{ 0x3F, 0x40, 0xFF, 0x80, 0x00, 0xFF }};
+
+  // assert
+  assert(sizeof(response.R3) == 6);
+  assert(response.R3.commandIndex == 63);
+  assert(response.R3.poweredUp == 0);
+  assert(response.R3.capacityStatus == 1);
+  assert(response.R3.uhsIICard == 0);
+  assert(response.R3.crc7 == 0x7F);
+  assert(response.R3.end == 1);
+}
+
+test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR6) {
+  // arrange
+  Everdrive_CardResponse response = {{ 0x03, 0xAA, 0xAA, 0x05, 0x20, 0xD1 }};
+
+  // assert
+  assert(sizeof(response.R6) == 6);
+  assert(response.R6.rca1 == 0xAA);
+  assert(response.R6.rca2 == 0xAA);
+  assert(response.R6.crc7 == 0x68);
+  assert(response.R6.end == 1);
+}
+
+test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR7) {
+  // arrange
+  Everdrive_CardResponse response = {{ 0x08, 0x00, 0x00, 0x01, 0xAA, 0x13 }};
+
+  // assert
+  assert(sizeof(response.R7) == 6);
+  assert(response.R7.commandIndex == 8);
+  assert(response.R7.voltageAccepted == 1);
+  assert(response.R7.echoBack == 0xAA);
+  assert(response.R7.crc7 == 0x09);
+  assert(response.R7.end == 1);
+}
+
+suite(
+  Everdrive_CardResponse_ShouldMapCorrectFieldsForR1,
+  Everdrive_CardResponse_ShouldMapCorrectFieldsForR3,
+  Everdrive_CardResponse_ShouldMapCorrectFieldsForR6,
+  Everdrive_CardResponse_ShouldMapCorrectFieldsForR7);
