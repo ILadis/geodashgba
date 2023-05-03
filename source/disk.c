@@ -1,9 +1,11 @@
 
 #include <disk.h>
+#include <math.h>
 
 static inline bool
 Disk_BufferFill(Disk *disk, unsigned int sector) {
-  return disk->read(sector, disk->buffer);
+  disk->offset = 0;
+  return disk->read(sector, disk->buffer, 1);
 }
 
 static inline bool
@@ -110,6 +112,11 @@ Disk_Initialize(
   return true;
 }
 
+static inline unsigned int
+Disk_GetEntryOffset(Disk *disk, DiskEntry *entry) {
+  return disk->rootDirectory + (entry->startCluster - disk->clusterOfRootDir) * disk->sectorsPerCluster;
+}
+
 bool
 Disk_OpenDirectory(
     Disk *disk,
@@ -135,7 +142,7 @@ Disk_OpenDirectory(
       }
     } while (!DiskEntry_NameEquals(&entry, name));
 
-    unsigned int offset = disk->rootDirectory + (entry.startCluster - disk->clusterOfRootDir) * disk->sectorsPerCluster;
+    unsigned int offset = Disk_GetEntryOffset(disk, &entry);
     if (!Disk_BufferFill(disk, offset)) {
       return false;
     }
@@ -168,10 +175,12 @@ Disk_ReadDirectory(
     }
   }
 
-  for (int i = 0; i < length(entry->name); i++) {
+  const int length = strlen(entry->name);
+  for (int i = 0; i < length; i++) {
     entry->name[i] = buffer[i];
   }
 
+  entry->name[length] = '\0';
   entry->type = flags & 0b10000 ? DISK_ENTRY_DIRECTORY : DISK_ENTRY_FILE;
   entry->startCluster = Disk_BufferGetU16At(disk, offset + 26);
   entry->fileSize = Disk_BufferGetU32At(disk, offset + 28);
@@ -182,11 +191,29 @@ Disk_ReadDirectory(
 }
 
 bool
+Disk_ReadFile(
+    Disk *disk,
+    DiskEntry *entry,
+    unsigned char *buffer)
+{
+  if (entry->type != DISK_ENTRY_FILE) {
+    return false;
+  }
+
+  // TODO still WIP, finish implementation
+  unsigned int offset = Disk_GetEntryOffset(disk, entry);
+  int count = 1 + Math_div(entry->fileSize, disk->bytesPerSector);
+
+  return disk->read(offset, buffer, count);
+}
+
+bool
 DiskEntry_NameEquals(
     DiskEntry *entry,
     char *name)
 {
-  for (int i = 0; i < length(entry->name); i++) {
+  const int length = strlen(entry->name);
+  for (int i = 0; i < length; i++) {
     if (name[i] == '\0' || name[i] != entry->name[i]) {
       return false;
     }

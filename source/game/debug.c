@@ -134,3 +134,21 @@ Debug_PrintHex16(unsigned short num) {
   Debug_PrintHex8(num >> 8);
   Debug_PrintHex8(num & 0xff);
 }
+
+void
+Debug_PrintBuffer(unsigned char *buffer, int length) {
+  int index = 0, cols = 0;
+  while (index < length) {
+    Debug_PrintHex8(buffer[index++]);
+
+    if (index % 2 == 0) {
+      Debug_Print(" ");
+      cols++;
+
+      if (cols == 5) {
+        Debug_PrintNewline();
+        cols = 0;
+      }
+    }
+  }
+}

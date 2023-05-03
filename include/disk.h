@@ -3,12 +3,12 @@
 
 #include "types.h"
 
-typedef bool (*Disk_ReadFn)(unsigned int sector, void *buffer);
+typedef bool (*Disk_ReadFn)(unsigned int sector, void *buffer, int count);
 
 typedef struct Disk {
   unsigned char buffer[512];
   unsigned int offset;
-  bool (*read)(unsigned int sector, void *buffer);
+  bool (*read)(unsigned int sector, void *buffer, int count);
   unsigned short bytesPerSector;
   unsigned short sectorsPerCluster;
   unsigned short numberOfReservedSectors;
@@ -19,7 +19,7 @@ typedef struct Disk {
 } Disk;
 
 typedef struct DiskEntry {
-  char name[11];
+  char name[12];
   enum {
     DISK_ENTRY_FILE,
     DISK_ENTRY_DIRECTORY,
@@ -42,6 +42,12 @@ bool
 Disk_ReadDirectory(
     Disk *disk,
     DiskEntry *entry);
+
+bool
+Disk_ReadFile(
+    Disk *disk,
+    DiskEntry *entry,
+    unsigned char *buffer);
 
 bool
 DiskEntry_NameEquals(

@@ -189,6 +189,9 @@ bool
 Everdrive_CardInitialize();
 
 bool
-Everdrive_CardReadBlock(unsigned int address, void *buffer);
+Everdrive_CardReadBlock(
+    unsigned int sector,
+    void *buffer,
+    int count);
 
 #endif

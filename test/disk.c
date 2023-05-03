@@ -88,7 +88,7 @@ static unsigned char sysDir[] = {
 };
 
 static bool
-Disk_ReadStatic(unsigned int index, void *buffer) {
+Disk_ReadStatic(unsigned int index, void *buffer, int count) {
   static unsigned char *sectors[] = {
     [0x0000] = bootRecord,
     [0x2000] = superBlock,
@@ -110,7 +110,7 @@ Disk_ReadStatic(unsigned int index, void *buffer) {
   return true;
 }
 
-test(Disk_Initialize_ShouldReadDiskMetadata) {
+test(Initialize_ShouldReadDiskMetadata) {
   // arrange
   Disk disk = {0};
 
@@ -127,7 +127,7 @@ test(Disk_Initialize_ShouldReadDiskMetadata) {
   assert(disk.clusterOfRootDir == 2);
 }
 
-test(Disk_ReadDirectory_ShouldReturnExpectedEntries) {
+test(ReadDirectory_ShouldReturnExpectedEntries) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -154,7 +154,7 @@ test(Disk_ReadDirectory_ShouldReturnExpectedEntries) {
   }
 }
 
-test(Disk_ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead) {
+test(ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -174,7 +174,7 @@ test(Disk_ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead) {
   assert(count == 3);
 }
 
-test(Disk_OpenDirectory_ShouldReturnTrueIfSubdirectoriesExist) {
+test(OpenDirectory_ShouldReturnTrueIfSubdirectoriesExist) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -192,7 +192,7 @@ test(Disk_OpenDirectory_ShouldReturnTrueIfSubdirectoriesExist) {
   assert(result == true);
 }
 
-test(Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist) {
+test(OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -211,8 +211,7 @@ test(Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist) {
   assert(result == false);
 }
 
-
-test(Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile) {
+test(OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -231,9 +230,38 @@ test(Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile) {
   assert(result == false);
 }
 
+test(OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother) {
+  // arrange
+  Disk disk = {0};
+  Disk_Initialize(&disk, Disk_ReadStatic);
+
+  char *path1[] = { NULL };
+  char *path2[] = { "GBASYS     ", NULL };
+
+  int count = 0;
+  DiskEntry entry = {0};
+
+  // act
+  if (Disk_OpenDirectory(&disk, path1)) {
+    while (Disk_ReadDirectory(&disk, &entry)) {
+      count++;
+    }
+  }
+
+  if (Disk_OpenDirectory(&disk, path2)) {
+    while (Disk_ReadDirectory(&disk, &entry)) {
+      count++;
+    }
+  }
+
+  // assert
+  assert(count == 10);
+}
+
 suite(
-  Disk_Initialize_ShouldReadDiskMetadata,
-  Disk_ReadDirectory_ShouldReturnExpectedEntries,
-  Disk_ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead,
-  Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist,
-  Disk_OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile);
+  Initialize_ShouldReadDiskMetadata,
+  ReadDirectory_ShouldReturnExpectedEntries,
+  ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead,
+  OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist,
+  OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile,
+  OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother);

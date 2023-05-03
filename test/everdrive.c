@@ -2,7 +2,7 @@
 #include <everdrive.h>
 #include "test.h"
 
-test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR1) {
+test(CardResponse_ShouldMapCorrectFieldsForR1) {
   // arrange
   Everdrive_CardResponse response = {{ 0x37, 0x00, 0x00, 0x01, 0x20, 0x83 }};
 
@@ -16,7 +16,7 @@ test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR1) {
   assert(response.R1.end == 1);
 }
 
-test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR3) {
+test(CardResponse_ShouldMapCorrectFieldsForR3) {
   // arrange
   Everdrive_CardResponse response = {{ 0x3F, 0x40, 0xFF, 0x80, 0x00, 0xFF }};
 
@@ -30,7 +30,7 @@ test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR3) {
   assert(response.R3.end == 1);
 }
 
-test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR6) {
+test(CardResponse_ShouldMapCorrectFieldsForR6) {
   // arrange
   Everdrive_CardResponse response = {{ 0x03, 0xAA, 0xAA, 0x05, 0x20, 0xD1 }};
 
@@ -42,7 +42,7 @@ test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR6) {
   assert(response.R6.end == 1);
 }
 
-test(Everdrive_CardResponse_ShouldMapCorrectFieldsForR7) {
+test(CardResponse_ShouldMapCorrectFieldsForR7) {
   // arrange
   Everdrive_CardResponse response = {{ 0x08, 0x00, 0x00, 0x01, 0xAA, 0x13 }};
 
@@ -72,7 +72,7 @@ Everdrive_CommandsCallback(Everdrive_CardCommand command) {
   }
 }
 
-test(Everdrive_CardInitialize_ShouldSendExpectedCardCommands) {
+test(CardInitialize_ShouldSendExpectedCardCommands) {
   // arrange
   Everdrive_CardCommand commands[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // CMD0
@@ -116,8 +116,8 @@ test(Everdrive_CardInitialize_ShouldSendExpectedCardCommands) {
 }
 
 suite(
-  Everdrive_CardResponse_ShouldMapCorrectFieldsForR1,
-  Everdrive_CardResponse_ShouldMapCorrectFieldsForR3,
-  Everdrive_CardResponse_ShouldMapCorrectFieldsForR6,
-  Everdrive_CardResponse_ShouldMapCorrectFieldsForR7,
-  Everdrive_CardInitialize_ShouldSendExpectedCardCommands);
+  CardResponse_ShouldMapCorrectFieldsForR1,
+  CardResponse_ShouldMapCorrectFieldsForR3,
+  CardResponse_ShouldMapCorrectFieldsForR6,
+  CardResponse_ShouldMapCorrectFieldsForR7,
+  CardInitialize_ShouldSendExpectedCardCommands);

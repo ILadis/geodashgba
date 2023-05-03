@@ -1,7 +1,13 @@
 
 #include <everdrive.h>
 
-static void
+
+void
+Everdrive_NoopCallback(Everdrive_CardCommand command) {
+  // does nothing
+}
+
+void
 Everdrive_LogCallback(Everdrive_CardCommand command) {
   extern void Debug_Print(char *message);
   extern void Debug_PrintNewline();
@@ -51,7 +57,7 @@ Everdrive_GetSystem() {
     .cardControl = EVERDRIVE_CARD_CONTROL(MEM_IO + 0x0014),
 
     .cardSpeed = EVERDRIVE_CARD_SPEED_SLOW,
-    .cardCallback = Everdrive_LogCallback,
+    .cardCallback = Everdrive_NoopCallback,
   };
 
   return &system;
@@ -123,6 +129,35 @@ Everdrive_CardAwaitF0() {
   }
 
   return -1;
+}
+
+static int
+Everdrive_CardReadData() {
+  Everdrive_System *system = Everdrive_GetSystem();
+
+  volatile Everdrive_CardData data = *(system->cardData);
+  volatile Everdrive_DeviceStatus status = {0};
+
+  do {
+    status = *(system->deviceStatus);
+  } while (status.cardBusy);
+
+  return data.lowByte & 0x00FF;
+}
+ 
+// TODO currently unused, should be static
+unsigned int
+Everdrive_CardWriteData(unsigned int data) {
+  Everdrive_System *system = Everdrive_GetSystem();
+  system->cardData->value = data = (data | 0xFF00);
+
+  volatile Everdrive_DeviceStatus status = {0};
+
+  do {
+    status = *(system->deviceStatus);
+  } while (status.cardBusy);
+
+  return data;
 }
 
 static Everdrive_CardCommand
@@ -284,24 +319,46 @@ Everdrive_CardInitialize() {
   return true;
 }
 
+static inline bool
+Everdrive_CardReadTerminate() {
+  Everdrive_CardResponse response;
+  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD12, 0, &response);
+
+  Everdrive_CardSetMode(EVERDRIVE_CARD_MODE1, false, false);
+  Everdrive_CardReadData();
+  Everdrive_CardReadData();
+  Everdrive_CardReadData();
+  Everdrive_CardSetMode(EVERDRIVE_CARD_MODE2, false, false);
+
+  int attempts = 65535;
+  while (attempts-- > 0) {
+    if (Everdrive_CardReadData() == 0xFF) break;
+  }
+
+  return attempts > 0;
+}
+
 bool
-Everdrive_CardReadBlock(unsigned int address, void *buffer) {
+Everdrive_CardReadBlock(
+    unsigned int sector,
+    void *buffer,
+    int count)
+{
   extern void GBA_Memcpy(void *dst, const void *src, int size);
 
   Everdrive_System *system = Everdrive_GetSystem();
-  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, address, NULL);
+  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, sector, NULL);
 
-// while (slen > 0)...
-  if (Everdrive_CardAwaitF0() == -1) {
-    return false;
+  while (count-- > 0) {
+    if (Everdrive_CardAwaitF0() == -1) {
+      return false;
+    }
+
+    GBA_Memcpy(buffer, system->cardData, 512);
+    buffer += 512;
   }
 
-  GBA_Memcpy(buffer, system->cardData, 512);
-
-  // TODO need to cancel OP (CMD18) when new read is received
-
-// buffer += 512
-// end while
+  Everdrive_CardReadTerminate();
 
   return true;
 }
