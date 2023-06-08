@@ -1,7 +1,5 @@
 
 #include <gba.h>
-#include <everdrive.h>
-#include <disk.h>
 #include <scene.h>
 
 #include <assets/graphics/tiles.h>
@@ -83,65 +81,11 @@ Scene_DoPlay() {
     Selector_GoForward(selector);
   }
 
-  // TODO workaround to draw progress when selector box is out of screen bounds
+  // update draw progress when selector box is out of screen bounds
   if (selector->redraw) {
     LevelId id = Selector_GetLevelId(selector);
     int best = Records_GetBestForLevel(records, id);
     Progress_SetProgress(progress, best);
-  }
-
-  if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
-    extern void Debug_Print(char *message);
-    extern void Debug_PrintLine(char *message);
-    extern void Debug_PrintNewline();
-    extern void Debug_PrintBuffer(unsigned char *buffer, int length);
-
-    Everdrive_UnlockSystem();
-
-    if (!Everdrive_CardInitialize()) {
-      Debug_PrintNewline();
-      Debug_PrintLine("diskInit failed");
-      while(true);
-    }
-
-    Disk disk = {0};
-    DiskEntry entry = {0};
-
-    if (!Disk_Initialize(&disk, Everdrive_CardReadBlock)) {
-      Debug_PrintNewline();
-      Debug_PrintLine("Error initializing disk");
-      while(true);
-    }
-
-    char *rootDir[] = { NULL };
-    if (!Disk_OpenDirectory(&disk, rootDir)) {
-      Debug_PrintNewline();
-      Debug_PrintLine("Error opening root directory");
-      while(true);
-    }
-
-    Debug_PrintNewline();
-    Debug_PrintLine("Listing root directory:");
-    while (Disk_ReadDirectory(&disk, &entry)) {
-      Debug_Print(entry.name);
-      Debug_PrintLine(entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
-    }
-
-    char *gbasysDir[] = { "GBASYS     ", NULL };
-    if (!Disk_OpenDirectory(&disk, gbasysDir)) {
-      Debug_PrintNewline();
-      Debug_PrintLine("Error opening GBASYS directory");
-      while(true);
-    }
-
-    Debug_PrintNewline();
-    Debug_PrintLine("Listing GBASYS directory:");
-    while (Disk_ReadDirectory(&disk, &entry)) {
-      Debug_Print(entry.name);
-      Debug_PrintLine(entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
-    }
-
-    while(true);
   }
 
   GBA_VSync();
@@ -154,6 +98,11 @@ Scene_DoPlay() {
     extern const Scene *play;
     Scene *current = Scene_GetCurrent();
     Scene_FadeReplaceWith(current, play);
+  }
+  else if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
+    extern const Scene *disk;
+    Scene *current = Scene_GetCurrent();
+    Scene_ReplaceWith(current, disk);
   }
 }
 

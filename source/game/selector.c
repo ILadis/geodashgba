@@ -87,7 +87,11 @@ Selector_Update(Selector *selector) {
   int next = Animation_CurrentValue(&selector->scroll);
 
   int threshold = selector->scroll.from + (selector->scroll.to - selector->scroll.from)/2;
-  if ((last < threshold && next >= threshold) || (last > threshold && next <= threshold)) {
+  bool overshoot = false
+    || (last < threshold && next >= threshold)
+    || (last > threshold && next <= threshold);
+
+  if (overshoot) {
     selector->redraw = true;
   }
 
