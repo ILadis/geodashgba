@@ -321,6 +321,14 @@ AsciiLevel_AddRing(Level *level) {
 }
 
 static void
+AsciiLevel_AddCoin(Level *level) {
+  Object object = {0};
+  if (Object_CreateCoin(&object)) {
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddPortal(Level *level) {
   Object object = {0};
   Vector offset = Vector_Of(0, -4);
@@ -476,6 +484,7 @@ AsciiLevel_GetChunk(
         continue;
       }
 
+      // TODO use "one for all" add function (for simple objects)
       switch (symbol) {
       case 'i':
         AsciiLevel_AddBoxWithPole(level);
@@ -512,6 +521,9 @@ AsciiLevel_GetChunk(
         break;
       case '@':
         AsciiLevel_AddRing(level);
+        break;
+      case '*':
+        AsciiLevel_AddCoin(level);
         break;
       case 'C':
         AsciiLevel_AddPortal(level);

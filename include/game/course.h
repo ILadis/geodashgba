@@ -16,6 +16,7 @@ typedef struct Course {
   Bounds bounds;
   Level *level;
   Chunk chunks[4];
+  Object *objects[20];
   struct {
     Chunk *chunk;
     int mapIndex, step;
@@ -56,11 +57,24 @@ Course_GetChunkAt(
   return &course->chunks[index];
 }
 
+static inline Chunk*
+Course_GetCurrentChunk(Course *course) {
+  return Course_GetChunkAt(course, course->index);
+}
+
+static inline Chunk*
+Course_GetNextChunk(Course *course) {
+  return Course_GetChunkAt(course, course->index + 1);
+}
+
 void
 Course_CheckHits(
     Course *course,
     Unit *unit,
     HitCallback callback);
+
+void
+Course_Update(Course *course);
 
 void
 Course_Draw(

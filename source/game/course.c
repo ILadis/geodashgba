@@ -58,17 +58,26 @@ Course_ResetChunks(Course *course) {
   }
 }
 
+static inline void
+Course_ResetState(
+    Course *course,
+    int index)
+{
+  course->objects[0] = NULL;
+  course->prepare.chunk = NULL;
+  course->redraw = true;
+  course->index = index;
+}
+
 void
 Course_ResetAndLoad(
     Course *course,
     Level *level)
 {
-  course->prepare.chunk = NULL;
-  course->redraw = true;
-  course->index = 0;
   course->level = level;
 
   Course_CalculateBounds(course);
+  Course_ResetState(course, 0);
   Course_ResetChunks(course);
 
   // load two chunks
@@ -94,14 +103,11 @@ Course_ResetTo(
 
   int index = Math_div(position->x, width);
   Course_ResetChunks(course);
+  Course_ResetState(course, index);
 
   // load two chunks
   Course_LoadChunk(course, index);
   Course_LoadChunk(course, index + 1);
-
-  course->prepare.chunk = NULL;
-  course->redraw = true;
-  course->index = index;
 }
 
 static inline void
@@ -132,13 +138,34 @@ Course_CheckHits(
 {
   Course_CheckFloorHit(course, unit, callback);
 
-  int index = course->index;
-
-  Chunk *current = Course_GetChunkAt(course, index);
+  Chunk *current = Course_GetCurrentChunk(course);
   Chunk_CheckHits(current, unit, callback);
 
-  Chunk *next = Course_GetChunkAt(course, index + 1);
+  Chunk *next = Course_GetNextChunk(course);
   Chunk_CheckHits(next, unit, callback);
+}
+
+void
+Course_Update(Course *course) {
+  Chunk *chunks[] = {
+    Course_GetCurrentChunk(course),
+    Course_GetNextChunk(course),
+  };
+
+  course->objects[0] = NULL;
+
+  int index = 0;
+  for (int i = 0; i < length(chunks); i++) {
+    Chunk *chunk = chunks[i];
+
+    int count = chunk->count;
+    for (int j = 0; j < count; j++) {
+      Object *object = &chunk->objects[j];
+      if (Object_Update(object)) {
+        course->objects[index++] = object;
+      }
+    }
+  }
 }
 
 static inline void
@@ -249,11 +276,13 @@ Course_PrepareChunk(
 
   default:
     int count = chunk->count;
-    if (step < count) {
-      Object *object = &chunk->objects[step];
-      Object_Draw(object, &shadow);
+    if (step >= count) {
+      return true;
     }
-    else return true;
+
+    Object *object = &chunk->objects[step];
+    Object_Draw(object, &shadow);
+    break;
   }
 
   return false;
@@ -281,14 +310,24 @@ Course_DrawChunk(
 
 static inline void
 Course_DrawChunks(Course *course) {
-  int index = course->index;
-
   if (course->redraw) {
-    Chunk *current = Course_GetChunkAt(course, index);
+    Chunk *current = Course_GetCurrentChunk(course);
     Course_DrawChunk(course, current);
 
-    Chunk *next = Course_GetChunkAt(course, index + 1);
+    Chunk *next = Course_GetNextChunk(course);
     Course_DrawChunk(course, next);
+  }
+  else {
+    GBA_TileMapRef target;
+    GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+    for (int i = 0; i < length(course->objects); i++) {
+      Object *object = course->objects[i];
+      if (object != NULL) {
+        Object_Draw(object, &target);
+      }
+      else break;
+    }
   }
 }
 
@@ -304,6 +343,7 @@ Course_Draw(
     Chunk *pending = Course_GetChunkAt(course, index + 2);
     Course_DrawChunk(course, pending);
 
+    course->objects[0] = NULL;
     course->index = ++index;
   }
 

@@ -18,6 +18,7 @@ typedef struct Object {
     TYPE_SPIKE,
     TYPE_PAD,
     TYPE_RING,
+    TYPE_COIN,
     TYPE_PORTAL,
     TYPE_GOAL,
     TYPE_GOAL_WALL,
@@ -52,6 +53,9 @@ Object_CreateRing(Object *object);
 
 bool
 Object_CreatePortal(Object *object);
+
+bool
+Object_CreateCoin(Object *object);
 
 bool
 Object_CreateRegularBox(
@@ -109,6 +113,9 @@ void
 Object_Move(
     Object *object,
     Vector *position);
+
+bool
+Object_Update(Object *object);
 
 void
 Object_Draw(

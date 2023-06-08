@@ -9,12 +9,14 @@ Object_IsHit(
   extern bool Object_HitSpike(Object *object, Shape *shape);
   extern bool Object_HitPad(Object *object, Shape *shape);
   extern bool Object_HitRing(Object *object, Shape *shape);
+  extern bool Object_HitCoin(Object *object, Shape *shape);
   extern bool Object_HitPortal(Object *object, Shape *shape);
 
   const bool (*hit[TYPE_COUNT])(Object *object, Shape *shape) = {
     [TYPE_SPIKE] = Object_HitSpike,
     [TYPE_PAD] = Object_HitPad,
     [TYPE_RING] = Object_HitRing,
+    [TYPE_COIN] = Object_HitCoin,
     [TYPE_PORTAL] = Object_HitPortal,
   };
 
@@ -46,6 +48,21 @@ Object_Move(
   }
 }
 
+bool
+Object_Update(Object *object) {
+  extern bool Object_UpdateCoin(Object *object);
+
+  const bool (*update[TYPE_COUNT])(Object *object) = {
+    [TYPE_COIN] = Object_UpdateCoin,
+  };
+
+  if (update[object->type] != NULL) {
+    return update[object->type](object);
+  }
+
+  return false;
+}
+
 void
 Object_Draw(
     Object *object,
@@ -59,6 +76,7 @@ Object_Draw(
   extern void Object_DrawSpike(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawPad(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawRing(Object *object, GBA_TileMapRef *target);
+  extern void Object_DrawCoin(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawPortal(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawGoalWall(Object *object, GBA_TileMapRef *target);
 
@@ -71,6 +89,7 @@ Object_Draw(
     [TYPE_SPIKE] = Object_DrawSpike,
     [TYPE_PAD] = Object_DrawPad,
     [TYPE_RING] = Object_DrawRing,
+    [TYPE_COIN] = Object_DrawCoin,
     [TYPE_PORTAL] = Object_DrawPortal,
     [TYPE_GOAL_WALL] = Object_DrawGoalWall,
   };
