@@ -1,21 +1,21 @@
 
 #include <gba.h>
+#include <log.h>
 #include <everdrive.h>
 #include <disk.h>
 #include <scene.h>
 
+extern Logger* Debug_GetLogger();
+
 static void
 Scene_DoPlay() {
-  extern void Debug_Print(char *message);
-  extern void Debug_PrintLine(char *message);
-  extern void Debug_PrintNewline();
-  extern void Debug_PrintBuffer(unsigned char *buffer, int length);
+  Logger *logger = Debug_GetLogger();
 
   Everdrive_UnlockSystem();
 
   if (!Everdrive_CardInitialize()) {
-    Debug_PrintNewline();
-    Debug_PrintLine("diskInit failed");
+    Logger_PrintNewline(logger);
+    Logger_PrintLine(logger, "diskInit failed");
     while(true);
   }
 
@@ -23,37 +23,37 @@ Scene_DoPlay() {
   DiskEntry entry = {0};
 
   if (!Disk_Initialize(&disk, Everdrive_CardReadBlock)) {
-    Debug_PrintNewline();
-    Debug_PrintLine("Error initializing disk");
+    Logger_PrintNewline(logger);
+    Logger_PrintLine(logger, "Error initializing disk");
     while(true);
   }
 
   char *rootDir[] = { NULL };
   if (!Disk_OpenDirectory(&disk, rootDir)) {
-    Debug_PrintNewline();
-    Debug_PrintLine("Error opening root directory");
+    Logger_PrintNewline(logger);
+    Logger_PrintLine(logger, "Error opening root directory");
     while(true);
   }
 
-  Debug_PrintNewline();
-  Debug_PrintLine("Listing root directory:");
+  Logger_PrintNewline(logger);
+  Logger_PrintLine(logger, "Listing root directory:");
   while (Disk_ReadDirectory(&disk, &entry)) {
-    Debug_Print(entry.name);
-    Debug_PrintLine(entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
+    Logger_Print(logger, entry.name);
+    Logger_PrintLine(logger, entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
   }
 
   char *gbasysDir[] = { "GBASYS     ", NULL };
   if (!Disk_OpenDirectory(&disk, gbasysDir)) {
-    Debug_PrintNewline();
-    Debug_PrintLine("Error opening GBASYS directory");
+    Logger_PrintNewline(logger);
+    Logger_PrintLine(logger, "Error opening GBASYS directory");
     while(true);
   }
 
-  Debug_PrintNewline();
-  Debug_PrintLine("Listing GBASYS directory:");
+  Logger_PrintNewline(logger);
+  Logger_PrintLine(logger, "Listing GBASYS directory:");
   while (Disk_ReadDirectory(&disk, &entry)) {
-    Debug_Print(entry.name);
-    Debug_PrintLine(entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
+    Logger_Print(logger, entry.name);
+    Logger_PrintLine(logger, entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
   }
 
   while(true);

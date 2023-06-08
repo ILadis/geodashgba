@@ -1,5 +1,6 @@
 
 #include <gba.h>
+#include <log.h>
 #include <scene.h>
 
 #include <assets/graphics/tiles.h>
@@ -11,6 +12,8 @@
 #include <game/progress.h>
 #include <game/selector.h>
 #include <game/records.h>
+
+extern Logger* mGBA_GetLogger();
 
 static void
 Scene_DoEnter() {
@@ -30,7 +33,6 @@ Scene_DoEnter() {
     GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
     GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
 
-    mGBA_DebugEnable(true);
     once = false;
   }
 
@@ -58,7 +60,8 @@ Scene_DoEnter() {
 
   Camera_Update(camera);
 
-  mGBA_DebugLog(mGBA_LOG_INFO, "Scene: select");
+  Logger *logger = mGBA_GetLogger();
+  Logger_PrintLine(logger, "Scene: select");
 }
 
 static void

@@ -638,35 +638,3 @@ GBA_Input_IsHeld(GBA_Key key) {
   GBA_Input *input = &system->input;
   return ((input->current.value & input->previous.value) & key) > 0;
 }
-
-static struct {
-  volatile unsigned short *enable;
-  volatile unsigned short *flags;
-  char *message;
-} mGBA_Debug = {
-  .enable  = (volatile unsigned short*) 0x4FFF780,
-  .flags   = (volatile unsigned short*) 0x4FFF700,
-  .message = (char*) 0x4FFF600,
-};
-
-bool
-mGBA_DebugEnable(bool enable) {
-  mGBA_Debug.enable[0] = enable ? 0xC0DE : 0;
-  return mGBA_Debug.enable[0] == 0x1DEA;
-}
-
-void
-mGBA_DebugLog(
-  mGBA_LogLevel level,
-  const char* message)
-{
-  // details see: https://github.com/mgba-emu/mgba/tree/master/opt/libgba
-  const int limit = 0x100;
-
-  for (int i = 0; i < limit; i++) {
-    char symbol = mGBA_Debug.message[i] = message[i];
-    if (symbol == '\0') break;
-  }
-
-  mGBA_Debug.flags[0] = level | 0x100;
-}

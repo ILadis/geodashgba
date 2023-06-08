@@ -519,21 +519,4 @@ GBA_Input_IsHit(GBA_Key key);
 bool
 GBA_Input_IsHeld(GBA_Key key);
 
-typedef enum mGBA_LogLevel {
-  // mGBA cli log level mask:
-  mGBA_LOG_FATAL = 0, // 1
-  mGBA_LOG_ERROR = 1, // 2
-  mGBA_LOG_WARN =  2, // 4
-  mGBA_LOG_INFO =  3, // 8
-  mGBA_LOG_DEBUG = 4, // 16
-} mGBA_LogLevel;
-
-bool
-mGBA_DebugEnable(bool enable);
-
-void
-mGBA_DebugLog(
-  mGBA_LogLevel level,
-  const char* message);
-
 #endif

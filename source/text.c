@@ -31,7 +31,7 @@ Printer_GetGlyph(
 int
 Printer_GetTextWidth(
     Printer *printer,
-    char *text)
+    const char *text)
 {
   int width = 0;
 
@@ -112,7 +112,7 @@ Printer_PrintGlyph(
 void
 Printer_WriteLine(
     Printer *printer,
-    char *text)
+    const char *text)
 {
   do {
     char letter = *(text++);

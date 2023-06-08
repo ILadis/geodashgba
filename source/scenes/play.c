@@ -1,5 +1,6 @@
 
 #include <gba.h>
+#include <log.h>
 #include <scene.h>
 
 #include <game/camera.h>
@@ -11,6 +12,8 @@
 #include <game/selector.h>
 #include <game/records.h>
 #include <game/particle.h>
+
+extern Logger* mGBA_GetLogger();
 
 static void
 Scene_DoEnter() {
@@ -33,7 +36,8 @@ Scene_DoEnter() {
   Camera_Update(camera);
   Particle_ResetAll();
 
-  mGBA_DebugLog(mGBA_LOG_INFO, "Scene: play");
+  Logger *logger = mGBA_GetLogger();
+  Logger_PrintLine(logger, "Scene: play");
 }
 
 static void

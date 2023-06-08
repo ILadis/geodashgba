@@ -87,11 +87,11 @@ Printer_SetCursor(
 int
 Printer_GetTextWidth(
     Printer *printer,
-    char *text);
+    const char *text);
 
 void
 Printer_WriteLine(
     Printer *printer,
-    char *line);
+    const char *line);
 
 #endif

@@ -1,6 +1,8 @@
 
+#include <log.h>
 #include <everdrive.h>
 
+extern Logger* Debug_GetLogger();
 
 void
 Everdrive_NoopCallback(Everdrive_CardCommand command) {
@@ -9,29 +11,27 @@ Everdrive_NoopCallback(Everdrive_CardCommand command) {
 
 void
 Everdrive_LogCallback(Everdrive_CardCommand command) {
-  extern void Debug_Print(char *message);
-  extern void Debug_PrintNewline();
-  extern void Debug_PrintHex8(unsigned char num);
+  Logger *logger = Debug_GetLogger();
 
   static int index = 0, length = 0;
   const int mask = 0b00111111;
 
   if (length-- > 0) {
-    Debug_PrintHex8(command);
+    Logger_PrintHex8(logger, command);
   }
 
   else if (index == 0 && command != 0xFF) {
-    Debug_PrintNewline();
-    Debug_Print(">");
-    Debug_PrintHex8(command);
+    Logger_PrintNewline(logger);
+    Logger_Print(logger, ">");
+    Logger_PrintHex8(logger, command);
 
     length = 5;
     index = (command & mask);
   }
 
   else if (index != 0 && (index == command || command == mask)) {
-    Debug_Print("<");
-    Debug_PrintHex8(command);
+    Logger_Print(logger, "<");
+    Logger_PrintHex8(logger, command);
 
     length = index == 2 ? 16 : 5;
     index = 0;

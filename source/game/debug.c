@@ -1,5 +1,6 @@
 
 #include <gba.h>
+#include <log.h>
 #include <text.h>
 
 #include <game/camera.h>
@@ -96,59 +97,21 @@ Debug_GetPrinter() {
   return &printer;
 }
 
-void
-Debug_Print(char *message) {
+static void
+Debug_Print(const char *message) {
   Printer *printer = Debug_GetPrinter();
-  Printer_WriteLine(printer, message);
-}
 
-void
-Debug_PrintNewline() {
-  Printer *printer = Debug_GetPrinter();
-  int y = printer->cursor.y + printer->font->height;
-  Printer_SetCursor(printer, 0, y);
-}
-
-void
-Debug_PrintLine(char *message) {
-  Debug_Print(message);
-  Debug_PrintNewline();
-}
-
-void
-Debug_PrintHex8(unsigned char num) {
-  static char digits[] = "0123456789ABCDEF";
-  char message[3] = {0};
-
-  int upper = num >> 4;
-  message[0] = digits[upper];
-
-  int lower = num & 0x0f;
-  message[1] = digits[lower];
-
-  Debug_Print(message);
-}
-
-void
-Debug_PrintHex16(unsigned short num) {
-  Debug_PrintHex8(num >> 8);
-  Debug_PrintHex8(num & 0xff);
-}
-
-void
-Debug_PrintBuffer(unsigned char *buffer, int length) {
-  int index = 0, cols = 0;
-  while (index < length) {
-    Debug_PrintHex8(buffer[index++]);
-
-    if (index % 2 == 0) {
-      Debug_Print(" ");
-      cols++;
-
-      if (cols == 5) {
-        Debug_PrintNewline();
-        cols = 0;
-      }
-    }
+  if (message[0] == '\n') {
+    int y = printer->cursor.y + printer->font->height;
+    Printer_SetCursor(printer, 0, y);
   }
+  else {
+    Printer_WriteLine(printer, message);
+  }
+}
+
+Logger*
+Debug_GetLogger() {
+  static Logger logger = { Debug_Print };
+  return &logger;
 }
