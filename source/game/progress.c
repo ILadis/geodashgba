@@ -162,7 +162,8 @@ Progress_DrawBar(Progress *progress) {
 
   int current = progress->current;
   for (int value = 0; value <= 1 << 8; value++) {
-    Progress_DrawPixels(progress, value, value < current);
+    bool state = current == 0 ? false : value <= current;
+    Progress_DrawPixels(progress, value, state);
   }
 
   progress->previous = current;
