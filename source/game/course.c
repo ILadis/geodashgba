@@ -64,6 +64,7 @@ Course_ResetState(
     int index)
 {
   course->prepare.chunk = NULL;
+  course->frame = 0;
   course->redraw = true;
   course->index = index;
 }
@@ -300,7 +301,7 @@ Course_AnimateObjects(Course *course) {
     int count = chunk->count;
     for (int j = 0; j < count; j++) {
       Object *object = &chunk->objects[j];
-      Object_Animate(object, &target);
+      Object_Animate(object, &target, course->frame);
     }
   }
 }
@@ -341,5 +342,6 @@ Course_Draw(
   Course_DrawBackground(course, camera);
   Course_DrawChunks(course);
 
+  course->frame++;
   course->redraw = false;
 }

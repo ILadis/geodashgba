@@ -48,24 +48,6 @@ Object_Move(
   }
 }
 
-bool
-Object_Animate(
-    Object *object,
-    GBA_TileMapRef *target)
-{
-  extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target);
-
-  const bool (*animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
-    [TYPE_COIN] = Object_AnimateCoin,
-  };
-
-  if (animate[object->type] != NULL) {
-    return animate[object->type](object, target);
-  }
-
-  return false;
-}
-
 void
 Object_Draw(
     Object *object,
@@ -100,4 +82,25 @@ Object_Draw(
   if (draw[object->type] != NULL) {
     draw[object->type](object, target);
   }
+}
+
+bool
+Object_Animate(
+    Object *object,
+    GBA_TileMapRef *target,
+    int frame)
+{
+  extern bool Object_AnimateBoxWithPole(Object *object, GBA_TileMapRef *target, int frame);
+  extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target, int frame);
+
+  const bool (*animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
+    [TYPE_BOX_WITH_POLE] = Object_AnimateBoxWithPole,
+    [TYPE_COIN] = Object_AnimateCoin,
+  };
+
+  if (animate[object->type] != NULL) {
+    return animate[object->type](object, target, frame);
+  }
+
+  return false;
 }

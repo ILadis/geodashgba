@@ -394,22 +394,66 @@ Object_DrawBox(
   }
 }
 
-static const GBA_TileMapRef pole = {
-  .width = 2, .height = 5,
-  .tiles = (GBA_Tile[]) {
-    // pole
-    { .tileId = 22, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 23, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 30, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 31, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 38, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 39, .vFlip = 0, .hFlip = 0 },
-    // block
-    { .tileId = 18, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 18, .vFlip = 0, .hFlip = 1 },
-    { .tileId = 26, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 26, .vFlip = 0, .hFlip = 1 },
-  }
+static const GBA_TileMapRef pole[] = {
+  // pole
+  { .width = 2, .height = 5,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 30, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 31, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 38, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 39, .vFlip = 0, .hFlip = 0 },
+      // block
+      { .tileId = 18, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 18, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 26, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 26, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  // pole frames
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 23, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 23, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 47, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 47, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 23, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 23, .vFlip = 0, .hFlip = 1 },
+    }
+  },
 };
 
 void
@@ -422,7 +466,7 @@ Object_DrawBoxWithPole(
   int tx = position.x / 8;
   int ty = position.y / 8;
 
-  const GBA_TileMapRef *tiles = &pole;
+  const GBA_TileMapRef *tiles = &pole[0];
   GBA_TileMapRef_Blit(target, tx, ty, tiles);
   ty += tiles->height;
 
@@ -438,6 +482,25 @@ Object_DrawBoxWithPole(
 
     GBA_TileMapRef_Blit(target, tx, ty, &vbox[2]);
   }
+}
+
+bool
+Object_AnimateBoxWithPole(
+    Object *object,
+    GBA_TileMapRef *target,
+    int frame)
+{
+  int index = (frame / 4) % 7;
+
+  Vector position = Bounds_Lower(&object->viewbox);
+
+  int tx = position.x / 8;
+  int ty = position.y / 8;
+
+  const GBA_TileMapRef *tiles = &pole[1 + index];
+  GBA_TileMapRef_Blit(target, tx, ty, tiles);
+
+  return true;
 }
 
 static const GBA_TileMapRef chains = {

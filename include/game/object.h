@@ -122,7 +122,8 @@ Object_Draw(
 bool
 Object_Animate(
     Object *object,
-    GBA_TileMapRef *target);
+    GBA_TileMapRef *target,
+    int frame);
 
 static inline void
 Object_AssignFrom(Object *object, const Object *other) {

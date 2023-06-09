@@ -22,6 +22,7 @@ typedef struct Course {
     int mapIndex, step;
   } prepare;
   int floor, index;
+  int frame;
   bool redraw;
 } Course;
 

@@ -4,7 +4,6 @@
 
 typedef struct Properties {
   bool collected;
-  int frame;
 } align4 Properties;
 
 bool
@@ -21,7 +20,6 @@ Object_CreateCoin(Object *object) {
 
   Properties *props = Object_GetProperties(object);
   props->collected = false;
-  props->frame = 0;
 
   return true;
 }
@@ -76,31 +74,28 @@ static const GBA_TileMapRef coin[] = {
   }
 };
 
-void
-Object_DrawCoin(
+bool
+Object_AnimateCoin(
     Object *object,
-    GBA_TileMapRef *target)
+    GBA_TileMapRef *target,
+    int frame)
 {
   Vector position = Bounds_Lower(&object->viewbox);
 
   int tx = position.x / 8;
   int ty = position.y / 8;
 
-  Properties *props = Object_GetProperties(object);
-  int index = (props->frame / 8) % 3;
+  int index = (frame / 8) % 3;
 
   GBA_TileMapRef_Blit(target, tx, ty, &coin[index]);
+
+  return true;
 }
 
-bool
-Object_AnimateCoin(
+void
+Object_DrawCoin(
     Object *object,
     GBA_TileMapRef *target)
 {
-  Properties *props = Object_GetProperties(object);
-  props->frame++;
-
-  Object_DrawCoin(object, target);
-
-  return true;
+  Object_AnimateCoin(object, target, 0);
 }
