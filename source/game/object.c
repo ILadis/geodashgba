@@ -49,15 +49,18 @@ Object_Move(
 }
 
 bool
-Object_Update(Object *object) {
-  extern bool Object_UpdateCoin(Object *object);
+Object_Animate(
+    Object *object,
+    GBA_TileMapRef *target)
+{
+  extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target);
 
-  const bool (*update[TYPE_COUNT])(Object *object) = {
-    [TYPE_COIN] = Object_UpdateCoin,
+  const bool (*animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
+    [TYPE_COIN] = Object_AnimateCoin,
   };
 
-  if (update[object->type] != NULL) {
-    return update[object->type](object);
+  if (animate[object->type] != NULL) {
+    return animate[object->type](object, target);
   }
 
   return false;

@@ -114,11 +114,13 @@ Object_Move(
     Object *object,
     Vector *position);
 
-bool
-Object_Update(Object *object);
-
 void
 Object_Draw(
+    Object *object,
+    GBA_TileMapRef *target);
+
+bool
+Object_Animate(
     Object *object,
     GBA_TileMapRef *target);
 

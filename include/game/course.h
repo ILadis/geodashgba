@@ -16,7 +16,7 @@ typedef struct Course {
   Bounds bounds;
   Level *level;
   Chunk chunks[4];
-  Object *objects[20];
+  // TODO consider keeping references to objects that need to be animated
   struct {
     Chunk *chunk;
     int mapIndex, step;
@@ -72,9 +72,6 @@ Course_CheckHits(
     Course *course,
     Unit *unit,
     HitCallback callback);
-
-void
-Course_Update(Course *course);
 
 void
 Course_Draw(

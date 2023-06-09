@@ -63,7 +63,6 @@ Course_ResetState(
     Course *course,
     int index)
 {
-  course->objects[0] = NULL;
   course->prepare.chunk = NULL;
   course->redraw = true;
   course->index = index;
@@ -143,29 +142,6 @@ Course_CheckHits(
 
   Chunk *next = Course_GetNextChunk(course);
   Chunk_CheckHits(next, unit, callback);
-}
-
-void
-Course_Update(Course *course) {
-  Chunk *chunks[] = {
-    Course_GetCurrentChunk(course),
-    Course_GetNextChunk(course),
-  };
-
-  course->objects[0] = NULL;
-
-  int index = 0;
-  for (int i = 0; i < length(chunks); i++) {
-    Chunk *chunk = chunks[i];
-
-    int count = chunk->count;
-    for (int j = 0; j < count; j++) {
-      Object *object = &chunk->objects[j];
-      if (Object_Update(object)) {
-        course->objects[index++] = object;
-      }
-    }
-  }
 }
 
 static inline void
@@ -309,6 +285,27 @@ Course_DrawChunk(
 }
 
 static inline void
+Course_AnimateObjects(Course *course) {
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  Chunk *chunks[] = {
+    Course_GetCurrentChunk(course),
+    Course_GetNextChunk(course),
+  };
+
+  for (int i = 0; i < length(chunks); i++) {
+    Chunk *chunk = chunks[i];
+
+    int count = chunk->count;
+    for (int j = 0; j < count; j++) {
+      Object *object = &chunk->objects[j];
+      Object_Animate(object, &target);
+    }
+  }
+}
+
+static inline void
 Course_DrawChunks(Course *course) {
   if (course->redraw) {
     Chunk *current = Course_GetCurrentChunk(course);
@@ -317,18 +314,7 @@ Course_DrawChunks(Course *course) {
     Chunk *next = Course_GetNextChunk(course);
     Course_DrawChunk(course, next);
   }
-  else {
-    GBA_TileMapRef target;
-    GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
-    for (int i = 0; i < length(course->objects); i++) {
-      Object *object = course->objects[i];
-      if (object != NULL) {
-        Object_Draw(object, &target);
-      }
-      else break;
-    }
-  }
+  else Course_AnimateObjects(course);
 }
 
 iwram void
@@ -343,7 +329,6 @@ Course_Draw(
     Chunk *pending = Course_GetChunkAt(course, index + 2);
     Course_DrawChunk(course, pending);
 
-    course->objects[0] = NULL;
     course->index = ++index;
   }
 

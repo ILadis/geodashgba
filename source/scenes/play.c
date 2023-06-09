@@ -78,7 +78,6 @@ Scene_DoPlay() {
 
   Cube_Update(cube, course);
   Camera_Update(camera);
-  Course_Update(course);
   Progress_Update(progress, cube);
   Particle_UpdateAll();
 

@@ -49,15 +49,6 @@ Object_HitCoin(
   return true;
 }
 
-// TODO consider Object_Animate instead (with global frame counter)
-bool
-Object_UpdateCoin(Object *object) {
-  Properties *props = Object_GetProperties(object);
-  props->frame++;
-
-  return true;
-}
-
 static const GBA_TileMapRef coin[] = {
   { .width = 2, .height = 2,
     .tiles = (GBA_Tile[]) {
@@ -99,4 +90,17 @@ Object_DrawCoin(
   int index = (props->frame / 8) % 3;
 
   GBA_TileMapRef_Blit(target, tx, ty, &coin[index]);
+}
+
+bool
+Object_AnimateCoin(
+    Object *object,
+    GBA_TileMapRef *target)
+{
+  Properties *props = Object_GetProperties(object);
+  props->frame++;
+
+  Object_DrawCoin(object, target);
+
+  return true;
 }

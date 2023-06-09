@@ -75,7 +75,6 @@ Scene_DoPlay() {
   Records *records = Records_GetInstance();
 
   Camera_Update(camera);
-  Course_Update(course);
   Selector_Update(selector);
 
   if (GBA_Input_IsHit(GBA_KEY_LEFT)) {
