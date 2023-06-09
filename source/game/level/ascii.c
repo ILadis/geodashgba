@@ -203,6 +203,19 @@ AsciiLevel_AddObjectToChunk(
 }
 
 static void
+AsciiLevel_AddObject(
+    Level *level,
+    Vector offset,
+    bool (*construct)(Object *object))
+{
+  Object object = {0};
+  if (construct(&object)) {
+    Object_Move(&object, &offset);
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+}
+
+static void
 AsciiLevel_AddBoxWithPole(Level *level) {
   Object object = {0};
   Vector offset = Vector_Of(0, -1);
@@ -302,69 +315,12 @@ AsciiLevel_AddOffsetDisk(
 }
 
 static void
-AsciiLevel_AddPad(Level *level) {
-  Object object = {0};
-  Vector offset = Vector_Of(0, +1);
-
-  if (Object_CreatePad(&object)) {
-    Object_Move(&object, &offset);
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
-AsciiLevel_AddRing(Level *level) {
-  Object object = {0};
-  if (Object_CreateRing(&object)) {
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
-AsciiLevel_AddCoin(Level *level) {
-  Object object = {0};
-  if (Object_CreateCoin(&object)) {
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
-AsciiLevel_AddPortal(Level *level) {
-  Object object = {0};
-  Vector offset = Vector_Of(0, -4);
-
-  if (Object_CreatePortal(&object)) {
-    Object_Move(&object, &offset);
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
 AsciiLevel_AddSpike(
     Level *level,
     Direction direction)
 {
   Object object = {0};
   if (Object_CreateSpike(&object, direction)) {
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
-AsciiLevel_AddTinySpike(Level *level) {
-  Object object = {0};
-  Vector offset = Vector_Of(0, +1);
-
-  if (Object_CreateTinySpike(&object)) {
-    Object_Move(&object, &offset);
-    AsciiLevel_AddObjectToChunk(level, &object);
-  }
-}
-
-static void
-AsciiLevel_AddGoal(Level *level) {
-  Object object = {0};
-  if (Object_CreateGoal(&object)) {
     AsciiLevel_AddObjectToChunk(level, &object);
   }
 }
@@ -484,7 +440,6 @@ AsciiLevel_GetChunk(
         continue;
       }
 
-      // TODO use "one for all" add function (for simple objects)
       switch (symbol) {
       case 'i':
         AsciiLevel_AddBoxWithPole(level);
@@ -505,7 +460,7 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddPit(level, true);
         break;
       case ',':
-        AsciiLevel_AddTinySpike(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, +1), Object_CreateTinySpike);
         break;
       case '-':
         AsciiLevel_AddDisk(level);
@@ -517,16 +472,16 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddOffsetDisk(level, DIRECTION_DOWN);
         break;
       case 'T':
-        AsciiLevel_AddPad(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, +1), Object_CreatePad);
         break;
       case '@':
-        AsciiLevel_AddRing(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, 0), Object_CreateRing);
         break;
       case '*':
-        AsciiLevel_AddCoin(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, 0), Object_CreateCoin);
         break;
       case 'C':
-        AsciiLevel_AddPortal(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, -4), Object_CreatePortal);
         break;
       case '^':
         AsciiLevel_AddSpike(level, DIRECTION_UP);
@@ -541,7 +496,7 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddSpike(level, DIRECTION_RIGHT);
         break;
       case 'G':
-        AsciiLevel_AddGoal(level);
+        AsciiLevel_AddObject(level, Vector_Of(0, 0), Object_CreateGoal);
         break;
       case '|':
         AsciiLevel_AddGoalWall(level);
