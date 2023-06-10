@@ -16,6 +16,7 @@ typedef enum Mode {
 typedef struct Progress {
   int previous, current;
   int best, total;
+  bool coins[3];
   enum Mode mode;
   bool redraw;
 } Progress;
@@ -42,9 +43,24 @@ Progress_SetProgress(
     Progress *progress,
     int value);
 
+void
+Progress_SetCollectedCoin(
+    Progress *progress,
+    int index);
+
+void
+Progress_SetCollectedCoins(
+    Progress *progress,
+    const bool *coins);
+
 static inline int
-Progress_GetProgress(Progress *progress) {
+Progress_GetBestProgress(Progress *progress) {
   return progress->best;
+}
+
+static inline bool*
+Progress_GetCollectedCoins(Progress *progress) {
+  return progress->coins;
 }
 
 void

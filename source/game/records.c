@@ -52,7 +52,7 @@ Records_AddNewEntryForLevel(
 }
 
 void
-Records_AddBestForLevel(
+Records_SetBestForLevel(
     Records *records,
     LevelId id, int best)
 {
@@ -77,4 +77,36 @@ Records_GetBestForLevel(
   }
 
   return entry->best;
+}
+
+void
+Records_SetCollectedCoinsForLevel(
+    Records *records,
+    LevelId id, bool *coins)
+{
+  struct Entry *entry = Records_FindEntryForLevel(records, id);
+  if (entry == NULL) {
+    entry = Records_AddNewEntryForLevel(records, id);
+  }
+
+  if (entry != NULL) {
+    entry->coins[0] = coins[0];
+    entry->coins[1] = coins[1];
+    entry->coins[2] = coins[2];
+  }
+}
+
+const bool*
+Records_GetCollectedCoinsForLevel(
+    Records *records,
+    LevelId id)
+{
+  static const bool fallback[3] = { false };
+
+  struct Entry *entry = Records_FindEntryForLevel(records, id);
+  if (entry == NULL) {
+    return fallback;
+  }
+
+  return entry->coins;
 }

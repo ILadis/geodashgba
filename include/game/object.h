@@ -55,7 +55,9 @@ bool
 Object_CreatePortal(Object *object);
 
 bool
-Object_CreateCoin(Object *object);
+Object_CreateCoin(
+    Object *object,
+    int index);
 
 bool
 Object_CreateRegularBox(

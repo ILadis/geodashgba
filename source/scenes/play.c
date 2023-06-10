@@ -107,21 +107,25 @@ Scene_DoExit() {
   Camera *camera = Camera_GetInstance();
   Camera_Reset(camera);
 
-  Cube *cube = Cube_GetInstance();
-  Cube_Reset(cube);
-
   Checkpoint *checkpoint = Checkpoint_GetInstance();
   Checkpoint_Reset(checkpoint);
 
   Progress *progress = Progress_GetInstance();
-  int best = Progress_GetProgress(progress);
+  int best = Progress_GetBestProgress(progress);
+  bool *coins = Progress_GetCollectedCoins(progress);
 
   Selector *selector = Selector_GetInstance();
   LevelId id = Selector_GetLevelId(selector);
 
   Records *records = Records_GetInstance();
-  Records_AddBestForLevel(records, id, best);
+  Records_SetBestForLevel(records, id, best);
 
+  Cube *cube = Cube_GetInstance();
+  if (cube->success) {
+    Records_SetCollectedCoinsForLevel(records, id, coins);
+  }
+
+  Cube_Reset(cube);
   Particle_ResetAll();
 }
 

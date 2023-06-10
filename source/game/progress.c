@@ -55,11 +55,39 @@ Progress_SetProgress(
 }
 
 void
+Progress_SetCollectedCoin(
+    Progress *progress,
+    int index)
+{
+  if (index >= 0 && index < length(progress->coins)) {
+    progress->coins[index] = true;
+  }
+}
+
+void
+Progress_SetCollectedCoins(
+    Progress *progress,
+    const bool *coins)
+{
+  progress->redraw = progress->mode == MODE_SELECT;
+
+  for (int i = 0; i < length(progress->coins); i++) {
+    progress->coins[i] = coins[i];
+  }
+}
+
+void
 Progress_Update(
     Progress *progress,
     Cube *cube)
 {
   const Vector *position = Cube_GetPosition(cube);
+
+  if (!cube->success && Cube_EnteredState(cube, STATE_DESTROYED)) {
+    progress->coins[0] = false;
+    progress->coins[1] = false;
+    progress->coins[2] = false;
+  }
 
   int value = Math_div(position->x << 8, progress->total);
   Progress_SetProgress(progress, value);
@@ -169,10 +197,50 @@ Progress_DrawBar(Progress *progress) {
   progress->previous = current;
 }
 
+static const GBA_TileMapRef coin[] = {
+  // collected
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 174, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 175, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 182, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 183, .vFlip = 0, .hFlip = 0 },
+    }
+  },
+  // not collected
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 206, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 207, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 214, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 215, .vFlip = 0, .hFlip = 0 },
+    }
+  }
+};
+
+static inline void
+Progress_DrawCoins(Progress *progress) {
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 2);
+
+  int tx = 19;
+  int ty = 10;
+
+  for (int i = 0; i < length(progress->coins); i++) {
+    bool index = progress->coins[i] ? 0 : 1;
+    const GBA_TileMapRef *tiles = &coin[index];
+    GBA_TileMapRef_Blit(&target, tx + i * tiles->width, ty, tiles);
+  }
+}
+
 void
 Progress_Draw(Progress *progress) {
   if (progress->redraw) {
     Progress_DrawBar(progress);
+
+    if (progress->mode == MODE_SELECT) {
+      Progress_DrawCoins(progress);
+    }
   }
 
   Progress_DrawDelta(progress);

@@ -326,6 +326,24 @@ AsciiLevel_AddSpike(
 }
 
 static void
+AsciiLevel_AddCoin(Level *level) {
+  Object object = {0};
+  Vector cursor = level->cursor;
+
+  int index = 0;
+  char symbol;
+  if (AsciiLevel_NextSymbol(level, DIRECTION_UP, &symbol)) {
+    index = symbol - '1';
+  }
+
+  if (Object_CreateCoin(&object, index)) {
+    AsciiLevel_AddObjectToChunk(level, &object);
+  }
+
+  level->cursor = cursor;
+}
+
+static void
 AsciiLevel_AddGoalWall(Level *level) {
   Object object = {0};
   Vector offset = Vector_Of(+1, 0);
@@ -478,7 +496,7 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddObject(level, Vector_Of(0, 0), Object_CreateRing);
         break;
       case '*':
-        AsciiLevel_AddObject(level, Vector_Of(0, 0), Object_CreateCoin);
+        AsciiLevel_AddCoin(level);
         break;
       case 'C':
         AsciiLevel_AddObject(level, Vector_Of(0, -4), Object_CreatePortal);

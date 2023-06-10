@@ -87,8 +87,12 @@ Scene_DoPlay() {
   // update draw progress when selector box is out of screen bounds
   if (selector->redraw) {
     LevelId id = Selector_GetLevelId(selector);
+
     int best = Records_GetBestForLevel(records, id);
     Progress_SetProgress(progress, best);
+
+    const bool *coins = Records_GetCollectedCoinsForLevel(records, id);
+    Progress_SetCollectedCoins(progress, coins);
   }
 
   GBA_VSync();
