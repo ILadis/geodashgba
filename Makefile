@@ -10,6 +10,9 @@ CFILES   := $(wildcard source/*.c) $(wildcard source/game/*.c) $(wildcard source
 CFILES   += $(wildcard source/game/cube/*.c) $(wildcard source/game/level/*.c) $(wildcard source/game/object/*.c)
 CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard assets/graphics/*.c) $(wildcard assets/tiles/*.c)
 
+# level files
+LEVELS   := $(patsubst %.txt,%.bin,$(wildcard levels/*.txt))
+
 # toolchain and flags
 EMU      := visualboyadvance-m
 CC       := arm-none-eabi-gcc
@@ -44,7 +47,13 @@ clean:
 	@rm -rf *.gba *.elf
 
 purge: clean
-	@rm -rf assets/ tools/sinlut tools/lvl2bin
+	@rm -rf assets/ levels/*.bin \
+		tools/sinlut    \
+		tools/bezlut    \
+		tools/ppm2font  \
+		tools/tmx2tiles \
+		tools/lvl2bin   \
+		tools/lvl2inc
 
 tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
@@ -52,7 +61,8 @@ tools:
 	@gcc tools/bezlut.c -o tools/bezlut -lm
 	@gcc tools/ppm2font.c -o tools/ppm2font
 	@gcc tools/tmx2tiles.c -o tools/tmx2tiles
-	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -g -I. -Iinclude -DNOGBA
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
+	@gcc tools/lvl2inc.c $(CFILES) -o tools/lvl2inc -I. -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
@@ -64,7 +74,11 @@ assets:
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/ppm2font 6x15 hud < graphics/font.ppm > assets/font.c
 	@tools/ppm2font 8x8 console < graphics/console.ppm > assets/console.c
-	@tools/lvl2bin > assets/levels.c
+	@tools/lvl2inc > assets/levels.c
+
+levels: $(LEVELS)
+levels/%.bin: levels/%.txt
+	tools/lvl2bin < $< > $@
 
 tests: $(TESTS)
 

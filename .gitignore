@@ -3,7 +3,9 @@
 *.sav
 .vscode/
 assets/
+levels/*.bin
 tools/lvl2bin
+tools/lvl2inc
 tools/ppm2font
 tools/bezlut
 tools/sinlut

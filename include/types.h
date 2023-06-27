@@ -16,6 +16,7 @@ typedef unsigned short u16;
 typedef unsigned int   u32;
 
 #define align4 __attribute__((aligned(4)))
+#define align8 __attribute__((aligned(8)))
 #define packed __attribute__((__packed__))
 
 // can be applied on code and data
