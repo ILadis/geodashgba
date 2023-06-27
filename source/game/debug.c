@@ -112,6 +112,6 @@ Debug_Print(const char *message) {
 
 Logger*
 Debug_GetLogger() {
-  static Logger logger = { Debug_Print };
+  static Logger logger = Logger_CreateNew(Debug_Print);
   return &logger;
 }

@@ -13,8 +13,6 @@
 #include <game/selector.h>
 #include <game/records.h>
 
-extern Logger* mGBA_GetLogger();
-
 static void
 Scene_DoEnter() {
   static bool once = true;
@@ -60,7 +58,7 @@ Scene_DoEnter() {
 
   Camera_Update(camera);
 
-  Logger *logger = mGBA_GetLogger();
+  Logger *logger = Logger_GetInstance();
   Logger_PrintLine(logger, "Scene: select");
 }
 

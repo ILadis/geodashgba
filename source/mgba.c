@@ -1,6 +1,5 @@
 
 #include <log.h>
-#include <types.h>
 
 typedef enum mGBA_LogLevel {
   // mGBA cli log level mask:
@@ -21,13 +20,13 @@ static struct {
   .message = (char*) 0x4FFF600,
 };
 
-static bool
-mGBA_DebugEnable(bool enable) {
-  mGBA_Debug.enable[0] = enable ? 0xC0DE : 0;
+bool
+mGBA_DebugEnable() {
+  mGBA_Debug.enable[0] = 0xC0DE;
   return mGBA_Debug.enable[0] == 0x1DEA;
 }
 
-static void
+void
 mGBA_DebugLog(const char* message) {
   mGBA_LogLevel level = mGBA_LOG_INFO;
 
@@ -50,18 +49,4 @@ mGBA_DebugLog(const char* message) {
       break;
     }
   }
-}
-
-static void
-mGBA_DebugLogNoop(const char* message) { }
-
-Logger*
-mGBA_GetLogger() {
-  static Logger logger = { mGBA_DebugLog };
-
-  if (!mGBA_DebugEnable(true)) {
-    logger.print = mGBA_DebugLogNoop;
-  }
-
-  return &logger;
 }

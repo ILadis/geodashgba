@@ -13,8 +13,6 @@
 #include <game/records.h>
 #include <game/particle.h>
 
-extern Logger* mGBA_GetLogger();
-
 static void
 Scene_DoEnter() {
   Course *course = Course_GetInstance();
@@ -36,7 +34,7 @@ Scene_DoEnter() {
   Camera_Update(camera);
   Particle_ResetAll();
 
-  Logger *logger = mGBA_GetLogger();
+  Logger *logger = Logger_GetInstance();
   Logger_PrintLine(logger, "Scene: play");
 }
 
