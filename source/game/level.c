@@ -81,35 +81,6 @@ extern Level course04;
 extern Level course05;
 #endif
 
-const Collection *collection = Level_DefineCollection(300 * 1024);
-
-int
-Collection_GetLevelCount(const Collection *collection) {
-  return collection->count;
-}
-
-Level*
-Collection_GetLevelByIndex(
-    const Collection *collection,
-    int index)
-{
-  static Level level = { .format = FORMAT_BINV1 };
-
-  if (index < collection->count) {
-    unsigned char *buffer = (unsigned char *) collection;
-
-    int length = collection->entries[index].length;
-    int offset = collection->entries[index].offset;
-
-    level.size.x = length;
-    level.buffer.write = &buffer[offset];
-
-    return &level;
-  }
-
-  return NULL;
-}
-
 Level*
 Level_GetById(LevelId id) {
   static Level *levels[LEVEL_COUNT] = {

@@ -79,34 +79,4 @@ Level_AddChunk(
     Level *level,
     Chunk *chunk);
 
-// TODO find better name
-typedef struct Collection {
-  char signature[16];
-  int length;
-  short count;
-  struct {
-    int offset;
-    int length;
-  } *entries;
-} packed Collection;
-
-#define Level_DefineCollection(size) (const Collection *) \
-((const align8 unsigned char[size]) { \
-  'L', 'e', 'v', 'e', 'l', 'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'o', 'n', '!', \
-  (unsigned char) ((size >> 24) & 0xFF), \
-  (unsigned char) ((size >> 16) & 0xFF), \
-  (unsigned char) ((size >>  8) & 0xFF), \
-  (unsigned char) ((size >>  0) & 0xFF), \
-})
-
-int
-Collection_GetLevelCount(const Collection *collection);
-
-Level*
-Collection_GetLevelByIndex(
-    const Collection *collection,
-    int index);
-
-// TODO consider Collection_AddLevel and Collection_RemoveLevel
-
 #endif
