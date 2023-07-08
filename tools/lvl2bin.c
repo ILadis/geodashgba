@@ -8,6 +8,7 @@ static char buffer[1024 * 1024 * 5] = {0};
 int main(int argc, char **argv) {
   FILE *in = stdin, *out = stdout, *log = stderr;
 
+  // TODO move to Level_ReadFrom
   int x = 0, y = 0;
   for (int i = 0; i < sizeof(buffer);) {
     int byte = fgetc(in);
@@ -33,27 +34,14 @@ int main(int argc, char **argv) {
     .size = { x, y }
   };
 
-  char name[15];
-  Level_GetName(&ascii, name);
-  Level_SetName(&binv1, name);
-
-  int index = 0;
-  while (true) {
-    Chunk chunk = {0};
-    Chunk_AssignIndex(&chunk, index++);
-
-    if (Level_GetChunk(&ascii, &chunk)) {
-      if (!Level_AddChunk(&binv1, &chunk)) {
-        fprintf(log, "Could not add chunk to level, size exceeded?\n");
-        break;
-      }
-    }
-    else {
-      fprintf(log, "Wrote %d chunk(s)\n", --index);
-      break;
-    }
+  int cunks = Level_Convert(&ascii, &binv1);
+  if (cunks < 0) {
+    fprintf(log, "Could not add chunk to level, size exceeded?\n");
+  } else {
+    fprintf(log, "Wrote %d chunk(s)\n", cunks);
   }
 
+  // TODO move to Level_WriteTo
   int length = binv1.cursor.x;
   const unsigned char *buffer = binv1.buffer.read;
   for (int i = 0; i < length; i++) {

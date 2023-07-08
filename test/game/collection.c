@@ -99,10 +99,58 @@ test(GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist) {
   assert(levels[1] == NULL);
 }
 
+test(ReadFrom_ShouldReturnTrueIfCollectionIsPresentInReader) {
+  // arrange
+  unsigned char buffer[] = {
+    [12]  = 'L', 'e', 'v', 'e', 'l', 'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'o', 'n', '!',
+            0xFF, 0x00, 0x00, 0x00,
+    [512] = 0x00
+  };
+
+  Collection *collection = Collection_DefineWithUsableSpace(200);
+
+  DataStream stream;
+  DataStream_From(&stream, buffer, sizeof(buffer));
+
+  Reader *reader = DataStream_AsReader(&stream);
+
+  // act
+  bool result = Collection_ReadFrom(collection, reader);
+
+  // assert
+  assert(result == true);
+  assert(collection->length == 0xFF);
+}
+
+test(ReadFrom_ShouldReturnFalseIfCollectionInReaderWouldNotFitIntoProvidedCollection) {
+  // arrange
+  unsigned char buffer[] = {
+    [12]  = 'L', 'e', 'v', 'e', 'l', 'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'o', 'n', '!',
+            0xFF, 0x00, 0x00, 0x00,
+    [512] = 0x00
+  };
+
+  Collection *collection = Collection_DefineNew(254);
+
+  DataStream stream;
+  DataStream_From(&stream, buffer, sizeof(buffer));
+
+  Reader *reader = DataStream_AsReader(&stream);
+
+  // act
+  bool result = Collection_ReadFrom(collection, reader);
+
+  // assert
+  assert(result == false);
+  assert(collection->length == 0xFF);
+}
+
 suite(
   DefineNew_ShouldDefineNewCollectionWithGivenSize,
   DefineNew_ShouldDefineNewCollectionWithUsableSpace,
   AddLevel_ShouldAllocateSpaceForLevelAndAppendLevelData,
   AddLevel_ShouldAllocateSpaceForLevelAndAppendLevelData,
   GetLevelByIndex_ShouldReturnExpectedLevel,
-  GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist);
+  GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist,
+  ReadFrom_ShouldReturnTrueIfCollectionIsPresentInReader,
+  ReadFrom_ShouldReturnFalseIfCollectionInReaderWouldNotFitIntoProvidedCollection);

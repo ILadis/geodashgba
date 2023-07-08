@@ -98,3 +98,67 @@ Collection_AddLevel(
 
   return true;
 }
+
+bool
+Collection_FindSignature(const Reader *reader) {
+  const Collection *collection = Collection_DefineWithUsableSpace(0);
+
+  const int length = sizeof(collection->signature);
+  int index = 0;
+
+  do {
+    int byte = Reader_ReadNext(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    if (byte == collection->signature[index]) {
+      index++;
+    } else {
+      index = 0;
+    }
+  } while (index != length);
+
+  return true;
+}
+
+bool
+Collection_ReadFrom(
+    volatile Collection *collection,
+    const Reader *reader)
+{
+  int index = sizeof(collection->signature);
+
+  if (!Collection_FindSignature(reader)) {
+    return false;
+  }
+
+  unsigned char *buffer = (unsigned char *) collection;
+  const int header = sizeof(*collection);
+  const int length = collection->length;
+
+  while (index < header) {
+    int byte = Reader_ReadNext(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    buffer[index++] = byte;
+  }
+
+  if (collection->length > length) {
+    return false;
+  }
+
+  const int limit = collection->length;
+  do {
+    int byte = Reader_ReadNext(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    buffer[index++] = byte;
+  } while (index != limit);
+
+  return true;
+}

@@ -79,4 +79,9 @@ Level_AddChunk(
     Level *level,
     Chunk *chunk);
 
+int
+Level_Convert(
+    Level *from,
+    Level *to);
+
 #endif

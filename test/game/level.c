@@ -310,6 +310,35 @@ test(GetChunk_ShouldNotReturnObjectsFromMetaDataSection) {
   assert(chunk.count == 0);
 }
 
+test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
+  // arrange
+  Level binv1 = Level_AllocateNew(512);
+  Level ascii = Level_FromLayout(
+    "{n:Test} ",
+    "         ",
+    "  x x x  ",
+  );
+
+  char name[5] = {0};
+
+  Chunk chunk = {0};
+  Chunk_AssignIndex(&chunk, 0);
+
+  // act
+  int chunks = Level_Convert(&ascii, &binv1);
+  Level_GetName(&binv1, name);
+  Level_GetChunk(&binv1, &chunk);
+
+  // assert
+  assert(chunks == 1);
+  assert(name[0] == 'T');
+  assert(name[1] == 'e');
+  assert(name[2] == 's');
+  assert(name[3] == 't');
+  assert(name[4] == '\0');
+  assert(chunk.count == 3);
+}
+
 suite(
   GetName_ShouldReturnExpectedLevelName,
   GetName_ShouldReturnSetName,
@@ -321,4 +350,5 @@ suite(
   GetChunk_ShouldCreateBoxesWithExpectedSizes,
   GetChunk_ShouldReturnEqualObjectsForSameLevelData,
   GetChunk_ShouldReturnAddedObjects,
-  GetChunk_ShouldNotReturnObjectsFromMetaDataSection);
+  GetChunk_ShouldNotReturnObjectsFromMetaDataSection,
+  Convert_ShouldConvertLevelFromAsciiToBinv1);

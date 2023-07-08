@@ -15,25 +15,11 @@ int main(int argc, char **argv) {
 
     if (in == NULL) break;
 
-    char name[15];
-    Level_GetName(in, name);
-    Level_SetName(&out, name);
-
-    int index = 0;
-    while (true) {
-      Chunk chunk = {0};
-      Chunk_AssignIndex(&chunk, index++);
-
-      if (Level_GetChunk(in, &chunk)) {
-        if (!Level_AddChunk(&out, &chunk)) {
-          fprintf(log, "Could not add chunk to level, size exceeded?\n");
-          break;
-        }
-      }
-      else {
-        fprintf(log, "Level #%d, wrote %d chunk(s)\n", id, --index);
-        break;
-      }
+    int cunks = Level_Convert(in, &out);
+    if (cunks < 0) {
+      fprintf(log, "Could not add chunk to level, size exceeded?\n");
+    } else {
+      fprintf(log, "Wrote %d chunk(s)\n", cunks);
     }
 
     fprintf(fp, "\n");
