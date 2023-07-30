@@ -2,7 +2,7 @@
 #define COLLECTION_H
 
 #include <types.h>
-#include <stream.h>
+#include <io.h>
 #include <game/level.h>
 
 typedef struct Collection {

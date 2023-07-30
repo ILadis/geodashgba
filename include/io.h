@@ -13,50 +13,50 @@ Reader_ReadNext(const Reader *reader) {
   return reader->read(reader->self);
 }
 
-typedef struct DataStream {
+typedef struct DataReader {
   unsigned char *data;
   int position, length;
-  Reader reader;
-} DataStream;
+  Reader base;
+} DataReader;
 
 bool
-DataStream_From(
-    DataStream *stream,
+DataReader_From(
+    DataReader *stream,
     void *data, int length);
 
 int
-DataStream_Read(void *reader);
+DataReader_Read(void *reader);
 
 static inline Reader*
-DataStream_AsReader(DataStream *stream) {
-  return &stream->reader;
+DataReader_AsReader(DataReader *reader) {
+  return &reader->base;
 }
 
 #ifdef NOGBA
 #include <stdio.h>
 
-typedef struct FileStream {
+typedef struct FileReader {
   FILE *fp;
-  Reader reader;
-} FileStream;
+  Reader base;
+} FileReader;
 
 bool
-FileStream_Open(
-    FileStream *stream,
+FileReader_Open(
+    FileReader *stream,
     const char *path,
     const char *modes);
 
 bool
-FileStream_From(
-    FileStream *stream,
+FileReader_From(
+    FileReader *stream,
     FILE *fp);
 
 int
-FileStream_Read(void *reader);
+FileReader_Read(void *reader);
 
 static inline Reader*
-FileStream_AsReader(FileStream *stream) {
-  return &stream->reader;
+FileReader_AsReader(FileReader *reader) {
+  return &reader->base;
 }
 
 #endif

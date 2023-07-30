@@ -109,10 +109,10 @@ test(ReadFrom_ShouldReturnTrueIfCollectionIsPresentInReader) {
 
   Collection *collection = Collection_DefineWithUsableSpace(200);
 
-  DataStream stream;
-  DataStream_From(&stream, buffer, sizeof(buffer));
+  DataReader data;
+  DataReader_From(&data, buffer, sizeof(buffer));
 
-  Reader *reader = DataStream_AsReader(&stream);
+  Reader *reader = DataReader_AsReader(&data);
 
   // act
   bool result = Collection_ReadFrom(collection, reader);
@@ -132,10 +132,10 @@ test(ReadFrom_ShouldReturnFalseIfCollectionInReaderWouldNotFitIntoProvidedCollec
 
   Collection *collection = Collection_DefineNew(254);
 
-  DataStream stream;
-  DataStream_From(&stream, buffer, sizeof(buffer));
+  DataReader data;
+  DataReader_From(&data, buffer, sizeof(buffer));
 
-  Reader *reader = DataStream_AsReader(&stream);
+  Reader *reader = DataReader_AsReader(&data);
 
   // act
   bool result = Collection_ReadFrom(collection, reader);

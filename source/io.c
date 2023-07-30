@@ -1,28 +1,28 @@
 
-#include <stream.h>
+#include <io.h>
 
 bool
-DataStream_From(
-    DataStream *stream,
+DataReader_From(
+    DataReader *reader,
     void *data, int length)
 {
-  stream->data = data;
+  reader->data = data;
 
   if (data == NULL) {
     return false;
   }
 
-  stream->position = 0;
-  stream->length = length;
-  stream->reader.self = stream;
-  stream->reader.read = DataStream_Read;
+  reader->position = 0;
+  reader->length = length;
+  reader->base.self = reader;
+  reader->base.read = DataReader_Read;
 
   return true;
 }
 
 int
-DataStream_Read(void *reader) {
-  DataStream *stream = reader;
+DataReader_Read(void *reader) {
+  DataReader *stream = reader;
   int index = stream->position;
 
   if (index >= stream->length) {
@@ -38,8 +38,8 @@ DataStream_Read(void *reader) {
 #ifdef NOGBA
 
 bool
-FileStream_Open(
-    FileStream *stream,
+FileReader_Open(
+    FileReader *reader,
     const char *path,
     const char *modes)
 {
@@ -48,16 +48,16 @@ FileStream_Open(
     return false;
   }
 
-  stream->fp = fp;
-  stream->reader.self = stream;
-  stream->reader.read = FileStream_Read;
+  reader->fp = fp;
+  reader->base.self = reader;
+  reader->base.read = FileReader_Read;
 
   return true;
 }
 
 bool
-FileStream_From(
-    FileStream *stream,
+FileReader_From(
+    FileReader *stream,
     FILE *fp)
 {
   stream->fp = fp;
@@ -66,15 +66,15 @@ FileStream_From(
     return false;
   }
 
-  stream->reader.self = stream;
-  stream->reader.read = FileStream_Read;
+  stream->base.self = stream;
+  stream->base.read = FileReader_Read;
 
   return true;
 }
 
 int
-FileStream_Read(void *reader) {
-  FileStream *stream = reader;
+FileReader_Read(void *reader) {
+  FileReader *stream = reader;
   FILE *fp = stream->fp;
   return fgetc(fp);
 }

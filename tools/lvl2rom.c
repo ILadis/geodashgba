@@ -14,13 +14,13 @@ int main(int argc, char **argv) {
 
   FILE *romfile = fopen(argv[2], "rb+");
 
-  FileStream stream;
-  if (!FileStream_From(&stream, romfile)) {
+  FileReader file;
+  if (!FileReader_From(&file, romfile)) {
     fprintf(log, "Could not open romfile.\n");
     return 1;
   }
 
-  Reader *reader = FileStream_AsReader(&stream);
+  Reader *reader = FileReader_AsReader(&file);
 
   Collection *collection = Collection_DefineWithUsableSpace(300 * 1024);
   if (!Collection_ReadFrom(collection, reader)) {
