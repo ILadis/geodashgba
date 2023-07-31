@@ -5,59 +5,94 @@
 
 typedef struct Reader {
   void *self;
-  int (*read)(void *self);
+  int  (*Read)(void *self);
+  bool (*SeekTo)(void *self, int position);
 } Reader;
 
 static inline int
-Reader_ReadNext(const Reader *reader) {
-  return reader->read(reader->self);
+Reader_Read(const Reader *reader) {
+  return reader->Read(reader->self);
 }
 
-typedef struct DataReader {
-  unsigned char *data;
-  int position, length;
-  Reader base;
-} DataReader;
+static inline bool
+Reader_SeekTo(const Reader *reader, int position) {
+  return reader->SeekTo(reader->self, position);
+}
 
-bool
-DataReader_From(
-    DataReader *stream,
-    void *data, int length);
+typedef struct Writer {
+  void *self;
+  bool (*Write)(void *self, unsigned char byte);
+  bool (*SeekTo)(void *self, int position);
+} Writer;
 
-int
-DataReader_Read(void *reader);
+static inline bool
+Writer_Write(const Writer *writer, unsigned char byte) {
+  return writer->Write(writer->self, byte);
+}
+
+static inline bool
+Writer_SeekTo(const Writer *writer, int position) {
+  return writer->SeekTo(writer->self, position);
+}
+
+typedef struct DataSource {
+  Reader reader;
+  Writer writer;
+} DataSource;
 
 static inline Reader*
-DataReader_AsReader(DataReader *reader) {
-  return &reader->base;
+DataSource_AsReader(DataSource *source) {
+  return &source->reader;
 }
+
+static inline Writer*
+DataSource_AsWriter(DataSource *source) {
+  return &source->writer;
+}
+
+int
+DataSource_CopyFrom(
+    DataSource *dst,
+    DataSource *src);
+
+typedef struct Buffer {
+  unsigned char *data;
+  int length, position;
+  DataSource source;
+} Buffer;
+
+#define Buffer_CreateNew(bytes...) ((Buffer) { \
+  .data = (unsigned char[]) { bytes }, \
+  .length = sizeof((unsigned char[]) { bytes }) \
+})
+
+DataSource*
+Buffer_From(
+    Buffer *buffer,
+    void *data,
+    int length);
+
+DataSource*
+Buffer_AsDataSource(Buffer *buffer);
 
 #ifdef NOGBA
 #include <stdio.h>
 
-typedef struct FileReader {
+typedef struct File {
   FILE *fp;
-  Reader base;
-} FileReader;
+  DataSource source;
+} File;
 
-bool
-FileReader_Open(
-    FileReader *stream,
+DataSource*
+File_Open(
+    File *file,
     const char *path,
     const char *modes);
 
-bool
-FileReader_From(
-    FileReader *stream,
+DataSource*
+File_From(
+    File *file,
     FILE *fp);
-
-int
-FileReader_Read(void *reader);
-
-static inline Reader*
-FileReader_AsReader(FileReader *reader) {
-  return &reader->base;
-}
 
 #endif
 #endif

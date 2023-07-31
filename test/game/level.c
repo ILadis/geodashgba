@@ -2,18 +2,57 @@
 #include <game/level.h>
 #include "../test.h"
 
+test(From_ShouldInitializeAsciiLevelAsExpected) {
+  // arrange
+  Buffer buffer = Buffer_CreateNew(
+    "       \n"
+    "       \n"
+    "       \n"
+  );
+
+  AsciiLevel ascii;
+  DataSource *source = Buffer_AsDataSource(&buffer);
+
+  // act
+  Level *level = AsciiLevel_From(&ascii, source);
+
+  // assert
+  assert(level->self == &ascii);
+  assert(ascii.source == source);
+  assert(ascii.size.x == 7);
+  assert(ascii.size.y == 3);
+  assert(ascii.limit == 0);
+}
+
+test(From_ShouldInitializeBinv1LevelAsExpected) {
+  // arrange
+  unsigned char data[] = { 0x00, 0x00, 0x00 };
+
+  Binv1Level binv1;
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+
+  // act
+  Level *level = Binv1Level_From(&binv1, source);
+
+  // assert
+  assert(level->self == &binv1);
+  assert(binv1.size == 3);
+}
+
 test(GetName_ShouldReturnExpectedLevelName) {
   // arrange
-  Level level = Level_FromLayout(
-    "{a:Author}   ",
-    "{n:Test}     ",
-    "{d:5}        ",
-    "             ",
-  );
+  unsigned char data[] =
+    "{a:Author}   \n"
+    "{n:Test}     \n"
+    "{d:5}        \n"
+    "             \n";
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   // act
   char name[5] = {0};
-  Level_GetName(&level, name);
+  Level_GetName(level, name);
 
   // assert
   assert(name[0] == 'T');
@@ -25,12 +64,16 @@ test(GetName_ShouldReturnExpectedLevelName) {
 
 test(GetName_ShouldReturnSetName) {
   // arrange
-  Level level = Level_AllocateNew(1024);
-  Level_SetName(&level, "Test");
+  unsigned char data[1024] = {0};
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = Binv1Level_From(&(Binv1Level) {0}, source);
+
+  Level_SetName(level, "Test");
 
   // act
   char name[5] = {0};
-  Level_GetName(&level, name);
+  Level_GetName(level, name);
 
   // assert
   assert(name[0] == 'T');
@@ -42,16 +85,20 @@ test(GetName_ShouldReturnSetName) {
 
 test(GetChunkCount_ShouldReturnExpectedChunkCount) {
   // arrange
-  Level level1 = Level_FromLayout(
-    "                              ",
-    "                              ",
-  );
+  unsigned char data2[] = { 0x00, 0x00, 0x00 };
+  unsigned char data1[] =
+    "                              \n"
+    "                              \n";
 
-  Level level2 = Level_FromData(0x00, 0x00, 0x00);
+  DataSource *source1 = Buffer_From(&(Buffer) {0}, data1, length(data1));
+  Level *level1 = AsciiLevel_From(&(AsciiLevel) {0}, source1);
+
+  DataSource *source2 = Buffer_From(&(Buffer) {0}, data2, length(data2));
+  Level *level2 = Binv1Level_From(&(Binv1Level) {0}, source2);
 
   // act
-  int count1 = Level_GetChunkCount(&level1);
-  int count2 = Level_GetChunkCount(&level2);
+  int count1 = Level_GetChunkCount(level1);
+  int count2 = Level_GetChunkCount(level2);
 
   // assert
   assert(count1 == 2);
@@ -60,19 +107,20 @@ test(GetChunkCount_ShouldReturnExpectedChunkCount) {
 
 test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   // arrange
-  const int offset = 432;
+  int offset = 432;
+  unsigned char data[] =
+    "       \n"
+    "       \n"
+    "  ...  \n";
 
-  Level level = Level_FromLayout(
-    "       ",
-    "       ",
-    "  ...  ",
-  );
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 1);
@@ -83,19 +131,20 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
   // arrange
-  const int offset = 432;
+  int offset = 432;
+  unsigned char data[] =
+    "               \n"
+    "              @\n"
+    "            ,,,\n";
 
-  Level level = Level_FromLayout(
-    "               ",
-    "              @",
-    "            ,,,",
-  );
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 4);
@@ -115,19 +164,20 @@ test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
   // arrange
-  const int offset = 432;
+  int offset = 432;
+  unsigned char data[] =
+    "   i   \n"
+    "   x   \n"
+    "   x   \n";
 
-  Level level = Level_FromLayout(
-    "   i   ",
-    "   x   ",
-    "   x   ",
-  );
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 1);
@@ -138,19 +188,20 @@ test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
 
 test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
   // arrange
-  const int offset = 432;
+  int offset = 432;
+  unsigned char data[] =
+    "x     x\n"
+    "   x   \n"
+    "x     x\n";
 
-  Level level = Level_FromLayout(
-    "x     x",
-    "   x   ",
-    "x     x",
-  );
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 5);
@@ -173,26 +224,27 @@ test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
   // arrange
-  const int offset = 320;
+  int offset = 320;
+  unsigned char data[] =
+    "               \n"
+    "       ^^^^    \n"
+    "^      xxxx    \n"
+    "xxxx          x\n"
+    "xxxxxxxxxxxxxxx\n"
+    "xxxxxxxxxxxxxxx\n"
+    "xxxxxxxxxxxxxxx\n"
+    "xxxxxxxxxxxxxxx\n"
+    "xxxxxxxxxxxxxxx\n"
+    "xxxxxxxxxxxxxxx\n";
 
-  Level level = Level_FromLayout(
-    "               ",
-    "       ^^^^    ",
-    "^      xxxx    ",
-    "xxxx          x",
-    "xxxxxxxxxxxxxxx",
-    "xxxxxxxxxxxxxxx",
-    "xxxxxxxxxxxxxxx",
-    "xxxxxxxxxxxxxxx",
-    "xxxxxxxxxxxxxxx",
-    "xxxxxxxxxxxxxxx",
-  );
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0),
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 9);
@@ -216,12 +268,14 @@ test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
 
 test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
   // arrange
-  Level level1 = Level_FromLayout(
-    "           ",
-    "         ^ ",
-  );
+  unsigned char data1[] =
+    "           \n"
+    "         ^ \n";
 
-  Level level2 = Level_FromData(
+  DataSource *source1 = Buffer_From(&(Buffer) {0}, data1, length(data1));
+  Level *level1 = AsciiLevel_From(&(AsciiLevel) {0}, source1);
+
+  unsigned char data2[] = {
     // meta data
     0x00,
     // chunk data
@@ -232,15 +286,18 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
     0x90, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
     0xa0, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  );
+  };
+
+  DataSource *source2 = Buffer_From(&(Buffer) {0}, data2, length(data2));
+  Level *level2 = Binv1Level_From(&(Binv1Level) {0}, source2);
 
   Chunk chunk1 = {0}, chunk2 = {0};
   Chunk_AssignIndex(&chunk1, 0);
   Chunk_AssignIndex(&chunk2, 0);
 
   // act
-  Level_GetChunk(&level1, &chunk1);
-  Level_GetChunk(&level2, &chunk2);
+  Level_GetChunk(level1, &chunk1);
+  Level_GetChunk(level2, &chunk2);
 
   // assert
   assert(chunk1.count == chunk2.count);
@@ -257,15 +314,17 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
 
 test(GetChunk_ShouldReturnAddedObjects) {
   // arrange
-  const int offset = 432;
+  char data2[1024] = {0};
+  char data1[] =
+    "i      ~  <xxx\n"
+    "x      -      \n"
+    "x^^ ..._  <xxx\n";
 
-  Level level1 = Level_FromLayout(
-    "i      ~  <xxx",
-    "x      -      ",
-    "x^^ ..._  <xxx",
-  );
+  DataSource *source1 = Buffer_From(&(Buffer) {0}, data1, length(data1));
+  Level *level1 = AsciiLevel_From(&(AsciiLevel) {0}, source1);
 
-  Level level2 = Level_AllocateNew(1024);
+  DataSource *source2 = Buffer_From(&(Buffer) {0}, data2, length(data2));
+  Level *level2 = Binv1Level_From(&(Binv1Level) {0}, source2);
 
   Chunk chunk1 = {0};
   Chunk_AssignIndex(&chunk1, 0);
@@ -274,9 +333,9 @@ test(GetChunk_ShouldReturnAddedObjects) {
   Chunk_AssignIndex(&chunk2, 0);
 
   // act
-  Level_GetChunk(&level1, &chunk1);
-  Level_AddChunk(&level2, &chunk1);
-  Level_GetChunk(&level2, &chunk2);
+  Level_GetChunk(level1, &chunk1);
+  Level_AddChunk(level2, &chunk1);
+  Level_GetChunk(level2, &chunk2);
 
   // assert
   assert(chunk1.count == chunk2.count);
@@ -292,19 +351,21 @@ test(GetChunk_ShouldReturnAddedObjects) {
 
 test(GetChunk_ShouldNotReturnObjectsFromMetaDataSection) {
   // arrange
-  Level level = Level_FromLayout(
-    "{a:^^   :}   ",
-    "{n:xx i x}   ",
-    "{d:   x  }   ",
-    "             ",
-    "             ",
-  );
+  unsigned char data[] =
+    "{a:^^   :}   \n"
+    "{n:xx i x}   \n"
+    "{d:   x  }   \n"
+    "             \n"
+    "             \n";
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
 
   Chunk chunk = {0};
   Chunk_AssignIndex(&chunk, 0);
 
   // act
-  Level_GetChunk(&level, &chunk);
+  Level_GetChunk(level, &chunk);
 
   // assert
   assert(chunk.count == 0);
@@ -312,12 +373,17 @@ test(GetChunk_ShouldNotReturnObjectsFromMetaDataSection) {
 
 test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   // arrange
-  Level binv1 = Level_AllocateNew(512);
-  Level ascii = Level_FromLayout(
-    "{n:Test} ",
-    "         ",
-    "  x x x  ",
-  );
+  unsigned char data2[512] = {0};
+  unsigned char data1[] =
+    "{n:Test} \n"
+    "         \n"
+    "  x x x  \n";
+
+  DataSource *source1 = Buffer_From(&(Buffer) {0}, data1, length(data1));
+  Level *ascii = AsciiLevel_From(&(AsciiLevel) {0}, source1);
+
+  DataSource *source2 = Buffer_From(&(Buffer) {0}, data2, length(data2));
+  Level *binv1 = Binv1Level_From(&(Binv1Level) {0}, source2);
 
   char name[5] = {0};
 
@@ -325,9 +391,9 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   Chunk_AssignIndex(&chunk, 0);
 
   // act
-  int chunks = Level_Convert(&ascii, &binv1);
-  Level_GetName(&binv1, name);
-  Level_GetChunk(&binv1, &chunk);
+  int chunks = Level_Convert(ascii, binv1);
+  Level_GetName(binv1, name);
+  Level_GetChunk(binv1, &chunk);
 
   // assert
   assert(chunks == 1);
@@ -340,6 +406,8 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
 }
 
 suite(
+  From_ShouldInitializeAsciiLevelAsExpected,
+  From_ShouldInitializeBinv1LevelAsExpected,
   GetName_ShouldReturnExpectedLevelName,
   GetName_ShouldReturnSetName,
   GetChunkCount_ShouldReturnExpectedChunkCount,

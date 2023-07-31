@@ -1,9 +1,63 @@
 
 #include <game/level.h>
 
+static inline void
+AsciiLevel_DetermineSize(AsciiLevel *level) {
+  Reader *reader = DataSource_AsReader(level->source);
+
+  int x = 0, y = 0, i = 0;
+  do {
+    int byte = Reader_Read(reader);
+    if (byte < 0) {
+      break;
+    }
+
+    else if (byte == '\n') {
+      x = i > x ? i : x;
+      i = 0;
+      y++;
+    }
+
+    else if (byte >= 0x20 && byte <= 0x7E) {
+      i++;
+    }
+  } while (true);
+
+  level->size.x = x;
+  level->size.y = y;
+  Reader_SeekTo(reader, 0);
+}
+
+Level*
+AsciiLevel_From(
+    AsciiLevel *level,
+    DataSource *source)
+{
+  level->source = source;
+  level->base.self = level;
+  level->chunk = NULL;
+  level->limit = 0;
+
+  void AsciiLevel_GetName(void *self, char *name);
+  void AsciiLevel_SetName(void *self, char *name);
+  int  AsciiLevel_GetChunkCount(void *self);
+  bool AsciiLevel_GetChunk(void *self, Chunk *chunk);
+  bool AsciiLevel_AddChunk(void *self, Chunk *chunk);
+
+  level->base.GetName = AsciiLevel_GetName;
+  level->base.SetName = AsciiLevel_SetName;
+  level->base.GetChunkCount = AsciiLevel_GetChunkCount;
+  level->base.GetChunk = AsciiLevel_GetChunk;
+  level->base.AddChunk = AsciiLevel_AddChunk;
+
+  AsciiLevel_DetermineSize(level);
+
+  return &level->base;
+}
+
 static bool
 AsciiLevel_GetSymbolAt(
-    Level *level,
+    AsciiLevel *level,
     int x, int y,
     char *symbol)
 {
@@ -14,10 +68,20 @@ AsciiLevel_GetSymbolAt(
     return false;
   }
 
-  const char *buffer = level->buffer.read;
-  int index = y * size->x + x;
+  int index = y + y * size->x + x;
 
-  const char c = *symbol = buffer[index];
+  Reader *reader = DataSource_AsReader(level->source);
+  if (!Reader_SeekTo(reader, index)) {
+    return false;
+  }
+
+  int byte = Reader_Read(reader);
+  if (byte < 0) {
+    return false;
+  }
+
+
+  const char c = *symbol = byte;
   if (c == '\0' || c == '\n') {
     return false;
   }
@@ -31,7 +95,7 @@ AsciiLevel_GetSymbolAt(
 }
 
 static inline char
-AsciiLevel_GetCurrentSymbol(Level *level) {
+AsciiLevel_GetCurrentSymbol(AsciiLevel *level) {
   Vector *cursor = &level->cursor;
 
   char symbol;
@@ -41,7 +105,7 @@ AsciiLevel_GetCurrentSymbol(Level *level) {
 }
 
 static Vector
-AsciiLevel_GetCursorPosition(Level *level) {
+AsciiLevel_GetCursorPosition(AsciiLevel *level) {
   Vector *cursor = &level->cursor;
   const Vector *size = &level->size;
 
@@ -61,7 +125,7 @@ AsciiLevel_GetCursorPosition(Level *level) {
 }
 
 static bool
-AsciiLevel_IsCursorOccupied(Level *level) {
+AsciiLevel_IsCursorOccupied(AsciiLevel *level) {
   Chunk *chunk = level->chunk;
   if (chunk == NULL) {
     return false;
@@ -80,12 +144,12 @@ AsciiLevel_IsCursorOccupied(Level *level) {
 
 static bool
 AsciiLevel_NextSymbol(
-    Level *level,
+    AsciiLevel *level,
     Direction direction,
     char *symbol);
 
 static bool
-AsciiLevel_IsCursorInMetaDataSection(Level *level) {
+AsciiLevel_IsCursorInMetaDataSection(AsciiLevel *level) {
   Vector cursor = level->cursor;
 
   char symbol;
@@ -105,7 +169,7 @@ AsciiLevel_IsCursorInMetaDataSection(Level *level) {
 
 static bool
 AsciiLevel_NextSymbol(
-    Level *level,
+    AsciiLevel *level,
     Direction direction,
     char *symbol)
 {
@@ -121,7 +185,7 @@ AsciiLevel_NextSymbol(
 
 static int
 AsciiLevel_CountConsecutiveSymbols(
-    Level *level,
+    AsciiLevel *level,
     Direction directon,
     char symbol)
 {
@@ -145,7 +209,7 @@ AsciiLevel_CountConsecutiveSymbols(
 
 static void
 AsciiLevel_CountWidthAndHeightOfSymbols(
-    Level *level,
+    AsciiLevel *level,
     int *width, int *height,
     char symbol)
 {
@@ -183,7 +247,7 @@ AsciiLevel_CountWidthAndHeightOfSymbols(
 
 static inline void
 AsciiLevel_AddObjectToChunk(
-    Level *level,
+    AsciiLevel *level,
     Object *template)
 {
   Vector position = AsciiLevel_GetCursorPosition(level);
@@ -204,7 +268,7 @@ AsciiLevel_AddObjectToChunk(
 
 static void
 AsciiLevel_AddObject(
-    Level *level,
+    AsciiLevel *level,
     Vector offset,
     bool (*construct)(Object *object))
 {
@@ -216,7 +280,7 @@ AsciiLevel_AddObject(
 }
 
 static void
-AsciiLevel_AddBoxWithPole(Level *level) {
+AsciiLevel_AddBoxWithPole(AsciiLevel *level) {
   Object object = {0};
   Vector offset = Vector_Of(0, -1);
 
@@ -229,7 +293,7 @@ AsciiLevel_AddBoxWithPole(Level *level) {
 }
 
 static void
-AsciiLevel_AddBoxWithChains(Level *level) {
+AsciiLevel_AddBoxWithChains(AsciiLevel *level) {
   Object object = {0};
   Vector offset = Vector_Of(0, -1);
 
@@ -254,7 +318,7 @@ AsciiLevel_AddBoxWithChains(Level *level) {
 }
 
 static void
-AsciiLevel_AddGridBox(Level *level) {
+AsciiLevel_AddGridBox(AsciiLevel *level) {
   int width = 1, height = 1;
   AsciiLevel_CountWidthAndHeightOfSymbols(level, &width, &height, '\0');
 
@@ -265,7 +329,7 @@ AsciiLevel_AddGridBox(Level *level) {
 }
 
 static void
-AsciiLevel_AddRegularBox(Level *level) {
+AsciiLevel_AddRegularBox(AsciiLevel *level) {
   int width = 1, height = 1;
   AsciiLevel_CountWidthAndHeightOfSymbols(level, &width, &height, '\0');
 
@@ -277,7 +341,7 @@ AsciiLevel_AddRegularBox(Level *level) {
 
 static void
 AsciiLevel_AddPit(
-    Level *level,
+    AsciiLevel *level,
     bool hanging)
 {
   Object object = {0};
@@ -292,7 +356,7 @@ AsciiLevel_AddPit(
 }
 
 static void
-AsciiLevel_AddDisk(Level *level) {
+AsciiLevel_AddDisk(AsciiLevel *level) {
   int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
 
   Object object = {0};
@@ -303,7 +367,7 @@ AsciiLevel_AddDisk(Level *level) {
 
 static void
 AsciiLevel_AddOffsetDisk(
-    Level *level,
+    AsciiLevel *level,
     Direction direction)
 {
   int width = AsciiLevel_CountConsecutiveSymbols(level, DIRECTION_RIGHT, '\0') + 1;
@@ -316,7 +380,7 @@ AsciiLevel_AddOffsetDisk(
 
 static void
 AsciiLevel_AddSpike(
-    Level *level,
+    AsciiLevel *level,
     Direction direction)
 {
   Object object = {0};
@@ -326,7 +390,7 @@ AsciiLevel_AddSpike(
 }
 
 static void
-AsciiLevel_AddCoin(Level *level) {
+AsciiLevel_AddCoin(AsciiLevel *level) {
   Object object = {0};
   Vector cursor = level->cursor;
 
@@ -344,7 +408,7 @@ AsciiLevel_AddCoin(Level *level) {
 }
 
 static void
-AsciiLevel_AddGoalWall(Level *level) {
+AsciiLevel_AddGoalWall(AsciiLevel *level) {
   Object object = {0};
   Vector offset = Vector_Of(+1, 0);
 
@@ -358,7 +422,7 @@ AsciiLevel_AddGoalWall(Level *level) {
 
 static int
 AsciiLevel_GetMetaData(
-    Level *level,
+    AsciiLevel *level,
     char key)
 {
   int y = 0, x = 0;
@@ -391,25 +455,27 @@ AsciiLevel_GetMetaData(
 
 void
 AsciiLevel_GetName(
-    Level *level,
+    void *self,
     char *name)
 {
+  AsciiLevel *level = self;
+
   int length = AsciiLevel_GetMetaData(level, 'n');
   while (length-- > 0) {
     AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, name++);
   }
-
   *name = '\0';
 }
 
 int
-AsciiLevel_GetChunkCount(Level *level) {
-  int count = 0;
+AsciiLevel_GetChunkCount(void *self) {
+  AsciiLevel *level = self;
   Chunk chunk = {0};
 
   level->limit = 0;
   level->chunk = NULL;
 
+  int count = 0;
   do {
     Chunk_AssignIndex(&chunk, count);
 
@@ -428,9 +494,11 @@ AsciiLevel_GetChunkCount(Level *level) {
 
 bool
 AsciiLevel_GetChunk(
-    Level *level,
+    void *self,
     Chunk *chunk)
 {
+  AsciiLevel *level = self;
+
   const Bounds *bounds = Chunk_GetBounds(chunk);
   Vector lower = Bounds_Lower(bounds);
   Vector upper = Bounds_Upper(bounds);
@@ -528,7 +596,7 @@ AsciiLevel_GetChunk(
 
 void
 AsciiLevel_SetName(
-    Level *level,
+    void *self,
     char *name)
 {
   // not implemented
@@ -536,7 +604,7 @@ AsciiLevel_SetName(
 
 bool
 AsciiLevel_AddChunk(
-    Level *level,
+    void *self,
     Chunk *chunk)
 {
   // not implemented

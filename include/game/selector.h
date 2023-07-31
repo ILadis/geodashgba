@@ -7,6 +7,7 @@
 #include <animation.h>
 
 #include <game/level.h>
+#include <game/collection.h>
 
 typedef struct Selector {
   LevelId id;
@@ -37,7 +38,9 @@ Selector_GetLevelId(Selector *selector) {
 
 static inline Level*
 Selector_GetLevel(Selector *selector) {
-  return Level_GetById(selector->id);
+  const Collection *collection = Collection_GetInstance();
+  Binv1Level *level = Collection_GetLevelByIndex(collection, selector->id);
+  return &level->base;
 }
 
 void

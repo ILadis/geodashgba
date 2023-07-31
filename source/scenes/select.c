@@ -9,6 +9,7 @@
 #include <game/camera.h>
 #include <game/course.h>
 #include <game/level.h>
+#include <game/collection.h>
 #include <game/progress.h>
 #include <game/selector.h>
 #include <game/records.h>
@@ -37,9 +38,11 @@ Scene_DoEnter() {
   Selector *selector = Selector_GetInstance();
   Selector_SetVisible(selector, true);
 
-  Level *level = Level_GetById(LEVEL_EMPTY);
+  const Collection *collection = Collection_GetInstance();
+  Binv1Level *level = Collection_GetLevelByIndex(collection, 0);
+
   Course *course = Course_GetInstance();
-  Course_ResetAndLoad(course, level);
+  Course_ResetAndLoad(course, &level->base);
 
   Progress *progress = Progress_GetInstance();
   Progress_SetMode(progress, MODE_SELECT);

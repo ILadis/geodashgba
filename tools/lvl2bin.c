@@ -1,53 +1,52 @@
 
-#include <game/level.h>
-#include <stdio.h>
-#include <ctype.h>
+#define NOGBA
 
-static char buffer[1024 * 1024 * 5] = {0};
+#include <game/level.h>
+#include <log.h>
+
+static char data[1024 * 1024 * 5] = {0};
 
 int main(int argc, char **argv) {
-  FILE *in = stdin, *out = stdout, *log = stderr;
+  Logger *log = Logger_GetInstance();
 
-  // TODO move to Level_ReadFrom
-  int x = 0, y = 0;
-  for (int i = 0; i < sizeof(buffer);) {
-    int byte = fgetc(in);
-
-    if (byte == EOF) {
-      break;
-    }
-
-    else if (byte == '\n') {
-      x = x > 0 ? x : i;
-      y++;
-    }
-
-    else if (isprint(byte)) {
-      buffer[i++] = (char) byte;
-    }
+  if(argc != 2) {
+    Logger_PrintLine(log, "Invalid number of arguments given.\n");
+    return 1;
   }
 
-  Level binv1 = Level_AllocateNew(30720);
-  Level ascii = {
-    .format = FORMAT_ASCII,
-    .buffer = buffer,
-    .size = { x, y }
-  };
+  Buffer buffer;
 
-  int cunks = Level_Convert(&ascii, &binv1);
-  if (cunks < 0) {
-    fprintf(log, "Could not add chunk to level, size exceeded?\n");
+  DataSource *source = File_Open(&(File) {0}, argv[1], "rb+");
+  DataSource *target = Buffer_From(&buffer, data, length(data));
+
+  if (source == NULL) {
+    Logger_PrintLine(log, "Could not open level file.");
+    return 1;
+  }
+
+  Level *ascii = AsciiLevel_From(&(AsciiLevel) {0}, source);
+  Level *binv1 = Binv1Level_From(&(Binv1Level) {0}, target);
+
+  int chunks = Level_Convert(ascii, binv1);
+  int length = buffer.position;
+
+  if (chunks < 0) {
+    Logger_PrintLine(log, "Could not add chunk to level, size exceeded?");
   } else {
-    fprintf(log, "Wrote %d chunk(s)\n", cunks);
+    Logger_Print(log, "Wrote 0x");
+    Logger_PrintHex16(log, chunks);
+    Logger_Print(log, " chunk(s) with length 0x");
+    Logger_PrintHex16(log, length);
+    Logger_PrintNewline(log);
   }
 
-  // TODO move to Level_WriteTo
-  int length = binv1.cursor.x;
-  const unsigned char *buffer = binv1.buffer.read;
-  for (int i = 0; i < length; i++) {
-    fputc(buffer[i], out);
-  }
+  DataSource *output = File_From(&(File) {0}, stdout);
+  Reader *reader = DataSource_AsReader(target);
+  Writer *writer = DataSource_AsWriter(output);
 
-  fclose(in);
-  fclose(out);
+  Reader_SeekTo(reader, 0);
+  while (length-- > 0) {
+    int byte = Reader_Read(reader);
+    Writer_Write(writer, byte);
+  }
 }

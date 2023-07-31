@@ -10,10 +10,23 @@ Logger_NoopLog(const char* message) { return; }
 extern bool mGBA_DebugEnable();
 extern void mGBA_DebugLog(const char* message);
 
+#ifdef NOGBA
+#include <stdio.h>
+
+static void
+LibC_DebugLog(const char* message) {
+  fprintf(stderr, "%s", message);
+}
+
+static Logger interfaces[] = {
+  { Logger_NoopEnable, LibC_DebugLog },
+};
+#else
 static Logger interfaces[] = {
   { mGBA_DebugEnable, mGBA_DebugLog },
   { Logger_NoopEnable, Logger_NoopLog },
 };
+#endif
 
 Logger*
 Logger_GetInstance() {

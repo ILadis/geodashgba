@@ -2,86 +2,76 @@
 #define LEVEL_H
 
 #include <gba.h>
+#include <io.h>
 #include <vector.h>
 
 #include <game/chunk.h>
 #include <game/object.h>
 
-typedef enum LevelId {
-  LEVEL_EMPTY,
-  LEVEL_STEREO_MADNESS,
-  LEVEL_BACK_ON_TRACK,
-  LEVEL_POLARGEIST,
-  LEVEL_DRY_OUT,
-  LEVEL_COUNT,
-} LevelId;
+typedef int LevelId;
 
 typedef struct Level {
-  const enum Format {
-    FORMAT_ASCII,
-    FORMAT_BINV1,
-  } format;
-  union {
-    const void *read;
-    void *write;
-  } buffer;
-  Vector size, cursor;
-  Chunk *chunk;
-  int limit;
+  void *self;
+  void (*GetName)(void *self, char *name);
+  void (*SetName)(void *self, char *name);
+  int  (*GetChunkCount)(void *self);
+  bool (*GetChunk)(void *self, Chunk *chunk);
+  bool (*AddChunk)(void *self, Chunk *chunk);
 } Level;
 
-#define Level_ToLayout(line, lines...) ((const char[][sizeof(line)]) { line, ##lines })
-#define Level_FromLayout(line, lines...) ((Level) { \
-  .format = FORMAT_ASCII, \
-  .buffer = { (void *) Level_ToLayout(line, ##lines) }, \
-  .size = { \
-    .x = sizeof(line), \
-    .y = length(Level_ToLayout(line, ##lines)), \
-  } \
-})
+static inline void
+Level_GetName(Level *level, char *name) {
+  level->GetName(level->self, name);
+}
 
-#define Level_ToBinv1(byte, bytes...) ((const unsigned char[]) { byte, ##bytes })
-#define Level_FromData(byte, bytes...) ((Level) { \
-  .format = FORMAT_BINV1, \
-  .buffer = { (void *) Level_ToBinv1(byte, ##bytes) }, \
-  .size = { length(Level_ToBinv1(byte, ##bytes)) } \
-})
+static inline void
+Level_SetName(Level *level, char *name) {
+  level->SetName(level->self, name);
+}
 
-#define Level_AllocateNew(length) ((Level) { \
-  .format = FORMAT_BINV1, \
-  .buffer = { (void *) ((unsigned char[length]) {0}) }, \
-  .size = { length } \
-})
+static inline int
+Level_GetChunkCount(Level *level) {
+  return level->GetChunkCount(level->self);
+}
 
-Level*
-Level_GetById(LevelId id);
+static inline bool
+Level_GetChunk(Level *level, Chunk *chunk) {
+  return level->GetChunk(level->self, chunk);
+}
 
-void
-Level_GetName(
-    Level *level,
-    char *name);
-
-void
-Level_SetName(
-    Level *level,
-    char *name);
-
-int
-Level_GetChunkCount(Level *level);
-
-bool
-Level_GetChunk(
-    Level *level,
-    Chunk *chunk);
-
-bool
-Level_AddChunk(
-    Level *level,
-    Chunk *chunk);
+static inline bool
+Level_AddChunk(Level *level, Chunk *chunk) {
+  return level->AddChunk(level->self, chunk);
+}
 
 int
 Level_Convert(
     Level *from,
     Level *to);
+
+typedef struct AsciiLevel {
+  DataSource *source;
+  Chunk *chunk;
+  Vector size, cursor;
+  int limit;
+  struct Level base;
+} AsciiLevel;
+
+Level*
+AsciiLevel_From(
+    AsciiLevel *level,
+    DataSource *source);
+
+typedef struct Binv1Level {
+  DataSource *source;
+  Chunk *chunk;
+  int size;
+  struct Level base;
+} Binv1Level;
+
+Level*
+Binv1Level_From(
+    Binv1Level *level,
+    DataSource *source);
 
 #endif

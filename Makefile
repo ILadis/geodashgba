@@ -62,7 +62,7 @@ tools:
 	@gcc tools/ppm2font.c -o tools/ppm2font
 	@gcc tools/tmx2tiles.c -o tools/tmx2tiles
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
-	@gcc tools/lvl2inc.c $(CFILES) -o tools/lvl2inc -I. -Iinclude -DNOGBA
+	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -I. -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles

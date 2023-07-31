@@ -1,7 +1,12 @@
 
 #include <game/collection.h>
 
-const Collection *collection = Collection_DefineNew(300 * 1024);
+static const Collection *collection = Collection_DefineNew(const, 300 * 1024);
+
+const Collection*
+Collection_GetInstance() {
+  return collection;
+}
 
 int
 Collection_GetLevelCount(const Collection *collection) {
@@ -22,12 +27,13 @@ Collection_GetWriteBuffer(Collection *collection) {
   return &buffer[header];
 }
 
-Level*
+Binv1Level*
 Collection_GetLevelByIndex(
     const Collection *collection,
     int index)
 {
-  static Level level = { .format = FORMAT_BINV1 };
+  static Buffer buffer;
+  static Binv1Level level;
 
   if (index < collection->count && index >= 0) {
     int length = collection->allocations[index];
@@ -37,10 +43,11 @@ Collection_GetLevelByIndex(
       offset += collection->allocations[i];
     }
 
-    const unsigned char *buffer = Collection_GetReadBuffer(collection);
+    // FIXME this is const (Buffer_Wrap requires non const)
+    /*const*/ unsigned char *data = (unsigned char *) Collection_GetReadBuffer(collection);
 
-    level.size.x = length;
-    level.buffer.read = &buffer[offset];
+    DataSource *source = Buffer_From(&buffer, &data[offset], length);
+    Binv1Level_From(&level, source);
 
     return &level;
   }
@@ -64,13 +71,8 @@ Collection_CanAllocate(
 bool
 Collection_AddLevel(
     Collection *collection,
-    const Level *level)
+    const Binv1Level *level)
 {
-  // only binary levels can be added
-  if (level->format != FORMAT_BINV1) {
-    return false;
-  }
-
   int index = collection->count;
   if (index >= length(collection->allocations)) {
     return false;
@@ -81,16 +83,28 @@ Collection_AddLevel(
     offset += collection->allocations[i];
   }
 
-  int length = level->size.x;
+  int length = level->size;
   if (!Collection_CanAllocate(collection, offset, length)) {
     return false;
   }
 
-  unsigned char *buffer = Collection_GetWriteBuffer(collection);
-  const unsigned char *data = level->buffer.read;
+  unsigned char *data = Collection_GetWriteBuffer(collection);
+
+  DataSource *target = Buffer_From(&(Buffer) {0}, &data[offset], length);
+  Writer *writer = DataSource_AsWriter(target);
+
+  DataSource *source = level->source;
+  Reader *reader = DataSource_AsReader(source);
 
   for (int i = 0; i < length; i++) {
-    buffer[offset + i] = data[i];
+    int byte = Reader_Read(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    if (!Writer_Write(writer, byte)) {
+      return false;
+    }
   }
 
   collection->allocations[index] = length;
@@ -107,7 +121,7 @@ Collection_FindSignature(const Reader *reader) {
   int index = 0;
 
   do {
-    int byte = Reader_ReadNext(reader);
+    int byte = Reader_Read(reader);
     if (byte < 0) {
       return false;
     }
@@ -138,7 +152,7 @@ Collection_ReadFrom(
   const int length = collection->length;
 
   while (index < header) {
-    int byte = Reader_ReadNext(reader);
+    int byte = Reader_Read(reader);
     if (byte < 0) {
       return false;
     }
@@ -152,13 +166,31 @@ Collection_ReadFrom(
 
   const int limit = collection->length;
   do {
-    int byte = Reader_ReadNext(reader);
+    int byte = Reader_Read(reader);
     if (byte < 0) {
       return false;
     }
 
     buffer[index++] = byte;
   } while (index != limit);
+
+  return true;
+}
+
+bool
+Collection_WriteTo(
+    const Collection *collection,
+    const Writer *writer)
+{
+  const unsigned char *buffer = (const unsigned char *) collection;
+  const int length = collection->length;
+
+  int index = sizeof(collection->signature);
+  while (index < length) {
+    if (!Writer_Write(writer, buffer[index++])) {
+      return false;
+    }
+  }
 
   return true;
 }

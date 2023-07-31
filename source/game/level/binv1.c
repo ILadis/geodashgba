@@ -1,6 +1,45 @@
 
 #include <game/level.h>
 
+static inline void
+Binv1Level_DetermineSize(Binv1Level *level) {
+  Reader *reader = DataSource_AsReader(level->source);
+
+  int size = 0;
+  while (Reader_Read(reader) >= 0) {
+    size++;
+  }
+
+  level->size = size;
+  Reader_SeekTo(reader, 0);
+}
+
+Level*
+Binv1Level_From(
+    Binv1Level *level,
+    DataSource *source)
+{
+  level->source = source;
+  level->base.self = level;
+  level->chunk = NULL;
+
+  void Binv1Level_GetName(void *self, char *name);
+  void Binv1Level_SetName(void *self, char *name);
+  int  Binv1Level_GetChunkCount(void *self);
+  bool Binv1Level_GetChunk(void *self, Chunk *chunk);
+  bool Binv1Level_AddChunk(void *self, Chunk *chunk);
+
+  level->base.GetName = Binv1Level_GetName;
+  level->base.SetName = Binv1Level_SetName;
+  level->base.GetChunkCount = Binv1Level_GetChunkCount;
+  level->base.GetChunk = Binv1Level_GetChunk;
+  level->base.AddChunk = Binv1Level_AddChunk;
+
+  Binv1Level_DetermineSize(level);
+
+  return &level->base;
+}
+
 static inline bool
 Binv1Level_IsLittleEndian() {
   const short int value = 1;
@@ -9,43 +48,23 @@ Binv1Level_IsLittleEndian() {
   return *endian == 1;
 }
 
-static inline bool
-Binv1Level_AdvanceCursor(
-    Level *level,
-    int length)
-{
-  const int offset = level->cursor.x;
-  const int size = level->size.x;
-  const int limit = level->limit;
-
-  const int cursor = offset + length;
-  if (cursor > size || (limit && cursor > limit)) {
-    return false;
-  }
-
-  level->cursor.x = cursor;
-
-  return true;
-}
-
 static bool
 Binv1Level_ReadValue(
-    Level *level,
+    Binv1Level *level,
     void *value,
     int length)
 {
-  const int offset = level->cursor.x;
-
-  if (!Binv1Level_AdvanceCursor(level, length)) {
-    return false;
-  }
-
-  unsigned char *buffer = level->buffer.write;
+  Reader *reader = DataSource_AsReader(level->source);
   unsigned char *values = value;
 
   if (Binv1Level_IsLittleEndian()) {
     for (int i = 0; i < length; i++) {
-      values[i] = buffer[offset + i];
+      int byte = Reader_Read(reader);
+      if (byte < 0) {
+        return false;
+      }
+
+      values[i] = byte;
     }
   }
 
@@ -54,33 +73,29 @@ Binv1Level_ReadValue(
 }
 
 static inline bool
-Binv1Level_ReadInt8(Level *level, int *value) {
+Binv1Level_ReadInt8(Binv1Level *level, int *value) {
   return Binv1Level_ReadValue(level, value, 1);
 }
 
 static inline bool
-Binv1Level_ReadInt16(Level *level, int *value) {
+Binv1Level_ReadInt16(Binv1Level *level, int *value) {
   return Binv1Level_ReadValue(level, value, 2);
 }
 
 static bool
 Binv1Level_WriteValue(
-    Level *level,
+    Binv1Level *level,
     void *value,
     int length)
 {
-  const int offset = level->cursor.x;
-
-  if (!Binv1Level_AdvanceCursor(level, length)) {
-    return false;
-  }
-
-  unsigned char *buffer = level->buffer.write;
+  Writer *writer = DataSource_AsWriter(level->source);
   unsigned char *values = value;
 
   if (Binv1Level_IsLittleEndian()) {
     for (int i = 0; i < length; i++) {
-      buffer[offset + i] = values[i];
+      if (!Writer_Write(writer, values[i])) {
+        return false;
+      }
     }
   }
 
@@ -89,33 +104,31 @@ Binv1Level_WriteValue(
 }
 
 static inline bool
-Binv1Level_WriteInt8(Level *level, int value) {
+Binv1Level_WriteInt8(Binv1Level *level, int value) {
   return Binv1Level_WriteValue(level, &value, 1);
 }
 
 static inline bool
-Binv1Level_WriteInt16(Level *level, int value) {
+Binv1Level_WriteInt16(Binv1Level *level, int value) {
   return Binv1Level_WriteValue(level, &value, 2);
-}
-
-static inline void
-Binv1Level_ResetCursor(Level *level) {
-  level->chunk = NULL;
-  level->cursor.x = 0;
 }
 
 static bool
 Binv1Level_SetCursorTo(
-    Level *level,
+    Binv1Level *level,
     Chunk *chunk)
 {
   level->chunk = chunk;
-  level->cursor.x = 0;
+
+  Reader *reader = DataSource_AsReader(level->source);
+  Reader_SeekTo(reader, 0);
 
   // skip header
   int header = 0;
   Binv1Level_ReadInt8(level, &header);
-  Binv1Level_AdvanceCursor(level, header);
+
+  int offset = header + 1;
+  Reader_SeekTo(reader, offset);
 
   int index = chunk->index;
   while (index-- > 0) {
@@ -125,10 +138,10 @@ Binv1Level_SetCursorTo(
       return false;
     }
 
-    int offset = count * 55;
-    if (!Binv1Level_AdvanceCursor(level, offset)) {
-      // no more data to read
-      return false;
+    offset += count * 55 + 1;
+    if (!Reader_SeekTo(reader, offset)) {
+      // no more data to read (but maybe all data was consumed)
+      return index == 0 && level->size == offset;
     }
   }
 
@@ -137,15 +150,17 @@ Binv1Level_SetCursorTo(
 
 static int
 Binv1Level_GetMetaData(
-    Level *level,
+    Binv1Level *level,
     int key)
 {
-  Binv1Level_ResetCursor(level);
+  Reader *reader = DataSource_AsReader(level->source);
+  Reader_SeekTo(reader, 0);
 
   // TODO limit further reading to size of header
   int header = 0;
   Binv1Level_ReadInt8(level, &header);
 
+  int offset = 1;
   while (true) {
     int tag = 0;
     if (!Binv1Level_ReadInt8(level, &tag)) {
@@ -163,15 +178,21 @@ Binv1Level_GetMetaData(
       return length;
     }
 
-    Binv1Level_AdvanceCursor(level, length);
+    offset += 2 + length;
+    if (!Reader_SeekTo(reader, offset)) {
+      // no more data to read
+      return false;
+    }
   }
 }
 
 void
 Binv1Level_GetName(
-    Level *level,
+    void *self,
     char *name)
 {
+  Binv1Level *level = self;
+
   int length = Binv1Level_GetMetaData(level, 'n');
   while (length-- > 0) {
     Binv1Level_ReadInt8(level, (int*) name++);
@@ -180,10 +201,11 @@ Binv1Level_GetName(
 }
 
 int
-Binv1Level_GetChunkCount(Level *level) {
-  int index = 1;
+Binv1Level_GetChunkCount(void *self) {
+  Binv1Level *level = self;
   Chunk chunk = {0};
 
+  int index = 1;
   do {
     Chunk_AssignIndex(&chunk, index);
 
@@ -197,7 +219,7 @@ Binv1Level_GetChunkCount(Level *level) {
 
 static void
 Binv1Level_ReadObject(
-    Level *level,
+    Binv1Level *level,
     Object *object)
 {
   int type = 0;
@@ -226,9 +248,10 @@ Binv1Level_ReadObject(
 
 bool
 Binv1Level_GetChunk(
-    Level *level,
+    void *self,
     Chunk *chunk)
 {
+  Binv1Level *level = self;
   if (!Binv1Level_SetCursorTo(level, chunk)) {
     return false;
   }
@@ -250,18 +273,21 @@ Binv1Level_GetChunk(
 
 static void
 Binv1Level_WriteMetaData(
-    Level *level,
+    Binv1Level *level,
     int key,
     char *value)
 {
-  Binv1Level_ResetCursor(level);
-
   int length = 0;
   while (value[length] != '\0') length++;
 
+  Reader *reader = DataSource_AsReader(level->source);
+  Reader_SeekTo(reader, 0);
+
   int header = 0;
   Binv1Level_ReadInt8(level, &header);
-  Binv1Level_AdvanceCursor(level, header);
+
+  int offset = header + 1;
+  Reader_SeekTo(reader, offset);
 
   Binv1Level_WriteInt8(level, key);
   Binv1Level_WriteInt8(level, length);
@@ -272,21 +298,22 @@ Binv1Level_WriteMetaData(
 
   header += length + 2;
 
-  Binv1Level_ResetCursor(level);
+  Reader_SeekTo(reader, 0);
   Binv1Level_WriteInt8(level, header);
 }
 
 void
 Binv1Level_SetName(
-    Level *level,
+    void *self,
     char *name)
 {
+  Binv1Level *level = self;
   Binv1Level_WriteMetaData(level, 'n', name);
 }
 
 static void
 Binv1Level_WriteObject(
-    Level *level,
+    Binv1Level *level,
     Object *object)
 {
   Binv1Level_WriteInt8(level, object->type);
@@ -309,9 +336,10 @@ Binv1Level_WriteObject(
 
 bool
 Binv1Level_AddChunk(
-    Level *level,
+    void *self,
     Chunk *chunk)
 {
+  Binv1Level *level = self;
   if (!Binv1Level_SetCursorTo(level, chunk)) {
     return false;
   }
