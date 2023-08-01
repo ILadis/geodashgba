@@ -140,8 +140,8 @@ Binv1Level_SetCursorTo(
 
     offset += count * 55 + 1;
     if (!Reader_SeekTo(reader, offset)) {
-      // no more data to read (but maybe all data was consumed)
-      return index == 0 && level->size == offset;
+      // no more data to read
+      return false;
     }
   }
 

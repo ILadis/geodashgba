@@ -38,7 +38,7 @@ endif
 
 .PHONY : assets tools run build clean
 
-run: build
+run: clean build levels
 	@$(EMU) main.gba
 
 build: main.gba main.elf
@@ -53,7 +53,7 @@ purge: clean
 		tools/ppm2font  \
 		tools/tmx2tiles \
 		tools/lvl2bin   \
-		tools/lvl2inc
+		tools/lvl2rom
 
 tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
@@ -74,11 +74,11 @@ assets:
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/ppm2font 6x15 hud < graphics/font.ppm > assets/font.c
 	@tools/ppm2font 8x8 console < graphics/console.ppm > assets/console.c
-	@tools/lvl2inc > assets/levels.c
 
 levels: $(LEVELS)
-levels/%.bin: levels/%.txt
-	tools/lvl2bin < $< > $@
+levels/%.bin: levels/%.txt main.gba
+	tools/lvl2bin $< > $@
+	tools/lvl2rom main.gba < $@
 
 tests: $(TESTS)
 

@@ -9,6 +9,7 @@ AsciiLevel_DetermineSize(AsciiLevel *level) {
   do {
     int byte = Reader_Read(reader);
     if (byte < 0) {
+      y += i > 0 ? 1 : 0;
       break;
     }
 

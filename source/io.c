@@ -106,7 +106,8 @@ Buffer_SeekTo(
     int position)
 {
   Buffer *buffer = self;
-  if (position >= buffer->length) {
+  // allow seeking to end of buffer (where next read would return -1)
+  if (position > buffer->length) {
     return false;
   }
 

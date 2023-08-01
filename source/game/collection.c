@@ -32,8 +32,8 @@ Collection_GetLevelByIndex(
     const Collection *collection,
     int index)
 {
-  static Buffer buffer;
-  static Binv1Level level;
+  static Buffer buffer = {0};
+  static Binv1Level level = {0};
 
   if (index < collection->count && index >= 0) {
     int length = collection->allocations[index];

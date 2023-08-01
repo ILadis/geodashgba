@@ -7,7 +7,7 @@ test(From_ShouldInitializeAsciiLevelAsExpected) {
   Buffer buffer = Buffer_CreateNew(
     "       \n"
     "       \n"
-    "       \n"
+    "       "
   );
 
   AsciiLevel ascii;
@@ -375,9 +375,9 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   // arrange
   unsigned char data2[512] = {0};
   unsigned char data1[] =
-    "{n:Test} \n"
-    "         \n"
-    "  x x x  \n";
+    "{n:Test}             |\n"
+    "                     |\n"
+    "  x x x       T ...  |\n";
 
   DataSource *source1 = Buffer_From(&(Buffer) {0}, data1, length(data1));
   Level *ascii = AsciiLevel_From(&(AsciiLevel) {0}, source1);
@@ -385,24 +385,38 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   DataSource *source2 = Buffer_From(&(Buffer) {0}, data2, length(data2));
   Level *binv1 = Binv1Level_From(&(Binv1Level) {0}, source2);
 
-  char name[5] = {0};
-
-  Chunk chunk = {0};
-  Chunk_AssignIndex(&chunk, 0);
-
   // act
   int chunks = Level_Convert(ascii, binv1);
+
+  char name[5] = {0};
   Level_GetName(binv1, name);
-  Level_GetChunk(binv1, &chunk);
 
   // assert
-  assert(chunks == 1);
+  assert(chunks == 2);
   assert(name[0] == 'T');
   assert(name[1] == 'e');
   assert(name[2] == 's');
   assert(name[3] == 't');
   assert(name[4] == '\0');
-  assert(chunk.count == 3);
+
+  Chunk chunk1 = {0}, chunk2 = {0};
+  for (int index = 0; index < chunks; index++) {
+    Chunk_AssignIndex(&chunk1, index);
+    Level_GetChunk(ascii, &chunk1);
+
+    Chunk_AssignIndex(&chunk2, index);
+    Level_GetChunk(binv1, &chunk2);
+
+    assert(chunk1.count == chunk2.count);
+
+    for (int i = 0; i < chunk1.count; i++) {
+      assert(chunk1.objects[i].type == chunk2.objects[i].type);
+      assert(chunk1.objects[i].solid == chunk2.objects[i].solid);
+      assert(chunk1.objects[i].deadly == chunk2.objects[i].deadly);
+      assert(chunk1.objects[i].hitbox.center.x == chunk2.objects[i].hitbox.center.x);
+      assert(chunk1.objects[i].hitbox.center.y == chunk2.objects[i].hitbox.center.y);
+    }
+  }
 }
 
 suite(
