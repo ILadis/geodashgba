@@ -50,10 +50,10 @@ int main(int argc, char **argv) {
   Logger_PrintHex16(log, count);
   Logger_PrintLine(log, " levels");
 
-  Binv1Level level;
-  Binv1Level_From(&level, source);
+  Binv1Level binv1;
+  Level *level = Binv1Level_From(&binv1, source);
 
-  if (!Collection_AddLevel(collection, &level)) {
+  if (!Collection_AddLevel(collection, &binv1)) {
     Logger_PrintLine(log, "Could not add level to collection.");
     return 1;
   }
@@ -66,8 +66,16 @@ int main(int argc, char **argv) {
     }
   }
 
+  char name[15] = {0};
+  Level_GetName(level, name);
+
+  Logger_Print(log, "Adding level to collection in rom: ");
+  Logger_Print(log, name);
+
   Writer *writer = DataSource_AsWriter(target);
   Collection_WriteTo(collection, writer);
+
+  Logger_PrintLine(log, "... Done!");
 
   // TODO close file handle (also in error cases)
 }

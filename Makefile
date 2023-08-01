@@ -21,7 +21,7 @@ OBJCOPY  := arm-none-eabi-objcopy
 ARCH     := -mthumb-interwork -mthumb
 SPECS    := -specs=gba.specs
 
-CFLAGS   := $(ARCH) -O2 -Wall -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -I. -Iinclude
+CFLAGS   := $(ARCH) -O2 -Wall -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -Iinclude
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases
@@ -36,12 +36,12 @@ ifdef DEBUG
   EMU     := mgba -l 8 -3 --gdb
 endif
 
-.PHONY : assets tools run build clean
+.PHONY : tools utils assets build run clean purge
 
-run: clean build levels
+build: main.gba main.elf levels
+
+run:
 	@$(EMU) main.gba
-
-build: main.gba main.elf
 
 clean:
 	@rm -rf *.gba *.elf
@@ -55,21 +55,23 @@ purge: clean
 		tools/lvl2bin   \
 		tools/lvl2rom
 
-tools: CFILES := $(filter-out source/main.c, $(CFILES))
 tools:
 	@gcc tools/sinlut.c -o tools/sinlut -lm
 	@gcc tools/bezlut.c -o tools/bezlut -lm
 	@gcc tools/ppm2font.c -o tools/ppm2font
 	@gcc tools/tmx2tiles.c -o tools/tmx2tiles
-	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -I. -Iinclude -DNOGBA
-	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -I. -Iinclude -DNOGBA
+
+utils: CFILES := $(filter-out source/main.c, $(CFILES))
+utils:
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -Iinclude -DNOGBA
+	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
 	@grit graphics/tiles.bmp -o assets/graphics/tiles -gB8 -Mw 1 -Mh 1 -ftc -gT0
 	@grit graphics/sprites.bmp -o assets/graphics/sprites -gB4 -Mw 1 -Mh 1 -ftc -gT0
-	@tools/tmx2tiles < tools/editor/maps/backgrounds.tmx > assets/tiles/backgrounds.c
-	@tools/tmx2tiles < tools/editor/maps/snippets.tmx > assets/tiles/snippets.c
+	@tools/tmx2tiles < graphics/backgrounds.tmx > assets/tiles/backgrounds.c
+	@tools/tmx2tiles < graphics/snippets.tmx > assets/tiles/snippets.c
 	@tools/sinlut > assets/sinlut.c
 	@tools/bezlut 0.19 1 0.22 1 > assets/bezlut.c
 	@tools/ppm2font 6x15 hud < graphics/font.ppm > assets/font.c
@@ -77,14 +79,14 @@ assets:
 
 levels: $(LEVELS)
 levels/%.bin: levels/%.txt main.gba
-	tools/lvl2bin $< > $@
-	tools/lvl2rom main.gba < $@
+	@tools/lvl2bin $< > $@
+	@tools/lvl2rom main.gba < $@
 
 tests: $(TESTS)
 
 test/%: CFILES := $(filter-out source/main.c, $(CFILES))
 test/%:
-	@gcc $@.c $(CFILES) -o test.elf -g -O0 -I. -Iinclude -DNOGBA
+	@gcc $@.c $(CFILES) -o test.elf -g -O0 -Iinclude -DNOGBA
 	@$(RUNNER) ./test.elf
 	@rm test.elf
 

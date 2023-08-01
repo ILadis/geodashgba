@@ -3,9 +3,7 @@
 #include <log.h>
 #include <scene.h>
 
-#include <assets/graphics/tiles.h>
-#include <assets/graphics/sprites.h>
-
+#include <game/assets.h>
 #include <game/camera.h>
 #include <game/course.h>
 #include <game/level.h>
@@ -25,12 +23,12 @@ Scene_DoEnter() {
     GBA_EnableSprites();
 
     // used for tilemaps
-    GBA_Memcpy(&system->tileSets8[0][0], tilesTiles, tilesTilesLen);
-    GBA_Memcpy(&system->backgroundPalette[0], tilesPal, tilesPalLen);
+    GBA_Memcpy(&system->tileSets8[0][0], tilesTiles, sizeof(tilesTiles));
+    GBA_Memcpy(&system->backgroundPalette[0], tilesPal, sizeof(tilesPal));
 
     // used for sprites
-    GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, spritesTilesLen);
-    GBA_Memcpy(&system->spritePalette[0], spritesPal, spritesPalLen);
+    GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, sizeof(spritesTiles));
+    GBA_Memcpy(&system->spritePalette[0], spritesPal, sizeof(spritesPal));
 
     once = false;
   }
