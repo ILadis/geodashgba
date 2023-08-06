@@ -23,12 +23,16 @@ Binv1Level_From(
   level->base.self = level;
   level->chunk = NULL;
 
+  int  Binv1Level_GetId(void *self);
+  void Binv1Level_SetId(void *self, int id);
   void Binv1Level_GetName(void *self, char *name);
   void Binv1Level_SetName(void *self, char *name);
   int  Binv1Level_GetChunkCount(void *self);
   bool Binv1Level_GetChunk(void *self, Chunk *chunk);
   bool Binv1Level_AddChunk(void *self, Chunk *chunk);
 
+  level->base.GetId = Binv1Level_GetId;
+  level->base.SetId = Binv1Level_SetId;
   level->base.GetName = Binv1Level_GetName;
   level->base.SetName = Binv1Level_SetName;
   level->base.GetChunkCount = Binv1Level_GetChunkCount;
@@ -186,6 +190,22 @@ Binv1Level_GetMetaData(
   }
 }
 
+int
+Binv1Level_GetId(void *self) {
+  Binv1Level *level = self;
+
+  int id = 0;
+  int length = Binv1Level_GetMetaData(level, 'i');
+  while (length-- > 0) {
+    int byte;
+    Binv1Level_ReadInt8(level, &byte);
+
+    id = (id << 8) | (byte & 0xFF);
+  }
+
+  return id;
+}
+
 void
 Binv1Level_GetName(
     void *self,
@@ -275,11 +295,9 @@ static void
 Binv1Level_WriteMetaData(
     Binv1Level *level,
     int key,
-    char *value)
+    char *value,
+    int length)
 {
-  int length = 0;
-  while (value[length] != '\0') length++;
-
   Reader *reader = DataSource_AsReader(level->source);
   Reader_SeekTo(reader, 0);
 
@@ -303,12 +321,33 @@ Binv1Level_WriteMetaData(
 }
 
 void
+Binv1Level_SetId(
+    void *self,
+    int id)
+{
+  Binv1Level *level = self;
+
+  char data[] = {
+    (char) ((id >> 24) & 0xFF),
+    (char) ((id >> 16) & 0xFF),
+    (char) ((id >>  8) & 0xFF),
+    (char) ((id >>  0) & 0xFF),
+  };
+
+  Binv1Level_WriteMetaData(level, 'i', data, length(data));
+}
+
+void
 Binv1Level_SetName(
     void *self,
     char *name)
 {
   Binv1Level *level = self;
-  Binv1Level_WriteMetaData(level, 'n', name);
+
+  int length = 0;
+  while (name[length] != '\0') length++;
+
+  Binv1Level_WriteMetaData(level, 'n', name, length);
 }
 
 static void

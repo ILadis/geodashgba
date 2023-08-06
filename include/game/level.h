@@ -12,12 +12,24 @@ typedef int LevelId;
 
 typedef struct Level {
   void *self;
+  int  (*GetId)(void *self);
+  void (*SetId)(void *self, int id);
   void (*GetName)(void *self, char *name);
   void (*SetName)(void *self, char *name);
   int  (*GetChunkCount)(void *self);
   bool (*GetChunk)(void *self, Chunk *chunk);
   bool (*AddChunk)(void *self, Chunk *chunk);
 } Level;
+
+static inline LevelId
+Level_GetId(Level *level) {
+  return level->GetId(level->self);
+}
+
+static inline void
+Level_SetId(Level *level, int id) {
+  level->SetId(level->self, id);
+}
 
 static inline void
 Level_GetName(Level *level, char *name) {

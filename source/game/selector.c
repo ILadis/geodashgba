@@ -52,7 +52,7 @@ Selector_Goto(
     Direction direction)
 {
   const Vector *vector = Vector_FromDirection(direction);
-  LevelId next = selector->id + vector->x;
+  int next = selector->index + vector->x;
 
   const Collection *collection = Collection_GetInstance();
   int count = Collection_GetLevelCount(collection);
@@ -68,7 +68,7 @@ Selector_Goto(
     Animation_Start(&scroll);
 
     selector->scroll = scroll;
-    selector->id = next;
+    selector->index = next;
   }
 }
 
@@ -151,8 +151,8 @@ Selector_DrawLevelIndicator(Selector *selector) {
   int ty = 5;
   int tx = (GBA_SCREEN_COLS - count) / 2;
 
-  for (LevelId id = 0; id < count; id++) {
-    const GBA_Tile *tile = id == selector->id ? &active : &inactive;
+  for (int index = 0; index < count; index++) {
+    const GBA_Tile *tile = index == selector->index ? &active : &inactive;
     GBA_TileMapRef_BlitTile(&target, tx++, ty, tile);
   }
 }
@@ -232,12 +232,12 @@ Selector_DrawArrows(
   const Collection *collection = Collection_GetInstance();
   int count = Collection_GetLevelCount(collection);
 
-  const LevelId bounds[] = {
+  const int bounds[] = {
     [DIRECTION_LEFT]  = 0,
     [DIRECTION_RIGHT] = count - 1,
   };
 
-  bool visible = selector->id != bounds[direction];
+  bool visible = selector->index != bounds[direction];
   GBA_Sprite_SetObjMode(sprite, visible ? 0 : 2);
 }
 

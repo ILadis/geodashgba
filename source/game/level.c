@@ -10,6 +10,9 @@ Level_Convert(
   Level_GetName(from, name);
   Level_SetName(to, name);
 
+  int id = Level_GetId(from);
+  Level_SetId(to, id);
+
   int index = 0;
   while (true) {
     Chunk chunk = {0};

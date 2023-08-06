@@ -39,6 +39,58 @@ test(From_ShouldInitializeBinv1LevelAsExpected) {
   assert(binv1.size == 3);
 }
 
+test(GetId_ShouldReturnZeroWhenLevelHasNoId) {
+  // arrange
+  unsigned char data[] =
+    "{a:Author}   \n"
+    "{n:Test}     \n"
+    "{d:5}        \n"
+    "             \n";
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
+
+  // act
+  int id = Level_GetId(level);
+
+  // assert
+  assert(id == 0);
+}
+
+test(GetId_ShouldReturnExpectedLevelId) {
+  // arrange
+  unsigned char data[] =
+    "{a:Author}    \n"
+    "{n:Test}      \n"
+    "{i:87d1-903f} \n"
+    "              \n";
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = AsciiLevel_From(&(AsciiLevel) {0}, source);
+
+  // act
+  int id = Level_GetId(level);
+
+  // assert
+  assert(id == 0x87D1903F);
+}
+
+test(GetId_ShouldReturnSetId) {
+  // arrange
+  unsigned char data[1024] = {0};
+
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
+  Level *level = Binv1Level_From(&(Binv1Level) {0}, source);
+
+  Level_SetId(level, 0x5f5f87bb);
+
+  // act
+  int id = Level_GetId(level);
+
+  // assert
+  assert(id == 0x5f5f87bb);
+}
+
 test(GetName_ShouldReturnExpectedLevelName) {
   // arrange
   unsigned char data[] =
@@ -375,6 +427,7 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   // arrange
   unsigned char data2[512] = {0};
   unsigned char data1[] =
+    "{i:1468-a561}        |\n"
     "{n:Test}             |\n"
     "                     |\n"
     "  x x x       T ...  |\n";
@@ -389,10 +442,12 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
   int chunks = Level_Convert(ascii, binv1);
 
   char name[5] = {0};
+  int id = Level_GetId(binv1);
   Level_GetName(binv1, name);
 
   // assert
   assert(chunks == 2);
+  assert(id == 0x1468A561);
   assert(name[0] == 'T');
   assert(name[1] == 'e');
   assert(name[2] == 's');
@@ -422,6 +477,9 @@ test(Convert_ShouldConvertLevelFromAsciiToBinv1) {
 suite(
   From_ShouldInitializeAsciiLevelAsExpected,
   From_ShouldInitializeBinv1LevelAsExpected,
+  GetId_ShouldReturnZeroWhenLevelHasNoId,
+  GetId_ShouldReturnExpectedLevelId,
+  GetId_ShouldReturnSetId,
   GetName_ShouldReturnExpectedLevelName,
   GetName_ShouldReturnSetName,
   GetChunkCount_ShouldReturnExpectedChunkCount,

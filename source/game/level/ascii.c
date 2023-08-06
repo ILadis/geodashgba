@@ -39,12 +39,16 @@ AsciiLevel_From(
   level->chunk = NULL;
   level->limit = 0;
 
+  int  AsciiLevel_GetId(void *self);
+  void AsciiLevel_SetId(void *self, int id);
   void AsciiLevel_GetName(void *self, char *name);
   void AsciiLevel_SetName(void *self, char *name);
   int  AsciiLevel_GetChunkCount(void *self);
   bool AsciiLevel_GetChunk(void *self, Chunk *chunk);
   bool AsciiLevel_AddChunk(void *self, Chunk *chunk);
 
+  level->base.GetId = AsciiLevel_GetId;
+  level->base.SetId = AsciiLevel_SetId;
   level->base.GetName = AsciiLevel_GetName;
   level->base.SetName = AsciiLevel_SetName;
   level->base.GetChunkCount = AsciiLevel_GetChunkCount;
@@ -454,6 +458,27 @@ AsciiLevel_GetMetaData(
   return length;
 }
 
+int
+AsciiLevel_GetId(void *self) {
+  AsciiLevel *level = self;
+
+  int id = 0;
+  int length = AsciiLevel_GetMetaData(level, 'i');
+  while (length-- > 0) {
+    char byte;
+    AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &byte);
+
+    if (byte >= '0' && byte <= '9') byte = byte - '0';
+    else if (byte >= 'a' && byte <= 'f') byte = byte - 'a' + 10;
+    else if (byte >= 'A' && byte <= 'F') byte = byte - 'A' + 10;
+    else continue;
+
+    id = (id << 4) | (byte & 0xF);
+  }
+
+  return id;
+}
+
 void
 AsciiLevel_GetName(
     void *self,
@@ -593,6 +618,14 @@ AsciiLevel_GetChunk(
   }
 
   return true;
+}
+
+void
+AsciiLevel_SetId(
+    void *self,
+    int id)
+{
+  // not implemented
 }
 
 void

@@ -10,10 +10,10 @@
 #include <game/collection.h>
 
 typedef struct Selector {
-  LevelId id;
   Animation scroll, move;
   GBA_Sprite *arrows[2];
   Printer printer;
+  int index;
   bool redraw;
 } Selector;
 
@@ -31,16 +31,16 @@ Selector_GoForward(Selector *selector);
 void
 Selector_GoBackward(Selector *selector);
 
-static inline LevelId
-Selector_GetLevelId(Selector *selector) {
-  return selector->id;
-}
-
 static inline Level*
 Selector_GetLevel(Selector *selector) {
   const Collection *collection = Collection_GetInstance();
-  Binv1Level *level = Collection_GetLevelByIndex(collection, selector->id);
+  Binv1Level *level = Collection_GetLevelByIndex(collection, selector->index);
   return &level->base;
+}
+
+static inline LevelId
+Selector_GetLevelId(Selector *selector) {
+  return Level_GetId(Selector_GetLevel(selector));
 }
 
 void
