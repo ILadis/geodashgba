@@ -1,5 +1,5 @@
 # Geodash GBA
-Geodash GBA is a demake of the popluar platformer Geometry Dash. The implementation is still work-in-progress.
+Geodash GBA is a demake of the popular platformer Geometry Dash. The implementation is still work-in-progress.
 
 <img src="scrot1.png"> <img src="scrot2.png">
 
