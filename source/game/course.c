@@ -218,47 +218,34 @@ Course_PrepareChunk(
     Course *course,
     Chunk *chunk)
 {
-  const int mapIndexes[] = { 10, 14 };
-  enum Step {
-    STEP_PREPARE_SHADOW = -2,
-    STEP_DRAW_FLOOR = -1,
+  GBA_System *system = GBA_GetSystem();
+  GBA_TileMapRef target = {
+    .width = 64, .height = 64,
+    .tiles = system->tileMaps[14],
   };
 
   if (course->prepare.chunk != chunk) {
     course->prepare.chunk = chunk;
-    course->prepare.step = STEP_PREPARE_SHADOW;
-    course->prepare.mapIndex = mapIndexes[chunk->index % 2];
+    course->prepare.step = 0;
 
     return false;
   }
 
-  int mapIndex = course->prepare.mapIndex;
-
-  GBA_System *system = GBA_GetSystem();
-  GBA_TileMapRef shadow = {
-    .width = 64, .height = 64,
-    .tiles = system->tileMaps[mapIndex]
-  };
-
   int step = course->prepare.step++;
   switch (step) {
-  case STEP_PREPARE_SHADOW:
-    GBA_Tile *tiles = system->tileMaps[mapIndexes[(chunk->index + 1) % 2]];
-    GBA_Memcpy(shadow.tiles, tiles, sizeof(GBA_Tile) * shadow.width * shadow.height);
-    break;
-
-  case STEP_DRAW_FLOOR:
-    Course_DrawFloor(course, chunk, &shadow);
+  case 0:
+    Course_DrawFloor(course, chunk, &target);
     break;
 
   default:
+    int index = step - 1;
     int count = chunk->count;
-    if (step >= count) {
+    if (index >= count) {
       return true;
     }
 
-    Object *object = &chunk->objects[step];
-    Object_Draw(object, &shadow);
+    Object *object = &chunk->objects[index];
+    Object_Draw(object, &target);
     break;
   }
 
@@ -274,13 +261,20 @@ Course_DrawChunk(
     .size = 3, // 512x512
     .colorMode = 1,
     .tileSetIndex = 0,
+    .tileMapIndex = 10,
     .priority = 2,
   };
 
   while (!Course_PrepareChunk(course, chunk));
 
-  int mapIndex = course->prepare.mapIndex;
-  layer.tileMapIndex = mapIndex;
+  GBA_System *system = GBA_GetSystem();
+  const GBA_TileMapRef source = {
+    .width = 64, .height = 64,
+    .tiles = system->tileMaps[14],
+  };
+
+  GBA_Tile *target = system->tileMaps[10];
+  GBA_Memcpy32(target, source.tiles, sizeof(GBA_Tile) * source.width * source.height);
 
   GBA_EnableBackgroundLayer(1, layer);
 }

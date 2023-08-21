@@ -344,7 +344,7 @@ Everdrive_CardReadBlock(
     void *buffer,
     int count)
 {
-  extern void GBA_Memcpy(void *dst, const void *src, int size);
+  extern void GBA_Memcpy16(void *dst, const void *src, int size);
 
   Everdrive_System *system = Everdrive_GetSystem();
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, sector, NULL);
@@ -354,7 +354,7 @@ Everdrive_CardReadBlock(
       return false;
     }
 
-    GBA_Memcpy(buffer, system->cardData, 512);
+    GBA_Memcpy16(buffer, system->cardData, 512);
     buffer += 512;
   }
 

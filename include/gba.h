@@ -417,7 +417,10 @@ void
 GBA_VSync();
 
 void
-GBA_Memcpy(void *dst, const void *src, int size);
+GBA_Memcpy32(void *dst, const void *src, int size);
+
+void
+GBA_Memcpy16(void *dst, const void *src, int size);
 
 void
 GBA_EnableSprites();

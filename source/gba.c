@@ -223,14 +223,30 @@ GBA_VSync() {
 }
 
 void
-GBA_Memcpy(void *dst, const void *src, int size) {
+GBA_Memcpy32(void *dst, const void *src, int size) {
   GBA_System *system = GBA_GetSystem();
   GBA_DirectMemcpy *dma3 = system->directMemcpy3;
 
   GBA_DirectMemcpy copy = {0};
   copy.dst = dst;
   copy.src = src;
-  // TODO revert this to copy word chunks
+  copy.numTransfers = size >> 2;
+  copy.chunkSize = 1; // copy words
+  copy.enable = 1;
+
+  dma3->dst = copy.dst;
+  dma3->src = copy.src;
+  dma3->cnt = copy.cnt;
+}
+
+void
+GBA_Memcpy16(void *dst, const void *src, int size) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_DirectMemcpy *dma3 = system->directMemcpy3;
+
+  GBA_DirectMemcpy copy = {0};
+  copy.dst = dst;
+  copy.src = src;
   copy.numTransfers = size >> 1;
   copy.chunkSize = 0; // copy half-words
   copy.enable = 1;

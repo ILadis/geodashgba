@@ -19,7 +19,7 @@ typedef struct Course {
   // TODO consider keeping references to objects that need to be animated
   struct {
     Chunk *chunk;
-    int mapIndex, step;
+    int step;
   } prepare;
   int floor, index;
   int frame;

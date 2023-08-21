@@ -23,12 +23,12 @@ Scene_DoEnter() {
     GBA_EnableSprites();
 
     // used for tilemaps
-    GBA_Memcpy(&system->tileSets8[0][0], tilesTiles, sizeof(tilesTiles));
-    GBA_Memcpy(&system->backgroundPalette[0], tilesPal, sizeof(tilesPal));
+    GBA_Memcpy32(&system->tileSets8[0][0], tilesTiles, sizeof(tilesTiles));
+    GBA_Memcpy32(&system->backgroundPalette[0], tilesPal, sizeof(tilesPal));
 
     // used for sprites
-    GBA_Memcpy(&system->tileSets4[4][0], spritesTiles, sizeof(spritesTiles));
-    GBA_Memcpy(&system->spritePalette[0], spritesPal, sizeof(spritesPal));
+    GBA_Memcpy32(&system->tileSets4[4][0], spritesTiles, sizeof(spritesTiles));
+    GBA_Memcpy32(&system->spritePalette[0], spritesPal, sizeof(spritesPal));
 
     once = false;
   }
