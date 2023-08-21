@@ -22,15 +22,15 @@ Selector_SetVisible(
 
     extern const Font hudFont;
 
-    Printer *printer = &selector->printer;
-    Printer_SetFont(printer, &hudFont);
+    Text *text = &selector->text;
+    Text_SetFont(text, &hudFont);
 
     int fill = GBA_Palette_FindColor(GBA_Color_From(0xffffff)); // actual color is 0xf8f8f8
     int outline = GBA_Palette_FindColor(GBA_Color_From(0x000008));
 
-    Printer_SetFillColor(printer, fill);
-    Printer_SetOutlineColor(printer, outline);
-    Printer_SetBackgroundColor(printer, background);
+    Text_SetFillColor(text, fill);
+    Text_SetOutlineColor(text, outline);
+    Text_SetBackgroundColor(text, background);
   }
   else {
     GBA_DisableBackgroundLayer(2);
@@ -166,8 +166,8 @@ Selector_DrawLevelBox(Selector *selector) {
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
   GBA_TileMapRef_Blit(&target, position.x, position.y, &selectLevelBoxTileMap);
 
-  Printer *printer = &selector->printer;
-  int color = printer->colors.background;
+  Text *text = &selector->text;
+  int color = text->colors.background;
   for (int tileId = 128; tileId <= 167; tileId++) {
     GBA_TileMapRef_FillTile(&target, tileId, color);
   }
@@ -177,12 +177,12 @@ Selector_DrawLevelBox(Selector *selector) {
   char name[15];
   Level_GetName(level, name);
 
-  int width = Printer_GetTextWidth(printer, name);
+  int width = Text_GetWidth(text, name);
   int dx = (160 - width) / 2;
 
-  Printer_SetCanvas(printer, &target);
-  Printer_SetCursor(printer, position.x * 8 + 8 + dx, position.y * 8 + 16);
-  Printer_WriteLine(printer, name);
+  Text_SetCanvas(text, &target);
+  Text_SetCursor(text, position.x * 8 + 8 + dx, position.y * 8 + 16);
+  Text_WriteLine(text, name);
 }
 
 static inline void

@@ -15,83 +15,69 @@ typedef struct Font {
   const Glyph *glyphs[95];
 } Font;
 
-typedef struct Printer {
-  GBA_TileMapRef *tileMap;
+typedef struct Text {
+  GBA_TileMapRef *canvas;
   const Font *font;
   struct { int x, y; } cursor;
+  // TODO consider adding bounds
   struct {
     int fill;
     int outline;
     int highlight;
     int background;
   } colors;
-} Printer;
+} Text;
 
 static inline void
-Printer_SetFont(
-    Printer *printer,
-    const Font *font)
-{
-  printer->font = font;
+Text_SetFont(Text *text, const Font *font) {
+  text->font = font;
 }
 
 static inline void
-Printer_SetCanvas(
-    Printer *printer,
-    GBA_TileMapRef *tileMap)
-{
-  printer->tileMap = tileMap;
+Text_SetCanvas(Text *text, GBA_TileMapRef *canvas) {
+  text->canvas = canvas;
 }
 
 static inline void
-Printer_SetFillColor(
-    Printer *printer,
-    int color)
-{
-  printer->colors.fill = color;
+Text_SetFillColor(Text *text, int color) {
+  text->colors.fill = color;
 }
 
 static inline void
-Printer_SetOutlineColor(
-    Printer *printer,
-    int color)
-{
-  printer->colors.outline = color;
+Text_SetOutlineColor(Text *text, int color) {
+  text->colors.outline = color;
 }
 
 static inline void
-Printer_SetHighlightColor(
-    Printer *printer,
-    int color)
-{
-  printer->colors.highlight = color;
+Text_SetHighlightColor(Text *text, int color) {
+  text->colors.highlight = color;
 }
 
 static inline void
-Printer_SetBackgroundColor(
-    Printer *printer,
-    int color)
-{
-  printer->colors.background = color;
+Text_SetBackgroundColor(Text *text, int color) {
+  text->colors.background = color;
 }
 
 static inline void
-Printer_SetCursor(
-    Printer *printer,
-    int x, int y)
-{
-  printer->cursor.x = x;
-  printer->cursor.y = y;
+Text_SetCursor(Text *text, int x, int y) {
+  text->cursor.x = x;
+  text->cursor.y = y;
+}
+
+static inline void
+Text_SetCursorNewline(Text *text) {
+  int y = text->cursor.y + text->font->height;
+  Text_SetCursor(text, 0, y);
 }
 
 int
-Printer_GetTextWidth(
-    Printer *printer,
-    const char *text);
+Text_GetWidth(
+    Text *text,
+    const char *line);
 
 void
-Printer_WriteLine(
-    Printer *printer,
+Text_WriteLine(
+    Text *text,
     const char *line);
 
 #endif

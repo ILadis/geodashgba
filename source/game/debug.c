@@ -74,39 +74,37 @@ Debug_DrawHitboxes() {
   }
 }
 
-static Printer*
-Debug_GetPrinter() {
+static Text*
+Debug_GetText() {
   static bool once = true;
-  static Printer printer = {0};
+  static Text text = {0};
 
   if (once) {
     GBA_EnableMode(3);
     GBA_Bitmap_FillRect(0, 0, 240, 160, (GBA_Color) {0});
 
     extern const Font consoleFont;
-    Printer_SetFont(&printer, &consoleFont);
-    Printer_SetFillColor(&printer, 0xF21238);
-    Printer_SetBackgroundColor(&printer, 0x000000);
+    Text_SetFont(&text, &consoleFont);
+    Text_SetFillColor(&text, 0xF21238);
+    Text_SetBackgroundColor(&text, 0x000000);
 
-    Printer_SetCanvas(&printer, NULL);
-    Printer_SetCursor(&printer, 0, 0);
+    Text_SetCanvas(&text, NULL);
+    Text_SetCursor(&text, 0, 0);
 
     once = false;
   }
 
-  return &printer;
+  return &text;
 }
 
 static void
 Debug_Print(const char *message) {
-  Printer *printer = Debug_GetPrinter();
+  Text *text = Debug_GetText();
 
   if (message[0] == '\n') {
-    int y = printer->cursor.y + printer->font->height;
-    Printer_SetCursor(printer, 0, y);
-  }
-  else {
-    Printer_WriteLine(printer, message);
+    Text_SetCursorNewline(text);
+  } else {
+    Text_WriteLine(text, message);
   }
 }
 

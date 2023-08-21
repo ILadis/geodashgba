@@ -12,7 +12,7 @@
 typedef struct Selector {
   Animation scroll, move;
   GBA_Sprite *arrows[2];
-  Printer printer;
+  Text text;
   int index;
   bool redraw;
 } Selector;

@@ -2,11 +2,11 @@
 #include <text.h>
 
 static inline const Glyph*
-Printer_GetGlyph(
-    Printer *printer,
+Text_GetGlyph(
+    Text *text,
     char letter)
 {
-  const Font *font = printer->font;
+  const Font *font = text->font;
   static const Glyph fallback = {0};
 
   const int limit = length(font->glyphs);
@@ -29,15 +29,15 @@ Printer_GetGlyph(
 }
 
 int
-Printer_GetTextWidth(
-    Printer *printer,
-    const char *text)
+Text_GetWidth(
+    Text *text,
+    const char *line)
 {
   int width = 0;
 
   do {
-    char letter = *(text++);
-    const Glyph *glyph = Printer_GetGlyph(printer, letter);
+    char letter = *(line++);
+    const Glyph *glyph = Text_GetGlyph(text, letter);
 
     if (glyph == NULL) {
       break;
@@ -50,28 +50,28 @@ Printer_GetTextWidth(
 }
 
 static inline void
-Printer_SetPixel(
-    Printer *printer,
+Text_SetPixel(
+    Text *text,
     int px, int py,
     int color)
 {
-  GBA_TileMapRef *tileMap = printer->tileMap;
-  if (tileMap != NULL) {
-    GBA_TileMapRef_SetPixel(tileMap, px, py, color);
+  GBA_TileMapRef *canvas = text->canvas;
+  if (canvas != NULL) {
+    GBA_TileMapRef_SetPixel(canvas, px, py, color);
   } else {
     GBA_Bitmap_FillPixel(px, py, GBA_Color_From(color));
   }
 }
 
 static void
-Printer_PrintGlyph(
-    Printer *printer,
+Text_PrintGlyph(
+    Text *text,
     const Glyph *glyph)
 {
-  const Font *font = printer->font;
+  const Font *font = text->font;
 
-  int px = printer->cursor.x;
-  int py = printer->cursor.y;
+  int px = text->cursor.x;
+  int py = text->cursor.y;
 
   int index = 0;
   for (int y = 0; y < font->height; y++) {
@@ -85,19 +85,19 @@ Printer_PrintGlyph(
       }
 
       if (fill & 1) {
-        Printer_SetPixel(printer, px + x, py + y, printer->colors.fill);
+        Text_SetPixel(text, px + x, py + y, text->colors.fill);
       }
 
       else if (outline & 1) {
-        Printer_SetPixel(printer, px + x, py + y, printer->colors.outline);
+        Text_SetPixel(text, px + x, py + y, text->colors.outline);
       }
 
       else if (highlight & 1) {
-        Printer_SetPixel(printer, px + x, py + y, printer->colors.highlight);
+        Text_SetPixel(text, px + x, py + y, text->colors.highlight);
       }
 
       else {
-        Printer_SetPixel(printer, px + x, py + y, printer->colors.background);
+        Text_SetPixel(text, px + x, py + y, text->colors.background);
       }
 
       fill >>= 1;
@@ -106,23 +106,23 @@ Printer_PrintGlyph(
     }
   }
 
-  printer->cursor.x += glyph->width + 1;
+  text->cursor.x += glyph->width + 1;
 }
 
 void
-Printer_WriteLine(
-    Printer *printer,
-    const char *text)
+Text_WriteLine(
+    Text *text,
+    const char *line)
 {
   do {
-    char letter = *(text++);
-    const Glyph *glyph = Printer_GetGlyph(printer, letter);
+    char letter = *(line++);
+    const Glyph *glyph = Text_GetGlyph(text, letter);
 
     if (glyph == NULL) {
       break;
     }
 
-    Printer_PrintGlyph(printer, glyph);
+    Text_PrintGlyph(text, glyph);
   } while (true);
 
   // TODO increase cursor y on new line character
