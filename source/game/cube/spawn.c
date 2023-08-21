@@ -29,8 +29,10 @@ Cube_ApplySpawn(
   }
 
   if (Cube_EnteredState(cube, STATE_DESTROYED)) {
-    cube->attempts++;
     cube->timer = 90;
+    if (!cube->success) {
+      Course_IncreaseAttempts(course);
+    }
 
     const Vector *position = Cube_GetPosition(cube);
 

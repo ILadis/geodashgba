@@ -2,6 +2,7 @@
 #define TEXT_H
 
 #include <gba.h>
+#include <vector.h>
 
 typedef struct Glyph {
   const int width;
@@ -18,7 +19,7 @@ typedef struct Font {
 typedef struct Text {
   GBA_TileMapRef *canvas;
   const Font *font;
-  struct { int x, y; } cursor;
+  Vector cursor;
   // TODO consider adding bounds
   struct {
     int fill;

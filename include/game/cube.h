@@ -23,7 +23,7 @@ typedef struct Cube {
   Bounds hitbox;
   struct { State current, previous; } state;
   struct { int angle, velocity; } rotation;
-  int launch, attempts, timer;
+  int launch, timer;
   bool success;
   Vector vertices[4];
   Shape shape;

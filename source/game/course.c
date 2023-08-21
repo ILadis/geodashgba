@@ -75,6 +75,7 @@ Course_ResetAndLoad(
     Level *level)
 {
   course->level = level;
+  course->attempts[0] = '\0';
 
   Course_CalculateBounds(course);
   Course_ResetState(course, 0);
@@ -108,6 +109,42 @@ Course_ResetTo(
   // load two chunks
   Course_LoadChunk(course, index);
   Course_LoadChunk(course, index + 1);
+}
+
+void // TODO move this into counter utility
+Course_IncreaseAttempts(Course *course) {
+  int length = 0;
+  char *attempts = course->attempts;
+
+  const int limit = length(course->attempts) - 1;
+  while (attempts[length] != '\0' && length < limit) {
+    length++;
+  }
+
+  if (length <= 0) {
+shift:
+    if (length < limit) {
+      // FIXME does not wrap around properly
+      for (int i = length; i >= 0; i--) {
+        attempts[i+1] = attempts[i];
+      }
+      attempts[0] = '1';
+      length++;
+    }
+    return;
+  }
+
+  int index = length - 1;
+  while (index >= 0 && attempts[index] == '9') {
+    attempts[index] = '0';
+    index--;
+  }
+
+  if (index < 0) {
+    goto shift;
+  } else {
+    attempts[index]++;
+  }
 }
 
 static inline void
@@ -213,6 +250,48 @@ Course_DrawFloor(
   }
 }
 
+static inline void
+Course_DrawAttempts(
+    Course *course,
+    Chunk *chunk,
+    GBA_TileMapRef *target)
+{
+  extern const Font consoleFont;
+
+  Text *text = &course->text;
+  if (text->font == NULL) {
+    // TODO use nicer font (probably "hudFont" but it's currenlty missing glyphs for digits)
+    Text_SetFont(text, &consoleFont);
+
+    int fill = GBA_Palette_FindColor(GBA_Color_From(0xffffff)); // actual color is 0xf8f8f8
+    int outline = GBA_Palette_FindColor(GBA_Color_From(0x000008));
+
+    Text_SetFillColor(text, fill);
+    Text_SetOutlineColor(text, outline);
+    Text_SetBackgroundColor(text, 0);
+  }
+
+  if (course->attempts[0] == '\0') {
+    return; // nothing to do
+  }
+
+  int tx = 2;
+  int ty = course->floor/8 - 13;
+
+  GBA_Tile tile = { .tileId = 129 };
+  for (int y = 0; y < 2; y++) {
+    for (int x = 0; x < 20; x++) {
+      GBA_TileMapRef_BlitTile(target, tx + x, ty + y, &tile);
+      GBA_TileMapRef_FillTile(target, tile.tileId++, 0);
+    }
+  }
+
+  Text_SetCanvas(text, target);
+  Text_SetCursor(text, tx * 8, ty * 8);
+  Text_WriteLine(text, "Attempt ");
+  Text_WriteLine(text, course->attempts);
+}
+
 static inline bool
 Course_PrepareChunk(
     Course *course,
@@ -222,23 +301,35 @@ Course_PrepareChunk(
   GBA_TileMapRef target = {
     .width = 64, .height = 64,
     .tiles = system->tileMaps[14],
+    .bitmaps = system->tileSets8[0],
+  };
+
+  enum Step {
+    STEP_DRAW_FLOOR,
+    STEP_DRAW_ATTEMPTS,
+    STEP_DRAW_COUNT
   };
 
   if (course->prepare.chunk != chunk) {
     course->prepare.chunk = chunk;
     course->prepare.step = 0;
-
     return false;
   }
 
   int step = course->prepare.step++;
   switch (step) {
-  case 0:
+  case STEP_DRAW_FLOOR:
     Course_DrawFloor(course, chunk, &target);
     break;
 
+  case STEP_DRAW_ATTEMPTS:
+    if (chunk->index == 0) {
+      Course_DrawAttempts(course, chunk, &target);
+    }
+    break;
+
   default:
-    int index = step - 1;
+    int index = step - STEP_DRAW_COUNT;
     int count = chunk->count;
     if (index >= count) {
       return true;

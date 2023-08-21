@@ -5,6 +5,7 @@
 #include <vector.h>
 #include <hit.h>
 #include <grid.h>
+#include <text.h>
 
 #include <game/chunk.h>
 #include <game/object.h>
@@ -15,13 +16,15 @@ typedef struct Course {
   Vector spawn;
   Bounds bounds;
   Level *level;
+  int index, floor;
   Chunk chunks[4];
+  Text text;
+  char attempts[4];
   // TODO consider keeping references to objects that need to be animated
   struct {
     Chunk *chunk;
     int step;
   } prepare;
-  int floor, index;
   int frame;
   bool redraw;
 } Course;
@@ -38,6 +41,9 @@ void
 Course_ResetTo(
     Course *course,
     const Vector *position);
+
+void
+Course_IncreaseAttempts(Course *course);
 
 static inline const Vector*
 Course_GetSpawn(Course *course) {
