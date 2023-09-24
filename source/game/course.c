@@ -75,7 +75,9 @@ Course_ResetAndLoad(
     Level *level)
 {
   course->level = level;
-  course->attempts[0] = '\0';
+
+  Counter counter = course->attempts;
+  Counter_Reset(counter, length(course->attempts));
 
   Course_CalculateBounds(course);
   Course_ResetState(course, 0);
@@ -111,40 +113,10 @@ Course_ResetTo(
   Course_LoadChunk(course, index + 1);
 }
 
-void // TODO move this into counter utility
+void
 Course_IncreaseAttempts(Course *course) {
-  int length = 0;
-  char *attempts = course->attempts;
-
-  const int limit = length(course->attempts) - 1;
-  while (attempts[length] != '\0' && length < limit) {
-    length++;
-  }
-
-  if (length <= 0) {
-shift:
-    if (length < limit) {
-      // FIXME does not wrap around properly
-      for (int i = length; i >= 0; i--) {
-        attempts[i+1] = attempts[i];
-      }
-      attempts[0] = '1';
-      length++;
-    }
-    return;
-  }
-
-  int index = length - 1;
-  while (index >= 0 && attempts[index] == '9') {
-    attempts[index] = '0';
-    index--;
-  }
-
-  if (index < 0) {
-    goto shift;
-  } else {
-    attempts[index]++;
-  }
+  Counter counter = course->attempts;
+  Counter_IncrementOne(counter);
 }
 
 static inline void
@@ -271,7 +243,8 @@ Course_DrawAttempts(
     Text_SetBackgroundColor(text, 0);
   }
 
-  if (course->attempts[0] == '\0') {
+  Counter counter = course->attempts;
+  if (Counter_IsBlank(counter)) {
     return; // nothing to do
   }
 

@@ -6,6 +6,7 @@
 #include <hit.h>
 #include <grid.h>
 #include <text.h>
+#include <counter.h>
 
 #include <game/chunk.h>
 #include <game/object.h>
