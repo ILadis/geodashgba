@@ -17,6 +17,11 @@ typedef struct Camera {
     Vector lower;
     Vector upper;
   } limit;
+  struct {
+    int duration;
+    int intensity;
+    Vector position;
+  } shake;
   const Vector *target;
 } Camera;
 
@@ -70,6 +75,9 @@ Camera_FollowTarget(
 {
   camera->target = position;
 }
+
+void
+Camera_Shake(Camera *camera);
 
 void
 Camera_Update(Camera *camera);

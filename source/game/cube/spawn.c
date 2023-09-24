@@ -32,6 +32,9 @@ Cube_ApplySpawn(
     cube->timer = 90;
     if (!cube->success) {
       Course_IncreaseAttempts(course);
+
+      Camera *camera = Camera_GetInstance();
+      Camera_Shake(camera);
     }
 
     const Vector *position = Cube_GetPosition(cube);

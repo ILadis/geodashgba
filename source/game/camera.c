@@ -18,6 +18,9 @@ Camera_Reset(Camera *camera) {
   camera->frame.threshold[DIRECTION_RIGHT] = 22;
   camera->limit.lower = Vector_Of(0, 0);
   camera->limit.upper = Vector_Of(0, 0);
+  camera->shake.duration = 0;
+  camera->shake.intensity = 0;
+  camera->shake.position = Vector_Of(0, 0);
   camera->target = NULL;
 }
 
@@ -81,10 +84,48 @@ Camera_GetTargetDelta(Camera *camera) {
 }
 
 void
+Camera_Shake(Camera *camera) {
+  camera->shake.duration = 5;
+  camera->shake.intensity = 1 << 7;
+  camera->shake.position = camera->position;
+}
+
+static inline bool
+Camera_ApplyShake(Camera *camera) {
+  int duration = camera->shake.duration;
+  if (duration <= 0) {
+    return false;
+  }
+
+  duration = --camera->shake.duration;
+
+  if (duration <= 0) {
+    camera->position = camera->shake.position;
+    return false;
+  }
+
+  int random = Math_rand();
+
+  int dx = (Math_cos(random) * camera->shake.intensity) >> 16;
+  int dy = (Math_sin(random) * camera->shake.intensity) >> 16;
+
+  int x = camera->shake.position.x + dx;
+  int y = camera->shake.position.y + dy;
+
+  camera->position.x = x;
+  camera->position.y = y;
+
+  return true;
+}
+
+void
 Camera_Update(Camera *camera) {
   const Vector *target = camera->target;
 
-  if (target != NULL) {
+  if (Camera_ApplyShake(camera)) {
+    // do nothing, camera is shaking
+  }
+  else if (target != NULL) {
     Vector delta = Camera_GetTargetDelta(camera);
     Camera_MoveBy(camera, &delta);
   }
