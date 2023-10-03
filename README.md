@@ -11,6 +11,6 @@ The GBA rom can then be built by issuing the following make commands:
 $ make tools
 $ make assets
 $ make utils
-$ make build 
+$ make build
 $ make levels
 ```

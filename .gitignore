@@ -6,6 +6,7 @@ assets/
 levels/*.bin
 tools/lvl2bin
 tools/lvl2rom
+tools/mksnd
 tools/ppm2font
 tools/bezlut
 tools/sinlut

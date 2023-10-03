@@ -43,7 +43,18 @@ Math_rand() {
 
 int
 Math_sin(int alpha) {
-  return 0;
+  extern double sin(double arg);
+  extern double round(double arg);
+
+  const double pi = 3.14159265358979323846;
+  double size = 256;
+
+  double rads = 2*pi * (alpha / size);
+
+  double number = sin(rads);
+  int fixed = (int) round(number * size) & 0xFFFF;
+
+  return fixed;
 }
 
 int

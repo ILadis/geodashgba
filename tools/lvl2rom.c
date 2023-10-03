@@ -9,7 +9,7 @@ static char data[1024 * 1024 * 5] = {0};
 int main(int argc, char **argv) {
   Logger *log = Logger_GetInstance();
 
-  if(argc != 2) {
+  if (argc != 2) {
     Logger_PrintLine(log, "Invalid number of arguments given.\n");
     return 1;
   }

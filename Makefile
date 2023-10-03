@@ -38,7 +38,7 @@ endif
 
 .PHONY : tools utils assets build run clean purge
 
-build: main.gba main.elf levels
+build: main.gba main.elf
 
 run:
 	@$(EMU) main.gba
@@ -63,8 +63,9 @@ tools:
 
 utils: CFILES := $(filter-out source/main.c, $(CFILES))
 utils:
-	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -Iinclude -DNOGBA
-	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -Iinclude -DNOGBA
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA
+	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA
+	@gcc tools/mksnd.c $(CFILES) -o tools/mksnd -lm -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
