@@ -341,23 +341,21 @@ Everdrive_CardReadTerminate() {
 bool
 Everdrive_CardReadBlock(
     unsigned int sector,
-    void *buffer,
-    int count)
+    void *buffer)
 {
   extern void GBA_Memcpy16(void *dst, const void *src, int size);
 
   Everdrive_System *system = Everdrive_GetSystem();
   Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, sector, NULL);
 
-  while (count-- > 0) {
-    if (Everdrive_CardAwaitF0() == -1) {
-      return false;
-    }
-
-    GBA_Memcpy16(buffer, system->cardData, 512);
-    buffer += 512;
+  if (Everdrive_CardAwaitF0() == -1) {
+    return false;
   }
 
+  GBA_Memcpy16(buffer, system->cardData, 512);
+  buffer += 512;
+
+  // TODO dont terminate read if next call requests the next sector
   Everdrive_CardReadTerminate();
 
   return true;

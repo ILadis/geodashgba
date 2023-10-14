@@ -1,11 +1,10 @@
 
 #include <disk.h>
-#include <math.h>
 
 static inline bool
 Disk_BufferFill(Disk *disk, unsigned int sector) {
   disk->offset = 0;
-  return disk->read(sector, disk->buffer, 1);
+  return disk->read(sector, disk->buffer);
 }
 
 static inline bool
@@ -66,7 +65,7 @@ Disk_Initialize(
     return false;
   }
 
-  // get first partition LBA
+  // get sector of first partition
   unsigned int offset = Disk_BufferGetU32At(disk, 0x01C6);
   if (!Disk_BufferFill(disk, offset)) {
     return false;
@@ -82,39 +81,59 @@ Disk_Initialize(
     return false;
   }
 
-  disk->bytesPerSector = Disk_BufferGetU16At(disk, 0x000B);
-  disk->sectorsPerCluster = Disk_BufferGetU8At(disk, 0x000D);
-  disk->numberOfReservedSectors = Disk_BufferGetU16At(disk, 0x000E);
-  disk->numberOfFATs = Disk_BufferGetU8At(disk, 0x0010);
-  disk->numberOfSectorsPerFAT = Disk_BufferGetU16At(disk, 0x0024);
-  disk->clusterOfRootDir = Disk_BufferGetU32At(disk, 0x002C);
+  DiskInfo *info = &disk->info;
 
-  unsigned int rootOffset = offset
-    + disk->numberOfReservedSectors
-    + disk->numberOfFATs * disk->numberOfSectorsPerFAT;
+  info->bytesPerSector = Disk_BufferGetU16At(disk, 0x000B);
+  info->sectorsPerCluster = Disk_BufferGetU8At(disk, 0x000D);
+  info->sectorsPerFAT = Disk_BufferGetU16At(disk, 0x0024);
 
-  disk->rootDirectory = rootOffset;
+  unsigned short reservedSectors = Disk_BufferGetU16At(disk, 0x000E);
+  unsigned short numberOfFATs = Disk_BufferGetU8At(disk, 0x0010);
 
-/*
-  unsigned int sectorSize = disk->meta.bytesPerSector;
-  unsigned int clusterSize = sectorSize * disk->meta.sectorsPerCluster;
+  unsigned int rootDirCluster = Disk_BufferGetU32At(disk, 0x002C);
+  unsigned int firstDataSector = offset + reservedSectors + numberOfFATs * info->sectorsPerFAT;
+  unsigned int firstFATSector = offset + reservedSectors;
 
-  unsigned int fatAddress = 0
-    + offset * 512
-    + disk->meta.numberOfReservedSectors * sectorSize;
-
-  unsigned int rootDirAddress = 0
-    + offset * 512
-    + disk->meta.numberOfReservedSectors * sectorSize
-    + disk->meta.numberOfFATs * disk->meta.numberOfSectorsPerFAT * sectorSize;
-*/
+  info->rootDirCluster = rootDirCluster;
+  info->firstFATSector = firstFATSector;
+  info->firstDataSector = firstDataSector;
 
   return true;
 }
 
 static inline unsigned int
-Disk_GetEntryOffset(Disk *disk, DiskEntry *entry) {
-  return disk->rootDirectory + (entry->startCluster - disk->clusterOfRootDir) * disk->sectorsPerCluster;
+Disk_GetSectorOfCluster(Disk *disk, unsigned int cluster) {
+  return disk->info.firstDataSector + (cluster - 2) * disk->info.sectorsPerCluster;
+}
+
+static inline unsigned int
+Disk_GetNextCluster(Disk *disk, unsigned int cluster) {
+  const unsigned int shifts[] = {
+    // bytes per sector:
+    [1] =  9, //  512
+    [2] = 10, // 1024
+    [4] = 11, // 2048
+    [8] = 12, // 4096
+  };
+
+  int index = disk->info.bytesPerSector >> 9;
+  unsigned int shift = shifts[index];
+  unsigned int modulo = disk->info.bytesPerSector - 1;
+
+  if (shift == 0) {
+    return Disk_BadCluster;
+  }
+
+  unsigned int fatOffset = cluster * 4;
+  unsigned int fatSector = disk->info.firstFATSector + (fatOffset >> shift);
+  unsigned int fatEntry = fatOffset & modulo;
+
+  if (!Disk_BufferFill(disk, fatSector)) {
+    return Disk_BadCluster;
+  }
+
+  unsigned int next = Disk_BufferGetU32At(disk, fatEntry) & Disk_ClusterMask;
+  return next;
 }
 
 bool
@@ -122,8 +141,9 @@ Disk_OpenDirectory(
     Disk *disk,
     char *path[])
 {
-  unsigned int offset = disk->rootDirectory;
-  if (!Disk_BufferFill(disk, offset)) {
+  DiskInfo *info = &disk->info;
+  unsigned int sector = Disk_GetSectorOfCluster(disk, info->rootDirCluster);
+  if (!Disk_BufferFill(disk, sector)) {
     return false;
   }
 
@@ -136,14 +156,14 @@ Disk_OpenDirectory(
       if (!Disk_ReadDirectory(disk, &entry)) {
         return false;
       }
-
-      if (entry.type != DISK_ENTRY_DIRECTORY) {
-        return false;
-      }
     } while (!DiskEntry_NameEquals(&entry, name));
 
-    unsigned int offset = Disk_GetEntryOffset(disk, &entry);
-    if (!Disk_BufferFill(disk, offset)) {
+    if (entry.type != DISK_ENTRY_DIRECTORY) {
+      return false;
+    }
+
+    unsigned int sector = Disk_GetSectorOfCluster(disk, entry.startCluster);
+    if (!Disk_BufferFill(disk, sector)) {
       return false;
     }
   }
@@ -190,26 +210,156 @@ Disk_ReadDirectory(
   return true;
 }
 
+static inline bool
+Disk_SectorIsAlignedWithCluster(Disk *disk, unsigned int sector) {
+  DiskInfo *info = &disk->info;
+  return (sector & (info->sectorsPerCluster - 1)) == 0;
+}
+
 bool
 Disk_ReadFile(
     Disk *disk,
-    DiskEntry *entry,
-    unsigned char *buffer)
+    const DiskEntry *entry,
+    unsigned char *buffer,
+    unsigned int length)
 {
   if (entry->type != DISK_ENTRY_FILE) {
     return false;
   }
 
-  // TODO still WIP, finish implementation
-  unsigned int offset = Disk_GetEntryOffset(disk, entry);
-  int count = 1 + Math_div(entry->fileSize, disk->bytesPerSector);
+  unsigned int cluster = entry->startCluster;
+  unsigned int size = entry->fileSize;
 
-  return disk->read(offset, buffer, count);
+  DiskInfo *info = &disk->info;
+  unsigned int sector = Disk_GetSectorOfCluster(disk, cluster);
+
+next:
+  do {
+    // buffer to small
+    if (length <= info->bytesPerSector) {
+      return false;
+    }
+
+    if (!disk->read(sector, buffer)) {
+      return false;
+    }
+
+    // last chunk was read
+    if (size <= info->bytesPerSector) {
+      return true;
+    }
+
+    length -= info->bytesPerSector;
+    size   -= info->bytesPerSector;
+    buffer += info->bytesPerSector;
+    sector += 1;
+  } while (!Disk_SectorIsAlignedWithCluster(disk, sector));
+
+  cluster = Disk_GetNextCluster(disk, cluster);
+  switch (cluster) {
+    case Disk_BadCluster:  return false;
+    case Disk_ClusterMask: return true;
+  }
+  sector = Disk_GetSectorOfCluster(disk, cluster);
+
+  goto next;
+}
+
+static int
+DiskReader_ReadNext(void *self);
+
+static int
+DiskReader_ReadAdvance(void *self) {
+  DiskReader *reader = self;
+  Disk *disk = reader->disk;
+
+  unsigned int sector = reader->sector + 1;
+  unsigned int cluster = reader->cluster;
+
+  if (Disk_SectorIsAlignedWithCluster(disk, sector)) {
+    cluster = Disk_GetNextCluster(disk, cluster);
+    switch (cluster) {
+      case Disk_BadCluster:  return -1;
+      case Disk_ClusterMask: return -1;
+    }
+    sector = Disk_GetSectorOfCluster(disk, cluster);
+  }
+
+  if (!Disk_BufferFill(disk, sector)) {
+    return -1;
+  }
+
+  reader->position = 0;
+  reader->sector = sector;
+  reader->cluster = cluster;
+  reader->super.Read = DiskReader_ReadNext;
+
+  return DiskReader_ReadNext(self);
+}
+
+static int
+DiskReader_ReadNext(void *self) {
+  DiskReader *reader = self;
+  DiskInfo *info = &reader->disk->info;
+  Disk *disk = reader->disk;
+
+  if (reader->size <= 0) {
+    return -1;
+  }
+
+  unsigned int position = reader->position++;
+  if (reader->position >= info->bytesPerSector) {
+    reader->super.Read = DiskReader_ReadAdvance;
+  }
+
+  reader->size--;
+  return Disk_BufferGetU8At(reader->disk, position);
+}
+
+static int
+DiskReader_InitializeRead(void *self) {
+  DiskReader *reader = self;
+  DiskEntry *entry = &reader->entry;
+  Disk *disk = reader->disk;
+
+  unsigned int sector = Disk_GetSectorOfCluster(disk, entry->startCluster);
+  if (!Disk_BufferFill(disk, sector)) {
+    return -1;
+  }
+
+  reader->cluster = entry->startCluster;
+  reader->size = entry->fileSize;
+  reader->sector = sector;
+  reader->position = 0;
+  reader->super.Read = DiskReader_ReadNext;
+
+  return DiskReader_ReadNext(self);
+}
+
+Reader*
+Disk_OpenFile(
+    Disk *disk,
+    const DiskEntry *entry)
+{
+  DiskReader *reader = &disk->reader;
+
+  if (entry->type != DISK_ENTRY_FILE) {
+    return NULL;
+  }
+
+  reader->super.self = reader;
+  reader->super.Read = DiskReader_InitializeRead;
+  reader->super.SeekTo = NULL; // TODO implement seek to
+
+  reader->disk = disk;
+  reader->entry = *entry;
+
+  return &reader->super;
 }
 
 bool
 DiskEntry_NameEquals(
-    DiskEntry *entry,
+    const DiskEntry *entry,
     char *name)
 {
   const int length = strlen(entry->name);
@@ -220,4 +370,154 @@ DiskEntry_NameEquals(
   }
 
   return true;
+}
+
+static inline bool
+DiskEntry_NormalizePathSegment(
+    const char **segment,
+    char **normalized,
+    const char *delimeters,
+    int limit, bool shrink)
+{
+  static char charmap[] = {
+    // special characters:
+    [0x21] = '!', [0x23] = '#', [0x24] = '$', [0x25] = '%',
+    [0x26] = '&', [0x27] = '\'',[0x25] = '(', [0x26] = ')',
+    [0x27] = '*', [0x28] = '+', [0x28] = ',', [0x29] = '-',
+    [0x40] = '@', [0x60] = '`', [0x7B] = '{', [0x7D] = '}',
+    [0x7E] = '~',
+
+    // numbers/digits:
+    [0x30] = '0', [0x31] = '1', [0x32] = '2', [0x33] = '3',
+    [0x34] = '4', [0x35] = '5', [0x36] = '6', [0x37] = '7',
+    [0x38] = '8', [0x39] = '9',
+
+    // upper case characters:
+    [0x41] = 'A', [0x42] = 'B', [0x43] = 'C', [0x44] = 'D',
+    [0x45] = 'E', [0x46] = 'F', [0x47] = 'G', [0x48] = 'H',
+    [0x49] = 'I', [0x4A] = 'J', [0x4B] = 'K', [0x4C] = 'L',
+    [0x4D] = 'M', [0x4E] = 'N', [0x4F] = 'O', [0x50] = 'P',
+    [0x51] = 'Q', [0x52] = 'R', [0x53] = 'S', [0x54] = 'T',
+    [0x55] = 'U', [0x56] = 'V', [0x57] = 'W', [0x58] = 'X',
+    [0x59] = 'Y', [0x5A] = 'Z',
+
+    // invalid characters:
+    [0x22] = '\0', [0x2A] ='\0', [0x2B] = '\0', [0x2C] = '\0',
+    [0x2E] = '\0', [0x2F] ='\0', [0x3A] = '\0', [0x3B] = '\0',
+    [0x3C] = '\0', [0x3D] ='\0', [0x3E] = '\0', [0x3F] = '\0',
+    [0x5B] = '\0', [0x5C] ='\0', [0x5D] = '\0', [0x7C] = '\0',
+
+    // lower case are mapped to upper case:
+    [0x61] = 'A', [0x62] = 'B', [0x63] = 'C', [0x64] = 'D',
+    [0x65] = 'E', [0x66] = 'F', [0x67] = 'G', [0x68] = 'H',
+    [0x69] = 'I', [0x6A] = 'J', [0x6B] = 'K', [0x6C] = 'L',
+    [0x6D] = 'M', [0x6E] = 'N', [0x6F] = 'O', [0x70] = 'P',
+    [0x71] = 'Q', [0x72] = 'R', [0x73] = 'S', [0x74] = 'T',
+    [0x75] = 'U', [0x76] = 'V', [0x77] = 'W', [0x78] = 'X',
+    [0x79] = 'Y', [0x7A] = 'Z',
+  };
+
+  int index = 0;
+
+  do {
+    char byte = (*segment)[index];
+    if (byte >= sizeof(charmap)) {
+      return false; // invalid character
+    }
+
+    int i = 0;
+    do {
+      if (delimeters[i] == byte) {
+        goto done;
+      }
+    } while (delimeters[i++] != '\0');
+
+    char glyph = charmap[byte];
+    if (glyph == '\0') {
+      return false; // invalid character
+    }
+
+    if (index < limit) {
+      (*normalized)[index] = glyph;
+    }
+
+    index++;
+  } while (true);
+
+done:
+  // empty file names are not allowed
+  if (shrink && index == 0) {
+    return false;
+  }
+
+  // fill remaining characters with spaces
+  for (int i = index; i < limit; i++) {
+    (*normalized)[i] = ' ';
+  }
+
+  if (index >= limit && shrink) {
+    (*normalized)[limit - 2] = '~';
+    (*normalized)[limit - 1] = '1';
+  }
+
+  *segment += index;
+  *normalized += limit;
+
+  return true;
+}
+
+bool
+DiskEntry_NormalizePath(
+    const char *pathname,
+    char *path[])
+{
+  int index = 0;
+
+  do {
+    char *segment = path[index];
+    if (segment == NULL) {
+      return false;
+    }
+
+    if (*pathname == '/' && *(++pathname) == '\0') {
+      break;
+    }
+
+    if (!DiskEntry_NormalizePathSegment(&pathname, &segment, "./", 8, true)) {
+      return false;
+    }
+
+    if (*pathname == '.') {
+      pathname++;
+    }
+
+    if (!DiskEntry_NormalizePathSegment(&pathname, &segment, "/", 3, false)) {
+      return false;
+    }
+
+    index++;
+  } while (*pathname != '\0');
+
+  path[index] = NULL;
+
+  return true;
+}
+
+char*
+DiskEntry_DirnameOf(char *path[]) {
+  int index = 0;
+
+  while (path[index] != NULL) {
+    char *current = path[index];
+    char *next = path[index + 1];
+
+    if (next == NULL) {
+      path[index] = NULL;
+      return current;
+    }
+
+    index++;
+  }
+
+  return NULL;
 }

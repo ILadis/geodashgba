@@ -66,6 +66,7 @@ utils:
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA
 	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA
 	@gcc tools/mksnd.c $(CFILES) -o tools/mksnd -lm -Iinclude -DNOGBA
+	@gcc tools/lsdsk.c $(CFILES) -o tools/lsdsk -lm -Iinclude -DNOGBA
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
@@ -87,7 +88,7 @@ tests: $(TESTS)
 
 test/%: CFILES := $(filter-out source/main.c, $(CFILES))
 test/%:
-	@gcc $@.c $(CFILES) -o test.elf -g -O0 -Iinclude -DNOGBA
+	@gcc $@.c $(CFILES) -o test.elf -g -O0 -lm -Iinclude -DNOGBA
 	@$(RUNNER) ./test.elf
 	@rm test.elf
 

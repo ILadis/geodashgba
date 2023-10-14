@@ -15,7 +15,7 @@ Scene_DoPlay() {
 
   if (!Everdrive_CardInitialize()) {
     Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "diskInit failed");
+    Logger_PrintLine(logger, "Error initializing disk");
     while(true);
   }
 
@@ -24,7 +24,7 @@ Scene_DoPlay() {
 
   if (!Disk_Initialize(&disk, Everdrive_CardReadBlock)) {
     Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "Error initializing disk");
+    Logger_PrintLine(logger, "Error initializing file system");
     while(true);
   }
 

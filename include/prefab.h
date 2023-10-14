@@ -1,7 +1,7 @@
 #ifndef PREFAB_H
 #define PREFAB_H
 
-#include "types.h"
+#include <types.h>
 
 typedef bool (*Action)(void *object);
 typedef struct Entity Entity;

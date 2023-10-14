@@ -1,7 +1,7 @@
 #ifndef GBA_H
 #define GBA_H
 
-#include "types.h"
+#include <types.h>
 
 #define GBA_SCREEN_WIDTH  240
 #define GBA_SCREEN_HEIGHT 160

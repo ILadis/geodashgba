@@ -87,44 +87,60 @@ static unsigned char sysDir[] = {
   [511] = 0x00
 };
 
+static unsigned char registeryDat[] = {
+  [  0] = 0x2f, 0x52, 0x4f, 0x4d, 0x53, 0x2f, 0x67, 0x65, 0x6f, 0x64, 0x61, 0x73, 0x68, 0x2e, 0x67, 0x62,
+          0x61, 0x00, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x72, 0x79, 0x2e, 0x67, 0x62, 0x61, 0x00, 0x20, 0x53,
+          0x61, 0x70, 0x70, 0x68, 0x69, 0x72, 0x65, 0x2e, 0x67, 0x62, 0x61, 0x00, 0x68, 0x65, 0x20, 0x53,
+          0x69, 0x74, 0x68, 0x2e, 0x67, 0x62, 0x61, 0x00, 0x6f, 0x72, 0x64, 0x73, 0x2e, 0x67, 0x62, 0x61,
+  [320] = 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xac, 0x8f, 0x02, 0x00, 0x30, 0x31, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x02, 0x01, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x74, 0x08, 0x37, 0x32,
+  [511] = 0x00
+};
+
+static unsigned char emptySector[512] = {0};
+
 static bool
-Disk_ReadStatic(unsigned int index, void *buffer, int count) {
+Disk_ReadStatic(unsigned int index, void *buffer) {
   static unsigned char *sectors[] = {
-    [0x0000] = bootRecord,
-    [0x2000] = superBlock,
-    [0x2492] = NULL, // first FAT
-    [0x6000] = rootDir,
-    [0x6040] = gbasysDir,
-    [0x6a00] = sysDir,
+    [0x00000] = bootRecord,
+    [0x02000] = superBlock,
+    [0x02492] = NULL, // first FAT
+    [0x06000] = rootDir,
+    [0x06040] = gbasysDir,
+    [0x06a00] = sysDir,
+    [0x5a740] = registeryDat,
   };
 
-  if (sectors[index] == NULL) {
-    return false;
+  unsigned char *source = emptySector;
+  if (sectors[index] != NULL) {
+    source = sectors[index];
   }
 
   unsigned char *target = buffer;
   for (int i = 0; i < 512; i++) {
-    target[i] = sectors[index][i];
+    target[i] = source[i];
   }
 
   return true;
 }
 
-test(Initialize_ShouldReadDiskMetadata) {
+test(Initialize_ShouldReadDiskInfo) {
   // arrange
   Disk disk = {0};
+  DiskInfo *info = &disk.info;
 
   // act
   bool result = Disk_Initialize(&disk, Disk_ReadStatic);
 
   // assert
   assert(result == true);
-  assert(disk.bytesPerSector == 512);
-  assert(disk.sectorsPerCluster == 64);
-  assert(disk.numberOfReservedSectors == 1170);
-  assert(disk.numberOfFATs == 2);
-  assert(disk.numberOfSectorsPerFAT == 7607);
-  assert(disk.clusterOfRootDir == 2);
+  assert(info->bytesPerSector == 512);
+  assert(info->sectorsPerCluster == 64);
+  assert(info->sectorsPerFAT == 7607);
+  assert(info->rootDirCluster == 2);
+  assert(info->firstFATSector == 9362);
+  assert(info->firstDataSector == 24576);
 }
 
 test(ReadDirectory_ShouldReturnExpectedEntries) {
@@ -258,10 +274,220 @@ test(OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother) {
   assert(count == 10);
 }
 
+test(ReadFile_ShouldFillBufferWithContentsOfFileAndReturnTrue) {
+  // arrange
+  Disk disk = {0};
+  Disk_Initialize(&disk, Disk_ReadStatic);
+
+  char *path[] = {
+    "GBASYS     ",
+    "SYS        ",
+    NULL
+  };
+
+  Disk_OpenDirectory(&disk, path);
+
+  DiskEntry entry = {0};
+  while (Disk_ReadDirectory(&disk, &entry)) {
+    if (DiskEntry_NameEquals(&entry, "REGIST~1DAT")) {
+      break;
+    }
+  }
+
+  unsigned char buffer[1024] = {0};
+  unsigned int length = sizeof(buffer);
+
+  // act
+  bool result = Disk_ReadFile(&disk, &entry, buffer, length);
+
+  // assert
+  assert(result == true);
+
+  for (int i = 0; i < entry.fileSize; i++) {
+    assert(buffer[i] == registeryDat[i]);
+  }
+}
+
+test(OpenFile_ShouldReturnReaderAndReadFileByteByByte) {
+  // arrange
+  Disk disk = {0};
+  Disk_Initialize(&disk, Disk_ReadStatic);
+
+  char *path[] = {
+    "GBASYS     ",
+    "SYS        ",
+    NULL
+  };
+
+  Disk_OpenDirectory(&disk, path);
+
+  DiskEntry entry = {0};
+  while (Disk_ReadDirectory(&disk, &entry)) {
+    if (DiskEntry_NameEquals(&entry, "REGIST~1DAT")) {
+      break;
+    }
+  }
+
+  // act
+  Reader *reader = Disk_OpenFile(&disk, &entry);
+
+  // assert
+  assert(reader != NULL);
+
+  for (int i = 0; i < entry.fileSize; i++) {
+    int byte = Reader_Read(reader);
+    assert(byte == registeryDat[i]);
+  }
+
+  int byte = Reader_Read(reader);
+  assert(byte == -1);
+}
+
+test(NormalizePath_ShouldReturnExpectedNormalizedPath) {
+  // arrange
+  const char *pathname = "/GBASYS/sys/registery.dat";
+
+  char segments[4][12] = {0};
+  char *path[] = {
+    segments[0],
+    segments[1],
+    segments[2],
+    segments[3],
+    NULL,
+  };
+
+  const char *expected[] = {
+    "GBASYS     ",
+    "SYS        ",
+    "REGIST~1DAT",
+  };
+
+  // act
+  bool result = DiskEntry_NormalizePath(pathname, path);
+
+  // assert
+  assert(result == true);
+  assert(path[3] == NULL);
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 12; j++) {
+      assert(expected[i][j] == path[i][j]);
+    }
+  }
+}
+
+test(NormalizePath_ShouldReturnExpectedNormalizedPathForRootDirectory) {
+  // arrange
+  const char *pathname = "/";
+
+  char segments[3][12] = {0};
+  char *path[] = {
+    segments[0],
+    segments[1],
+    segments[2],
+    NULL,
+  };
+
+  // act
+  bool result = DiskEntry_NormalizePath(pathname, path);
+
+  // assert
+  assert(result == true);
+  assert(path[0] == NULL);
+  assert(path[1] == segments[1]);
+  assert(path[2] == segments[2]);
+  assert(path[3] == NULL);
+}
+
+test(NormalizePath_ShouldReturnFalseWhenPathnameContainsInvalidCharacters) {
+  // arrange
+  char segments[4][12] = {0};
+  const char *pathnames[] = {
+    "/GBASYS/sys/reg:stery.dat",
+    "///",
+    "/GBASYS/sys/.dat",
+    "/GBASYS/./romcfg",
+  };
+
+  for (int i = 0; i < length(pathnames); i++) {
+    char *path[] = {
+      segments[0],
+      segments[1],
+      segments[2],
+      segments[3],
+      NULL,
+    };
+
+    // act
+    bool result = DiskEntry_NormalizePath(pathnames[i], path);
+
+    // assert
+    assert(result == false);
+  }
+}
+
+test(NormalizePath_ShouldReturnFalseWhenPathnameExceedsCapacityOfProvidedPath) {
+  // arrange
+  const char *pathname = "/GBASYS/sys/regstery.dat";
+
+  char segments[2][12] = {0};
+  char *path[] = {
+    segments[0],
+    segments[1],
+    NULL,
+  };
+
+  // act
+  bool result = DiskEntry_NormalizePath(pathname, path);
+
+  // assert
+  assert(result == false);
+}
+
+test(DirnameOf_ShouldReturnExpectedFilenameAndAlterPath) {
+  // arrange
+  char *folder1 = "GBASYS     ";
+  char *folder2 = "SYS        ";
+  char *file    = "RECENT  DAT";
+
+  char *path[] = { folder1, folder2, file, NULL };
+
+  // act
+  char *filename = DiskEntry_DirnameOf(path);
+
+  // assert
+  assert(filename == file);
+  assert(path[0] == folder1);
+  assert(path[1] == folder2);
+  assert(path[2] == NULL);
+  assert(path[3] == NULL);
+}
+
+test(DirnameOf_ShouldReturnNullForRootDirectory) {
+  // arrange
+  char *path[] = { NULL };
+
+  // act
+  char *filename = DiskEntry_DirnameOf(path);
+
+  // assert
+  assert(filename == NULL);
+  assert(path[0] == NULL);
+}
+
 suite(
-  Initialize_ShouldReadDiskMetadata,
+  Initialize_ShouldReadDiskInfo,
   ReadDirectory_ShouldReturnExpectedEntries,
   ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead,
+  OpenDirectory_ShouldReturnTrueIfSubdirectoriesExist,
   OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist,
   OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile,
-  OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother);
+  OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother,
+  ReadFile_ShouldFillBufferWithContentsOfFileAndReturnTrue,
+  OpenFile_ShouldReturnReaderAndReadFileByteByByte,
+  NormalizePath_ShouldReturnExpectedNormalizedPath,
+  NormalizePath_ShouldReturnExpectedNormalizedPathForRootDirectory,
+  NormalizePath_ShouldReturnFalseWhenPathnameContainsInvalidCharacters,
+  NormalizePath_ShouldReturnFalseWhenPathnameExceedsCapacityOfProvidedPath,
+  DirnameOf_ShouldReturnExpectedFilenameAndAlterPath,
+  DirnameOf_ShouldReturnNullForRootDirectory);

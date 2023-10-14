@@ -1,22 +1,10 @@
 #ifndef DISK_H
 #define DISK_H
 
-#include "types.h"
+#include <types.h>
+#include <io.h>
 
-typedef bool (*Disk_ReadFn)(unsigned int sector, void *buffer, int count);
-
-typedef struct Disk {
-  unsigned char buffer[512];
-  unsigned int offset;
-  bool (*read)(unsigned int sector, void *buffer, int count);
-  unsigned short bytesPerSector;
-  unsigned short sectorsPerCluster;
-  unsigned short numberOfReservedSectors;
-  unsigned short numberOfFATs;
-  unsigned short numberOfSectorsPerFAT;
-  unsigned short clusterOfRootDir;
-  unsigned int rootDirectory;
-} Disk;
+typedef bool (*Disk_ReadFn)(unsigned int sector, void *buffer);
 
 typedef struct DiskEntry {
   char name[12];
@@ -27,6 +15,38 @@ typedef struct DiskEntry {
   unsigned int startCluster;
   unsigned int fileSize;
 } DiskEntry;
+
+typedef struct Disk {
+  unsigned char buffer[512]; // TODO support sectors greater than 512 bytes
+  unsigned int offset;
+  bool (*read)(unsigned int sector, void *buffer);
+
+  struct DiskInfo {
+    unsigned short bytesPerSector;
+    unsigned short sectorsPerCluster;
+    unsigned short sectorsPerFAT;
+
+    unsigned int rootDirCluster;
+    unsigned int firstDataSector;
+    unsigned int firstFATSector;
+  } info;
+
+  struct DiskReader {
+    Reader super;
+    struct Disk *disk;
+    struct DiskEntry entry;
+    unsigned int cluster;
+    unsigned int sector;
+    unsigned int position;
+    unsigned int size;
+  } reader;
+} Disk;
+
+#define Disk_ClusterMask 0x0FFFFFFF
+#define Disk_BadCluster  0x0FFFFFF7
+
+typedef struct DiskInfo DiskInfo;
+typedef struct DiskReader DiskReader;
 
 bool
 Disk_Initialize(
@@ -46,12 +66,26 @@ Disk_ReadDirectory(
 bool
 Disk_ReadFile(
     Disk *disk,
-    DiskEntry *entry,
-    unsigned char *buffer);
+    const DiskEntry *entry,
+    unsigned char *buffer,
+    unsigned int length);
+
+Reader*
+Disk_OpenFile(
+    Disk *disk,
+    const DiskEntry *entry);
 
 bool
 DiskEntry_NameEquals(
-    DiskEntry *entry,
+    const DiskEntry *entry,
     char *name);
+
+bool
+DiskEntry_NormalizePath(
+    const char *pathname,
+    char *path[]);
+
+char*
+DiskEntry_DirnameOf(char *path[]);
 
 #endif

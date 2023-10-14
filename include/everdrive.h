@@ -1,7 +1,7 @@
 #ifndef EVERDRIVE_H
 #define EVERDRIVE_H
 
-#include "types.h"
+#include <types.h>
 
 #define EVERDRIVE_MEM_IO 0x09FC0000
 
@@ -191,7 +191,6 @@ Everdrive_CardInitialize();
 bool
 Everdrive_CardReadBlock(
     unsigned int sector,
-    void *buffer,
-    int count);
+    void *buffer);
 
 #endif
