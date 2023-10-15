@@ -174,7 +174,10 @@ typedef struct Everdrive_System {
   Everdrive_CardSpeed cardSpeed;
 
   void (*cardCallback)(Everdrive_CardCommand command);
+  unsigned int cardSector;
 } Everdrive_System;
+
+#define Everdrive_CardSectorNone ~0
 
 Everdrive_System*
 Everdrive_GetSystem();

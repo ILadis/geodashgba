@@ -58,6 +58,7 @@ Everdrive_GetSystem() {
 
     .cardSpeed = EVERDRIVE_CARD_SPEED_SLOW,
     .cardCallback = Everdrive_NoopCallback,
+    .cardSector = Everdrive_CardSectorNone,
   };
 
   return &system;
@@ -346,17 +347,19 @@ Everdrive_CardReadBlock(
   extern void GBA_Memcpy16(void *dst, const void *src, int size);
 
   Everdrive_System *system = Everdrive_GetSystem();
-  Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, sector, NULL);
+  bool continuous = sector == system->cardSector;
+
+  if (!continuous) {
+    if (system->cardSector != Everdrive_CardSectorNone) Everdrive_CardReadTerminate();
+    Everdrive_CardSendCommand(EVERDRIVE_CARD_CMD18, sector, NULL);
+  }
 
   if (Everdrive_CardAwaitF0() == -1) {
     return false;
   }
 
   GBA_Memcpy16(buffer, system->cardData, 512);
-  buffer += 512;
-
-  // TODO dont terminate read if next call requests the next sector
-  Everdrive_CardReadTerminate();
+  system->cardSector = sector + 1;
 
   return true;
 }
