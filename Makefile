@@ -12,6 +12,7 @@ CFILES   += $(wildcard assets/*.c) $(wildcard assets/fonts/*.c) $(wildcard asset
 
 # level files
 LEVELS   := $(patsubst %.txt,%.bin,$(wildcard levels/*.txt))
+LEVELS   := $(filter-out levels/99_%.bin, $(LEVELS))
 
 # toolchain and flags
 EMU      := visualboyadvance-m
