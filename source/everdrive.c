@@ -64,6 +64,7 @@ Everdrive_GetSystem() {
   return &system;
 }
 
+// TODO make this return a boolean (true if successful)
 void
 Everdrive_UnlockSystem() {
   Everdrive_System *system = Everdrive_GetSystem();

@@ -105,11 +105,6 @@ Scene_DoPlay() {
     Scene *current = Scene_GetCurrent();
     Scene_FadeReplaceWith(current, play);
   }
-  else if (GBA_Input_IsHit(GBA_KEY_SELECT)) {
-    extern const Scene *disk;
-    Scene *current = Scene_GetCurrent();
-    Scene_ReplaceWith(current, disk);
-  }
 }
 
 static void

@@ -4,7 +4,7 @@
 
 test(DefineWithTotalSpace_ShouldDefineNewCollectionWithGivenSize) {
   // act
-  Collection *collection = Collection_DefineWithTotalSpace(1024);
+  DataCollection *collection = DataCollection_DefineWithTotalSpace(1024);
 
   // assert
   assert(collection->length == 1024);
@@ -12,7 +12,7 @@ test(DefineWithTotalSpace_ShouldDefineNewCollectionWithGivenSize) {
 
 test(DefineWithUsableSpace_ShouldDefineNewCollectionWithUsableSpace) {
   // act
-  Collection *collection = Collection_DefineWithUsableSpace(7);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(7);
 
   // assert
   assert(collection->length > 7);
@@ -20,14 +20,14 @@ test(DefineWithUsableSpace_ShouldDefineNewCollectionWithUsableSpace) {
 
 test(DefineWithUsableSpace_ShouldAllocatedExpectedBytesForZeroSize) {
   // arrange
-  const int size = sizeof(Collection);
+  const int size = sizeof(DataCollection);
   const unsigned char header[] = {
     0x4c, 0x65, 0x76, 0x65, 0x6c, 0x43, 0x6f, 0x6c, 0x6c, 0x65,
     0x63, 0x74, 0x69, 0x6f, 0x6e, 0x21, size, 0x00, 0x00, 0x00,
   };
 
   // act
-  Collection *collection = Collection_DefineWithUsableSpace(0);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(0);
 
   // assert
   unsigned char *data = (unsigned char *) collection;
@@ -38,7 +38,7 @@ test(DefineWithUsableSpace_ShouldAllocatedExpectedBytesForZeroSize) {
 
 test(AddLevel_ShouldReturnFalseWhenThereIsNoSpaceLeftForNewLevel) {
   // arrange
-  Collection *collection = Collection_DefineWithUsableSpace(6);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(6);
 
   unsigned char data[] = { 0x00, 0x00, 0x00 };
 
@@ -55,9 +55,9 @@ test(AddLevel_ShouldReturnFalseWhenThereIsNoSpaceLeftForNewLevel) {
   Binv1Level_From(&level3, source);
 
   // act
-  bool result1 = Collection_AddLevel(collection, &level1);
-  bool result2 = Collection_AddLevel(collection, &level2);
-  bool result3 = Collection_AddLevel(collection, &level3);
+  bool result1 = DataCollection_AddLevel(collection, &level1);
+  bool result2 = DataCollection_AddLevel(collection, &level2);
+  bool result3 = DataCollection_AddLevel(collection, &level3);
 
   // assert
   assert(result1 == true && result2 == true);
@@ -69,7 +69,7 @@ test(AddLevel_ShouldReturnFalseWhenThereIsNoSpaceLeftForNewLevel) {
 
 test(AddLevel_ShouldAllocateSpaceForLevelAndAppendLevelData) {
   // arrange
-  Collection *collection = Collection_DefineWithUsableSpace(1024);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(1024);
 
   unsigned char data[] = { 0x00, 0x00, 0x00 };
 
@@ -80,7 +80,7 @@ test(AddLevel_ShouldAllocateSpaceForLevelAndAppendLevelData) {
   Binv1Level_From(&level, source);
 
   // act
-  bool result = Collection_AddLevel(collection, &level);
+  bool result = DataCollection_AddLevel(collection, &level);
 
   // assert
   assert(result == true);
@@ -90,7 +90,7 @@ test(AddLevel_ShouldAllocateSpaceForLevelAndAppendLevelData) {
 
 test(GetLevelByIndex_ShouldReturnExpectedLevel) {
   // arrange
-  Collection *collection = Collection_DefineWithUsableSpace(9);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(9);
 
   unsigned char data[][3] = {
     { 0x01, 0x02, 0x03 },
@@ -105,11 +105,11 @@ test(GetLevelByIndex_ShouldReturnExpectedLevel) {
     Binv1Level level;
     Binv1Level_From(&level, source);
 
-    Collection_AddLevel(collection, &level);
+    DataCollection_AddLevel(collection, &level);
   }
 
   // act
-  const Binv1Level *level = Collection_GetLevelByIndex(collection, 2);
+  const Binv1Level *level = DataCollection_GetLevelByIndex(collection, 2);
 
   // assert
   assert(level != NULL);
@@ -124,7 +124,7 @@ test(GetLevelByIndex_ShouldReturnExpectedLevel) {
 
 test(GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist) {
   // arrange
-  Collection *collection = Collection_DefineWithUsableSpace(6);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(6);
 
   unsigned char data[][3] = {
     { 0x01, 0x02, 0x03 },
@@ -138,13 +138,13 @@ test(GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist) {
     Binv1Level level;
     Binv1Level_From(&level, source);
 
-    Collection_AddLevel(collection, &level);
+    DataCollection_AddLevel(collection, &level);
   }
 
   // act
   const Binv1Level *levels[] = {
-    Collection_GetLevelByIndex(collection, -1),
-    Collection_GetLevelByIndex(collection, +2),
+    DataCollection_GetLevelByIndex(collection, -1),
+    DataCollection_GetLevelByIndex(collection, +2),
   };
 
   // assert
@@ -160,14 +160,14 @@ test(ReadFrom_ShouldReturnTrueIfCollectionIsPresentInReader) {
     [512] = 0x00
   };
 
-  Collection *collection = Collection_DefineWithUsableSpace(200);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(200);
 
   Buffer buffer;
   DataSource *source = Buffer_From(&buffer, data, sizeof(data));
   Reader *reader = DataSource_AsReader(source);
 
   // act
-  bool result = Collection_ReadFrom(collection, reader);
+  bool result = DataCollection_ReadFrom(collection, reader);
 
   // assert
   assert(result == true);
@@ -182,14 +182,14 @@ test(ReadFrom_ShouldReturnFalseIfCollectionInReaderWouldNotFitIntoProvidedCollec
     [512] = 0x00
   };
 
-  Collection *collection = Collection_DefineWithTotalSpace(254);
+  DataCollection *collection = DataCollection_DefineWithTotalSpace(254);
 
   Buffer buffer;
   DataSource *source = Buffer_From(&buffer, data, sizeof(data));
   Reader *reader = DataSource_AsReader(source);
 
   // act
-  bool result = Collection_ReadFrom(collection, reader);
+  bool result = DataCollection_ReadFrom(collection, reader);
 
   // assert
   assert(result == false);

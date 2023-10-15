@@ -1,196 +1,58 @@
 
 #include <game/collection.h>
 
-static const Collection *collection = Collection_DefineNew(const, 300 * 1024);
+static Collection const* collections[5];
+
+static int GetLevelCount() {
+  int Collections_GetLevelCount(Collection const* collections[]);
+  return Collections_GetLevelCount(collections);
+}
+
+static Binv1Level* GetLevelByIndex(int index) {
+  Binv1Level* Collections_GetLevelByIndex(Collection const* collections[], int index);
+  return Collections_GetLevelByIndex(collections, index);
+}
 
 const Collection*
 Collection_GetInstance() {
-  return collection;
+  static const Collection base = {
+    .GetLevelCount = GetLevelCount,
+    .GetLevelByIndex = GetLevelByIndex,
+  };
+
+  collections[0] = DataCollection_GetInstance();
+  collections[1] = DiskCollection_GetInstance();
+  collections[2] = NULL;
+
+  return &base;
 }
 
 int
-Collection_GetLevelCount(const Collection *collection) {
-  return collection->count;
-}
+Collections_GetLevelCount(Collection const* collections[]) {
+  int count = 0;
 
-static const unsigned char*
-Collection_GetReadBuffer(const Collection *collection) {
-  const unsigned char *buffer = (const unsigned char *) collection;
-  const int header = sizeof(Collection);
-  return &buffer[header];
-}
+  const Collection *collection = collections[0];
+  for (int i = 0; collection != NULL; collection = collections[++i]) {
+    count += Collection_GetLevelCount(collection);
+  }
 
-static unsigned char*
-Collection_GetWriteBuffer(Collection *collection) {
-  unsigned char *buffer = (unsigned char *) collection;
-  const int header = sizeof(Collection);
-  return &buffer[header];
+  return count;
 }
 
 Binv1Level*
-Collection_GetLevelByIndex(
-    const Collection *collection,
+Collections_GetLevelByIndex(
+    Collection const* collections[],
     int index)
 {
-  static Buffer buffer = {0};
-  static Binv1Level level = {0};
-
-  if (index < collection->count && index >= 0) {
-    int length = collection->allocations[index];
-    int offset = 0;
-
-    for (int i = 0; i < index; i++) {
-      offset += collection->allocations[i];
+  const Collection *collection = collections[0];
+  for (int i = 0; collection != NULL; collection = collections[++i]) {
+    int count = Collection_GetLevelCount(collection);
+    if (index < count) {
+      return Collection_GetLevelByIndex(collection, index);
     }
 
-    // FIXME this is const (Buffer_Wrap requires non const)
-    /*const*/ unsigned char *data = (unsigned char *) Collection_GetReadBuffer(collection);
-
-    DataSource *source = Buffer_From(&buffer, &data[offset], length);
-    Binv1Level_From(&level, source);
-
-    return &level;
+    index -= count;
   }
 
   return NULL;
-}
-
-static bool
-Collection_CanAllocate(
-    const Collection *collection,
-    int offset,
-    int length)
-{
-  const int header = sizeof(Collection);
-  const int size = collection->length;
-  const int limit = size - header;
-
-  return offset + length <= limit;
-}
-
-bool
-Collection_AddLevel(
-    Collection *collection,
-    const Binv1Level *level)
-{
-  int index = collection->count;
-  if (index >= length(collection->allocations)) {
-    return false;
-  }
-
-  int offset = 0;
-  for (int i = 0; i < collection->count; i++) {
-    offset += collection->allocations[i];
-  }
-
-  int length = level->size;
-  if (!Collection_CanAllocate(collection, offset, length)) {
-    return false;
-  }
-
-  unsigned char *data = Collection_GetWriteBuffer(collection);
-
-  DataSource *target = Buffer_From(&(Buffer) {0}, &data[offset], length);
-  Writer *writer = DataSource_AsWriter(target);
-
-  DataSource *source = level->source;
-  Reader *reader = DataSource_AsReader(source);
-
-  for (int i = 0; i < length; i++) {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    if (!Writer_Write(writer, byte)) {
-      return false;
-    }
-  }
-
-  collection->allocations[index] = length;
-  collection->count++;
-
-  return true;
-}
-
-bool
-Collection_FindSignature(const Reader *reader) {
-  const Collection *collection = Collection_DefineWithUsableSpace(0);
-
-  const int length = sizeof(collection->signature);
-  int index = 0;
-
-  do {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    if (byte == collection->signature[index]) {
-      index++;
-    } else {
-      index = 0;
-    }
-  } while (index != length);
-
-  return true;
-}
-
-bool
-Collection_ReadFrom(
-    volatile Collection *collection,
-    const Reader *reader)
-{
-  int index = sizeof(collection->signature);
-
-  if (!Collection_FindSignature(reader)) {
-    return false;
-  }
-
-  unsigned char *buffer = (unsigned char *) collection;
-  const int header = sizeof(*collection);
-  const int length = collection->length;
-
-  while (index < header) {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    buffer[index++] = byte;
-  }
-
-  if (collection->length > length) {
-    return false;
-  }
-
-  const int limit = collection->length;
-  do {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    buffer[index++] = byte;
-  } while (index != limit);
-
-  return true;
-}
-
-bool
-Collection_WriteTo(
-    const Collection *collection,
-    const Writer *writer)
-{
-  const unsigned char *buffer = (const unsigned char *) collection;
-  const int length = collection->length;
-
-  int index = sizeof(collection->signature);
-  while (index < length) {
-    if (!Writer_Write(writer, buffer[index++])) {
-      return false;
-    }
-  }
-
-  return true;
 }

@@ -2,20 +2,52 @@
 #define COLLECTION_H
 
 #include <types.h>
+#include <everdrive.h>
+#include <disk.h>
 #include <io.h>
 #include <game/level.h>
 
 typedef struct Collection {
+  int (*GetLevelCount)();
+  Binv1Level* (*GetLevelByIndex)(int index);
+} Collection;
+
+const Collection*
+Collection_GetInstance();
+
+static inline int
+Collection_GetLevelCount(const Collection *collection) {
+  return collection->GetLevelCount();
+}
+
+static inline Binv1Level*
+Collection_GetLevelByIndex(const Collection *collection, int index) {
+  return collection->GetLevelByIndex(index);
+}
+
+typedef struct DiskCollection {
+  Disk disk;
+  DiskEntry levels[15];
+  int count;
+} DiskCollection;
+
+const Collection*
+DiskCollection_GetInstance();
+
+typedef struct DataCollection {
   char signature[16];
   int length;
-  short count;
-  int allocations[20];
-} packed Collection;
+  volatile short count;
+  volatile int allocations[20];
+} packed DataCollection;
 
-#define Collection_DefineWithUsableSpace(size) Collection_DefineNew(, sizeof(Collection) + size)
-#define Collection_DefineWithTotalSpace(size) Collection_DefineNew(, size)
+const Collection*
+DataCollection_GetInstance();
 
-#define Collection_DefineNew(modifier, size) (Collection *) \
+#define DataCollection_DefineWithUsableSpace(size) DataCollection_DefineNew(, sizeof(DataCollection) + size)
+#define DataCollection_DefineWithTotalSpace(size) DataCollection_DefineNew(, size)
+
+#define DataCollection_DefineNew(modifier, size) (DataCollection *) \
 ((align8 modifier unsigned char[size]) { \
   'L', 'e', 'v', 'e', 'l', 'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'o', 'n', '!', \
   (unsigned char) (((size) >>  0) & 0xFF), \
@@ -24,35 +56,32 @@ typedef struct Collection {
   (unsigned char) (((size) >> 24) & 0xFF), \
 })
 
-const Collection*
-Collection_GetInstance();
-
 int
-Collection_GetLevelCount(const Collection *collection);
+DataCollection_GetLevelCount(const DataCollection *collection);
 
 Binv1Level*
-Collection_GetLevelByIndex(
-    const Collection *collection,
+DataCollection_GetLevelByIndex(
+    const DataCollection *collection,
     int index);
 
 bool
-Collection_AddLevel(
-    Collection *collection,
+DataCollection_AddLevel(
+    DataCollection *collection,
     const Binv1Level *level);
 
-// TODO implement Collection_RemoveLevel
+// TODO implement DataCollection_RemoveLevel
 
 bool
-Collection_FindSignature(const Reader *reader);
+DataCollection_FindSignature(const Reader *reader);
 
 bool
-Collection_ReadFrom(
-    volatile Collection *collection,
+DataCollection_ReadFrom(
+    DataCollection *collection,
     const Reader *reader);
 
 bool
-Collection_WriteTo(
-    const Collection *collection,
+DataCollection_WriteTo(
+    const DataCollection *collection,
     const Writer *writer);
 
 #endif

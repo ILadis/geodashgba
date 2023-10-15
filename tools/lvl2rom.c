@@ -27,11 +27,11 @@ int main(int argc, char **argv) {
   buffer.length = DataSource_CopyFrom(source, input);
 
   Reader *reader = DataSource_AsReader(target);
-  Collection *collection = Collection_DefineWithUsableSpace(300 * 1024);
+  DataCollection *collection = DataCollection_DefineWithUsableSpace(300 * 1024);
 
   int attempts = 5;
   while (attempts-- > 0) {
-    if (Collection_ReadFrom(collection, reader)) {
+    if (DataCollection_ReadFrom(collection, reader)) {
       break;
     }
   }
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  int count = Collection_GetLevelCount(collection);
+  int count = DataCollection_GetLevelCount(collection);
   int length = collection->length;
 
   Logger_Print(log, "Found level collection of size 0x");
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   Binv1Level binv1;
   Level *level = Binv1Level_From(&binv1, source);
 
-  if (!Collection_AddLevel(collection, &binv1)) {
+  if (!DataCollection_AddLevel(collection, &binv1)) {
     Logger_PrintLine(log, "Could not add level to collection.");
     return 1;
   }
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
   // TODO find better way to restore position
   Reader_SeekTo(reader, 0);
   while (attempts++ < 5) {
-    if (!Collection_FindSignature(reader)) {
+    if (!DataCollection_FindSignature(reader)) {
       break;
     }
   }
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   Logger_Print(log, name);
 
   Writer *writer = DataSource_AsWriter(target);
-  Collection_WriteTo(collection, writer);
+  DataCollection_WriteTo(collection, writer);
 
   Logger_PrintLine(log, "... Done!");
 
