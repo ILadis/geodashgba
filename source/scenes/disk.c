@@ -5,62 +5,72 @@
 #include <disk.h>
 #include <scene.h>
 
+#include <game/level.h>
+#include <game/course.h>
+
 extern Logger* Debug_GetLogger();
+static Disk sdcard = {0};
+
+static void
+Scene_DoEnter() {
+  static bool once = true;
+
+  if (once) {
+    Everdrive_UnlockSystem();
+
+    if (Everdrive_CardInitialize()) {
+      Disk_Initialize(&sdcard, Everdrive_CardReadBlock);
+    }
+
+    once = false;
+  }
+}
 
 static void
 Scene_DoPlay() {
+  extern const Scene *play;
+  Scene *current = Scene_GetCurrent();
+
+  if (current->next != play) {
+    Scene_ReplaceWith(current, play);
+  }
+}
+
+static void
+Scene_DoExit() {
   Logger *logger = Debug_GetLogger();
 
-  Everdrive_UnlockSystem();
+  char *directory[] = { NULL };
+  char *filename = "LEVEL   BIN";
 
-  if (!Everdrive_CardInitialize()) {
-    Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "Error initializing disk");
-    while(true);
+  if (!Disk_OpenDirectory(&sdcard, directory)) {
+    Logger_PrintLine(logger, "Error opening level directory");
+    while (true);
   }
 
-  Disk disk = {0};
   DiskEntry entry = {0};
+  do {
+    if (!Disk_ReadDirectory(&sdcard, &entry)) {
+      Logger_PrintLine(logger, "Error: level file not found");
+      while (true);
+    }
+  } while (!DiskEntry_NameEquals(&entry, filename));
 
-  if (!Disk_Initialize(&disk, Everdrive_CardReadBlock)) {
-    Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "Error initializing file system");
-    while(true);
+  DataSource *source = Disk_OpenFile(&sdcard, &entry);
+  if (source == NULL) {
+    Logger_PrintLine(logger, "Error opening level file");
+    while (true);
   }
 
-  char *rootDir[] = { NULL };
-  if (!Disk_OpenDirectory(&disk, rootDir)) {
-    Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "Error opening root directory");
-    while(true);
-  }
+  static Binv1Level level = {0};
+  Binv1Level_From(&level, source);
 
-  Logger_PrintNewline(logger);
-  Logger_PrintLine(logger, "Listing root directory:");
-  while (Disk_ReadDirectory(&disk, &entry)) {
-    Logger_Print(logger, entry.name);
-    Logger_PrintLine(logger, entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
-  }
-
-  char *gbasysDir[] = { "GBASYS     ", NULL };
-  if (!Disk_OpenDirectory(&disk, gbasysDir)) {
-    Logger_PrintNewline(logger);
-    Logger_PrintLine(logger, "Error opening GBASYS directory");
-    while(true);
-  }
-
-  Logger_PrintNewline(logger);
-  Logger_PrintLine(logger, "Listing GBASYS directory:");
-  while (Disk_ReadDirectory(&disk, &entry)) {
-    Logger_Print(logger, entry.name);
-    Logger_PrintLine(logger, entry.type == DISK_ENTRY_FILE ? " (f)" : " (d)");
-  }
-
-  while(true);
+  Course *course = Course_GetInstance();
+  Course_ResetAndLoad(course, &level.base);
 }
 
 const Scene *disk = &(Scene) {
-  .enter = Scene_Noop,
+  .enter = Scene_DoEnter,
   .play = Scene_DoPlay,
-  .exit = Scene_Noop,
+  .exit = Scene_DoExit,
 };

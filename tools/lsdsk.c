@@ -8,7 +8,7 @@
 
 static DataSource *source = NULL;
 
-bool read(unsigned int sector, void *buffer, int count) {
+bool read(unsigned int sector, void *buffer) {
   Reader *reader = DataSource_AsReader(source);
   if (!Reader_SeekTo(reader, sector * 512)) {
     return false;
@@ -30,8 +30,8 @@ bool read(unsigned int sector, void *buffer, int count) {
 int main(int argc, char **argv) {
   Logger *log = Logger_GetInstance();
 
-  if (argc != 3) {
-    Logger_PrintLine(log, "Invalid number of arguments given.\n");
+  if (argc < 3) {
+    Logger_PrintLine(log, "Invalid number of arguments given.");
     return 1;
   }
 
@@ -93,10 +93,17 @@ int main(int argc, char **argv) {
     Writer_Write(writer, buffer[i]);
   }
 #else
-  Reader *reader = Disk_OpenFile(&disk, &entry);
-  if (reader == NULL) {
+  DataSource *source = Disk_OpenFile(&disk, &entry);
+  if (source == NULL) {
     Logger_PrintLine(log, "Could not open file.");
     return 1;
+  }
+
+  Reader *reader = DataSource_AsReader(source);
+  if (argc > 3) {
+    extern int atoi(const char *string);
+    int position = atoi(argv[3]);
+    Reader_SeekTo(reader, position);
   }
 
   for (int i = 0; i < entry.fileSize; i++) {

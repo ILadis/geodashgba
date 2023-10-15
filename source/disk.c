@@ -270,8 +270,8 @@ DiskReader_ReadNext(void *self);
 
 static int
 DiskReader_ReadAdvance(void *self) {
-  DiskReader *reader = self;
-  Disk *disk = reader->disk;
+  Disk *disk = self;
+  DiskReader *reader = &disk->reader;
 
   unsigned int sector = reader->sector + 1;
   unsigned int cluster = reader->cluster;
@@ -292,16 +292,18 @@ DiskReader_ReadAdvance(void *self) {
   reader->position = 0;
   reader->sector = sector;
   reader->cluster = cluster;
-  reader->super.Read = DiskReader_ReadNext;
+
+  DataSource *source = &disk->source;
+  source->reader.Read = DiskReader_ReadNext;
 
   return DiskReader_ReadNext(self);
 }
 
 static int
 DiskReader_ReadNext(void *self) {
-  DiskReader *reader = self;
-  DiskInfo *info = &reader->disk->info;
-  Disk *disk = reader->disk;
+  Disk *disk = self;
+  DiskReader *reader = &disk->reader;
+  DiskInfo *info = &disk->info;
 
   if (reader->size <= 0) {
     return -1;
@@ -309,18 +311,19 @@ DiskReader_ReadNext(void *self) {
 
   unsigned int position = reader->position++;
   if (reader->position >= info->bytesPerSector) {
-    reader->super.Read = DiskReader_ReadAdvance;
+    DataSource *source = &disk->source;
+    source->reader.Read = DiskReader_ReadAdvance;
   }
 
   reader->size--;
-  return Disk_BufferGetU8At(reader->disk, position);
+  return Disk_BufferGetU8At(disk, position);
 }
 
 static int
 DiskReader_InitializeRead(void *self) {
-  DiskReader *reader = self;
-  DiskEntry *entry = &reader->entry;
-  Disk *disk = reader->disk;
+  Disk *disk = self;
+  DiskReader *reader = &disk->reader;
+  DiskEntry *entry = &disk->entry;
 
   unsigned int sector = Disk_GetSectorOfCluster(disk, entry->startCluster);
   if (!Disk_BufferFill(disk, sector)) {
@@ -331,30 +334,49 @@ DiskReader_InitializeRead(void *self) {
   reader->size = entry->fileSize;
   reader->sector = sector;
   reader->position = 0;
-  reader->super.Read = DiskReader_ReadNext;
+
+  DataSource *source = &disk->source;
+  source->reader.Read = DiskReader_ReadNext;
 
   return DiskReader_ReadNext(self);
 }
 
-Reader*
+static bool
+DiskReader_SeekTo(void *self, int position) { // TODO improve this
+  Disk *disk = self;
+  if (DiskReader_InitializeRead(self) < 0) {
+    return false;
+  }
+
+  disk->reader.position = 0;
+  while (position-- > 0) {
+    if (Reader_Read(&disk->source.reader) < 0) {
+      // allow seeking to end of buffer (where next read would return -1)
+      return position == 0 ? true : false;
+    }
+  }
+
+  return true;
+}
+
+DataSource*
 Disk_OpenFile(
     Disk *disk,
     const DiskEntry *entry)
 {
-  DiskReader *reader = &disk->reader;
+  DataSource *source = &disk->source;
 
   if (entry->type != DISK_ENTRY_FILE) {
     return NULL;
   }
 
-  reader->super.self = reader;
-  reader->super.Read = DiskReader_InitializeRead;
-  reader->super.SeekTo = NULL; // TODO implement seek to
+  source->reader.self = disk;
+  source->reader.Read = DiskReader_InitializeRead;
+  source->reader.SeekTo = DiskReader_SeekTo;
 
-  reader->disk = disk;
-  reader->entry = *entry;
+  disk->entry = *entry;
 
-  return &reader->super;
+  return source;
 }
 
 bool
@@ -432,7 +454,7 @@ DiskEntry_NormalizePathSegment(
       }
     } while (delimeters[i++] != '\0');
 
-    char glyph = charmap[byte];
+    char glyph = charmap[(int) byte];
     if (glyph == '\0') {
       return false; // invalid character
     }

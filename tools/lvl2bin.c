@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   Logger *log = Logger_GetInstance();
 
   if (argc != 2) {
-    Logger_PrintLine(log, "Invalid number of arguments given.\n");
+    Logger_PrintLine(log, "Invalid number of arguments given.");
     return 1;
   }
 

@@ -31,10 +31,9 @@ typedef struct Disk {
     unsigned int firstFATSector;
   } info;
 
+  struct DataSource source;
+  struct DiskEntry entry;
   struct DiskReader {
-    Reader super;
-    struct Disk *disk;
-    struct DiskEntry entry;
     unsigned int cluster;
     unsigned int sector;
     unsigned int position;
@@ -70,7 +69,7 @@ Disk_ReadFile(
     unsigned char *buffer,
     unsigned int length);
 
-Reader*
+DataSource*
 Disk_OpenFile(
     Disk *disk,
     const DiskEntry *entry);

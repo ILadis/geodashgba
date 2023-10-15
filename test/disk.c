@@ -329,7 +329,8 @@ test(OpenFile_ShouldReturnReaderAndReadFileByteByByte) {
   }
 
   // act
-  Reader *reader = Disk_OpenFile(&disk, &entry);
+  DataSource *source = Disk_OpenFile(&disk, &entry);
+  Reader *reader = DataSource_AsReader(source);
 
   // assert
   assert(reader != NULL);
