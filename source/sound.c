@@ -17,35 +17,7 @@ static const int Octave[] = {
   [NOTE_B]      = 30.8677 * (1 << 8),
 };
 
-Sample*
-NoteSample_Create(
-    NoteSample *sample,
-    Note note,
-    int rate)
-{
-  int NoteSample_Get(void *sample, int index);
-
-  sample->super.self = sample;
-  sample->super.Get = NoteSample_Get;
-
-  sample->note = note;
-  sample->rate = rate;
-  sample->length = 1 << rate;
-
-  return &sample->super;
-}
-
-Sample*
-NoteSample_NextFrom(
-    NoteSample *sample,
-    char *notes,
-    int rate)
-{
-  enum Note note = Note_FromText(notes);
-  return NoteSample_Create(sample, note, rate);
-}
-
-int
+static int
 NoteSample_Get(
     void *self,
     int index)
@@ -53,16 +25,17 @@ NoteSample_Get(
   NoteSample *sample = self;
   Note note = sample->note;
 
-  if (index > sample->length) {
+  if (index > sample->length || note > length(Octave)) {
     return 0;
   }
 
   const int pi = 256;
-  const int octave = 4; // TODO currently hard coded
+  const int octave = sample->octave;
 
-  /* Note: multiplying frequency (24.8 fixed point) with index (19.13 fixed point for
-   * 8k sample rate) results in a 11.21 fixed point number. This is why we have to shift
-   * by 21 to get the alpha/integer part that is used to get the sin-value.
+  /* Note: multiplying frequency (24.8 fixed point) with index (for example a 19.13 fixed
+   * point for when using 8kHz as the sample rate) results in a 11.21 fixed point number.
+   * This is why we have to shift by 21 to get the alpha/integer part that is used to get
+   * the sin-value.
    */
   int frequency = Octave[note] * (1 << octave);
   int alpha = (pi * frequency * index) >> (8 + sample->rate);
@@ -74,58 +47,118 @@ NoteSample_Get(
   return (value * 127) >> 8;
 }
 
+static inline NoteSample*
+NoteSample_FromSamples(union Samples *samples) {
+  NoteSample *sample = &samples->note;
+  sample->super.self = sample;
+  sample->super.Get = NoteSample_Get;
+  return sample;
+}
+
+static inline bool
+NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
+  int index = channel->track.index;
+  char *notes = channel->track.notes;
+
+  char symbol = notes[index];
+  if (symbol == '\0' || symbol < 'A' || symbol > 'Z') {
+    return false;
+  }
+
+  enum Note note = (symbol - 'A') * 2;
+
+  int octave = 4;
+  int dotted = 0;
+  int length = channel->tempo;
+  bool shorten = false;
+
+  while (true) {
+    char modifier = notes[++index];
+    if (modifier == ' ' || modifier == '|') {
+      continue;
+    }
+
+    switch (modifier) {
+      case '^': note += 1; continue;
+      case '_': note -= 1; continue;
+      case '`': octave += 1; continue;
+      case ',': octave -= 1; continue;
+      case '/': shorten = true; continue;
+      case '2': length = shorten ? length >> 1 : length << 1; continue;
+      case '4': length = shorten ? length >> 2 : length << 2; continue;
+      case '8': length = shorten ? length >> 3 : length << 3; continue;
+      case '.': length += length >> ++dotted; continue;
+    }
+
+    break;
+  }
+
+  NoteSample *sample = NoteSample_FromSamples(&channel->samples);
+  sample->note = note;
+  sample->octave = octave;
+  sample->length = length;
+  sample->rate = channel->rate;
+
+  channel->track.index = index;
+  channel->sample = &sample->super;
+  channel->length = length;
+  channel->position = 0;
+
+  return true;
+}
+
 SoundChannel*
 NoteSoundChannel_Create(
     NoteSoundChannel *channel,
     char *notes,
     int rate)
 {
-  void NoteSoundChannel_Fill(void *channel, int *buffer, int size);
+  int NoteSoundChannel_Fill(void *channel, int *buffer, int size);
 
   channel->super.self = channel;
   channel->super.Fill = NoteSoundChannel_Fill;
 
-  channel->notes = notes;
+  channel->track.notes = notes;
+  channel->track.index = 0;
+  channel->rate = rate;
+  channel->tempo = 2500;
   channel->position = 0;
-  channel->volume = 255;
+  channel->length = 0;
 
-  NoteSample_NextFrom(&channel->sample, notes, rate);
+  NoteSoundChannel_NextSample(channel);
 
   return &channel->super;
 }
 
-void
+int
 NoteSoundChannel_Fill(
     void *self,
     int *buffer,
     int size)
 {
   NoteSoundChannel *channel = self;
-  NoteSample *sample = &channel->sample;
+  Sample *sample = channel->sample;
 
-  char *notes = &channel->notes[0];
-  int length = channel->sample.length;
+  int length = channel->length;
+  int offset = 0;
 
-  while (size > 0) {
-    int index = channel->position;
-    int value = NoteSample_Get(sample, index);
+  if (channel->position >= length) {
+      return 0; // end of track
+  }
 
-    *buffer = value;
+  while (offset < size) {
+    int value = Sample_Get(sample, channel->position++);
+    buffer[offset++] += value;
 
-    channel->position += 1;
-    buffer += 1;
-    size -= 1;
+    if (channel->position < length) {
+      continue;
+    }
 
-    // advance to next note
-    if (channel->position >= length) {
-      notes += 2;
-
-      if (notes[0] != '\0') {
-        NoteSample_NextFrom(sample, notes, sample->rate);
-
-        channel->position = 0;
-        channel->notes = notes;
-      }
+    // advance to next sample (note or pause)
+    if (!NoteSoundChannel_NextSample(channel)) {
+      break;
     }
   }
+
+  return offset;
 }

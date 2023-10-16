@@ -52,7 +52,7 @@ Math_sin(int alpha) {
   double rads = 2*pi * (alpha / size);
 
   double number = sin(rads);
-  int fixed = (int) round(number * size) & 0xFFFF;
+  int fixed = (int) round(number * size);
 
   return fixed;
 }

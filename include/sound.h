@@ -19,16 +19,6 @@ typedef enum Note {
   NOTE_B = 2,
 } Note;
 
-static inline Note
-Note_FromText(char *text) {
-  char symbol = text[0];
-  char modifier = text[1];
-
-  enum Note note = (symbol - 'A') * 2 + (modifier == '^' ? 1 : 0);
-
-  return note;
-}
-
 typedef struct Sample {
   void *self;
   int (*Get)(void *self, int index);
@@ -42,37 +32,36 @@ Sample_Get(Sample *sample, int index) {
 typedef struct NoteSample {
   Sample super;
   Note note;
-  int rate, length;
+  int octave;
+  int length;
+  int rate;
 } NoteSample;
-
-Sample*
-NoteSample_Create(
-    NoteSample *sample,
-    Note note,
-    int rate);
-
-Sample*
-NoteSample_NextFrom(
-    NoteSample *sample,
-    char *notes,
-    int rate);
 
 typedef struct SoundChannel {
   void *self;
-  void (*Fill)(void *self, int *buffer, int size);
+  int (*Fill)(void *self, int *buffer, int size);
 } SoundChannel;
 
-static inline void
+static inline int
 SoundChannel_Fill(SoundChannel *channel, int *buffer, int size) {
-  channel->Fill(channel->self, buffer, size);
+  return channel->Fill(channel->self, buffer, size);
 }
 
 typedef struct NoteSoundChannel {
   struct SoundChannel super;
-  struct NoteSample sample;
-  char *notes;
+  struct {
+    char *notes;
+    int index;
+  } track;
+  union Samples {
+    NoteSample note;
+  } samples;
+  Sample *sample;
+  int rate; // sample rate
+  int tempo;
+  // TODO implement volume
   int position;
-  int volume; // TODO not implemented yet
+  int length;
 } NoteSoundChannel;
 
 SoundChannel*
