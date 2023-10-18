@@ -62,11 +62,10 @@ Cube_LoadSprite(Cube *cube) {
   static const GBA_Sprite base = {
     .colorMode = 0,
     .paletteBank = 0,
-    .shape = 0,
-    .size = 1,
+    .shape = GBA_SPRITE_SHAPE_OF(16, 16),
+    .size = GBA_SPRITE_SIZE_OF(16, 16),
     .tileId = 0,
-    .gfxMode = 0,
-    .objMode = 0,
+    .objMode = GBA_SPRITE_MODE_RENDER,
     .priority = 0,
   };
 
@@ -94,7 +93,7 @@ Cube_Draw(
   GBA_Sprite *sprite = Cube_LoadSprite(cube);
 
   if (Cube_InState(cube, STATE_DESTROYED)) {
-    GBA_Sprite_SetObjMode(sprite, 2);
+    GBA_Sprite_SetObjMode(sprite, GBA_SPRITE_MODE_HIDE);
   }
   else {
     int rotation = cube->rotation.angle;
@@ -108,6 +107,6 @@ Cube_Draw(
     Camera_RelativeTo(camera, &position);
     GBA_Sprite_SetPosition(sprite, position.x, position.y);
     GBA_Sprite_SetRotation(sprite, rotation);
-    GBA_Sprite_SetObjMode(sprite, 3);
+    GBA_Sprite_SetObjMode(sprite, GBA_SPRITE_MODE_AFFINE2);
   }
 }

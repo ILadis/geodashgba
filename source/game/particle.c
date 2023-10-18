@@ -112,11 +112,10 @@ Particle_LoadSprite(Particle *particle) {
   static GBA_Sprite base = {
     .colorMode = 0,
     .paletteBank = 0,
-    .shape = 0,
-    .size = 0,
+    .shape = GBA_SPRITE_SHAPE_OF(8, 8),
+    .size = GBA_SPRITE_SIZE_OF(8, 8),
     .tileId = 4,
-    .gfxMode = 0,
-    .objMode = 0,
+    .objMode = GBA_SPRITE_MODE_RENDER,
     .priority = 0,
   };
 
@@ -159,9 +158,9 @@ Particle_Draw(Particle *particle) {
   if (Camera_InViewport(camera, &bounds)) {
     Camera_RelativeTo(camera, &bounds.center);
     GBA_Sprite_SetPosition(sprite, bounds.center.x, bounds.center.y);
-    GBA_Sprite_SetObjMode(sprite, 0); // show sprite
+    GBA_Sprite_SetObjMode(sprite, GBA_SPRITE_MODE_RENDER);
   } else {
-    GBA_Sprite_SetObjMode(sprite, 2); // hide sprite
+    GBA_Sprite_SetObjMode(sprite, GBA_SPRITE_MODE_HIDE);
   }
 
   return true;

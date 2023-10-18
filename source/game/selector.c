@@ -193,11 +193,10 @@ Selector_DrawArrows(
   static const GBA_Sprite base = {
     .colorMode = 0,
     .paletteBank = 0,
-    .shape = 2, // 16x32
-    .size  = 2,
+    .shape = GBA_SPRITE_SHAPE_OF(16, 32),
+    .size = GBA_SPRITE_SIZE_OF(16, 32),
     .tileId = 8,
-    .gfxMode = 0,
-    .objMode = 0,
+    .objMode = GBA_SPRITE_MODE_RENDER,
     .priority = 0,
   };
 
@@ -238,7 +237,7 @@ Selector_DrawArrows(
   };
 
   bool visible = selector->index != bounds[direction];
-  GBA_Sprite_SetObjMode(sprite, visible ? 0 : 2);
+  GBA_Sprite_SetObjMode(sprite, visible ? GBA_SPRITE_MODE_RENDER : GBA_SPRITE_MODE_HIDE);
 }
 
 void

@@ -84,11 +84,10 @@ Checkpoint_LoadSprite(
   static const GBA_Sprite base = {
     .colorMode = 0,
     .paletteBank = 0,
-    .shape = 2,
-    .size = 0,
+    .shape = GBA_SPRITE_SHAPE_OF(8, 16),
+    .size = GBA_SPRITE_SIZE_OF(8, 16),
     .tileId = 16,
-    .gfxMode = 0,
-    .objMode = 0,
+    .objMode = GBA_SPRITE_MODE_RENDER,
     .priority = 0,
   };
 

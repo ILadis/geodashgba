@@ -59,7 +59,18 @@ Logger_PrintHex8(Logger *logger, unsigned char num) {
 void
 Logger_PrintHex16(Logger *logger, unsigned short num) {
   Logger_PrintHex8(logger, num >> 8);
-  Logger_PrintHex8(logger, num & 0xff);
+  Logger_PrintHex8(logger, num >> 0);
+}
+
+void
+Logger_PrintHex32(
+    Logger *logger,
+    unsigned int num)
+{
+  Logger_PrintHex8(logger, num >> 24);
+  Logger_PrintHex8(logger, num >> 16);
+  Logger_PrintHex8(logger, num >> 8);
+  Logger_PrintHex8(logger, num >> 0);
 }
 
 void

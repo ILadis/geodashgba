@@ -17,25 +17,9 @@
 #define GBA_MEM_OAM  0x07000000 // -"-
 #define GBA_MEM_ROM  0x08000000
 
-#define GBA_REG_DISPCNT  *((volatile u16 *) (GBA_MEM_IO+0x0000))
-#define GBA_REG_DISPSTAT *((volatile u16 *) (GBA_MEM_IO+0x0004))
-#define GBA_REG_VCOUNT   *((volatile u16 *) (GBA_MEM_IO+0x0006))
-#define GBA_REG_BG0CNT   *((volatile u16 *) (GBA_MEM_IO+0x0008))
-#define GBA_REG_BG1CNT   *((volatile u16 *) (GBA_MEM_IO+0x000A))
-#define GBA_REG_BG2CNT   *((volatile u16 *) (GBA_MEM_IO+0x000C))
-#define GBA_REG_BG3CNT   *((volatile u16 *) (GBA_MEM_IO+0x000E))
-#define GBA_REG_BG0HOFS  *((volatile s16 *) (GBA_MEM_IO+0x0010))
-#define GBA_REG_BG0VOFS  *((volatile s16 *) (GBA_MEM_IO+0x0012))
-#define GBA_REG_BG1HOFS  *((volatile s16 *) (GBA_MEM_IO+0x0014))
-#define GBA_REG_BG1VOFS  *((volatile s16 *) (GBA_MEM_IO+0x0016))
-#define GBA_REG_BG2HOFS  *((volatile s16 *) (GBA_MEM_IO+0x0018))
-#define GBA_REG_BG2VOFS  *((volatile s16 *) (GBA_MEM_IO+0x001A))
-#define GBA_REG_BG3HOFS  *((volatile s16 *) (GBA_MEM_IO+0x001C))
-#define GBA_REG_BG3VOFS  *((volatile s16 *) (GBA_MEM_IO+0x001E))
-#define GBA_REG_BLDCNT   *((volatile u16 *) (GBA_MEM_IO+0x0050))
-#define GBA_REG_BLDVAL   *((volatile u16 *) (GBA_MEM_IO+0x0052))
-#define GBA_REG_BLDFACE  *((volatile u16 *) (GBA_MEM_IO+0x0054))
-#define GBA_REG_KEYPAD   *((volatile u16 *) (GBA_MEM_IO+0x0130))
+typedef struct GBA_DisplayVCount {
+  u16 value;
+} GBA_DisplayVCount;
 
 typedef union GBA_DisplayControl {
   u16 value;
@@ -134,7 +118,7 @@ typedef union GBA_Blend {
   u16 value;
   struct {
     u16 eva: 5;
-    u16 unused1: 3;
+    u16 unused: 3;
     u16 evb: 5;
   };
 } GBA_Blend;
@@ -175,18 +159,44 @@ typedef union GBA_Keypad {
   };
 } GBA_Keypad;
 
-#define GBA_DISPLAY_CONTROL(ADDR)     ((GBA_DisplayControl *)    (ADDR))
-#define GBA_BACKGROUND_CONTROLS(ADDR) ((GBA_BackgroundControl *) (ADDR))
-#define GBA_BACKGROUND_OFFSETS(ADDR)  ((GBA_BackgroundOffset *)  (ADDR))
-#define GBA_BLEND_CONTROL(ADDR)       ((GBA_BlendControl *)      (ADDR))
-#define GBA_BLEND_FACE(ADDR)          ((GBA_BlendFace *)         (ADDR))
-#define GBA_BLEND(ADDR)               ((GBA_Blend *)             (ADDR))
-#define GBA_KEYPAD(ADDR)              ((GBA_Keypad *)            (ADDR))
+#define GBA_DISPLAY_VCOUNT(ADDR)     ((GBA_DisplayVCount *)     (ADDR))
+#define GBA_DISPLAY_CONTROL(ADDR)    ((GBA_DisplayControl *)    (ADDR))
+#define GBA_BACKGROUND_CONTROL(ADDR) ((GBA_BackgroundControl *) (ADDR))
+#define GBA_BACKGROUND_OFFSET(ADDR)  ((GBA_BackgroundOffset *)  (ADDR))
+#define GBA_BLEND_CONTROL(ADDR)      ((GBA_BlendControl *)      (ADDR))
+#define GBA_BLEND_FACE(ADDR)         ((GBA_BlendFace *)         (ADDR))
+#define GBA_BLEND(ADDR)              ((GBA_Blend *)             (ADDR))
+#define GBA_KEYPAD(ADDR)             ((GBA_Keypad *)            (ADDR))
 
 typedef struct GBA_Input {
   GBA_Keypad previous;
   GBA_Keypad current;
 } GBA_Input;
+
+typedef struct GBA_TimerData {
+  u16 value;
+} GBA_TimerData;
+
+typedef enum GBA_TimerFrequency {
+  GBA_TIMER_FREQUENCY_1    = 0,
+  GBA_TIMER_FREQUENCY_64   = 1,
+  GBA_TIMER_FREQUENCY_256  = 2,
+  GBA_TIMER_FREQUENCY_1024 = 3,
+} GBA_TimerFrequency;
+
+typedef union GBA_TimerControl {
+  u16 value;
+  struct {
+    u16 frequency: 2;
+    u16 cascade: 1;
+    u16 unused: 3;
+    u16 interrupt: 1;
+    u16 enable: 1;
+  };
+} GBA_TimerControl;
+
+#define GBA_TIMER_DATA(ADDR)    ((GBA_TimerData *)    (ADDR))
+#define GBA_TIMER_CONTROL(ADDR) ((GBA_TimerControl *) (ADDR))
 
 typedef struct GBA_Color {
   union {
@@ -211,6 +221,16 @@ GBA_Color_Equals(GBA_Color color, GBA_Color other) {
       && color.green == other.green
       && color.blue == other.blue;
 }
+
+typedef enum GBA_SpriteMode {
+  GBA_SPRITE_MODE_RENDER  = 0,
+  GBA_SPRITE_MODE_HIDE    = 2,
+  GBA_SPRITE_MODE_AFFINE  = 1,
+  GBA_SPRITE_MODE_AFFINE2 = 3,
+} GBA_SpriteObjectMode;
+
+#define GBA_SPRITE_SHAPE_OF(w, h) (w == h ? 0 : w > h ? 1 : 2)
+#define GBA_SPRITE_SIZE_OF(w, h)  (w*h <= 128 ? 0 : w*h <= 256 ? 1 : w*h <= 1024 ? 2 : 3)
 
 typedef struct GBA_Sprite {
   union {
@@ -332,14 +352,15 @@ typedef struct GBA_System {
   GBA_Input input;
   GBA_Keypad *const volatile keypad;
 
-  GBA_DirectMemcpy *const volatile directMemcpy0;
-  GBA_DirectMemcpy *const volatile directMemcpy1;
-  GBA_DirectMemcpy *const volatile directMemcpy2;
-  GBA_DirectMemcpy *const volatile directMemcpy3;
+  GBA_TimerData *const volatile timerData[4];
+  GBA_TimerControl *const volatile timerControl[4];
 
+  GBA_DirectMemcpy *const volatile directMemcpy[4];
+
+  GBA_DisplayVCount *const volatile vcount;
   GBA_DisplayControl *const volatile displayControl;
-  GBA_BackgroundControl *const volatile backgroundControls;
-  GBA_BackgroundOffset *const volatile backgroundOffsets;
+  GBA_BackgroundControl *const volatile backgroundControls[4];
+  GBA_BackgroundOffset *const volatile backgroundOffsets[4];
 
   GBA_BlendControl *const volatile blendControl;
   GBA_BlendFace *const volatile blendFace;
@@ -380,6 +401,16 @@ GBA_EnableBackgroundLayer(
 
 void
 GBA_DisableBackgroundLayer(int layer);
+
+void
+GBA_StartTimerCascade(
+    GBA_TimerFrequency frequency,
+    GBA_TimerData *overflows);
+
+int
+GBA_GetTimerValue(
+    int index,
+    GBA_TimerData *overflows);
 
 void
 GBA_OffsetBackgroundLayer(
@@ -443,7 +474,7 @@ GBA_Affine_Release(GBA_Affine *affine);
 void
 GBA_Sprite_SetObjMode(
     GBA_Sprite *sprite,
-    int mode);
+    GBA_SpriteObjectMode mode);
 
 void
 GBA_Sprite_SetPosition(

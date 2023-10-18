@@ -2,6 +2,41 @@
 #include <gba.h>
 #include "test.h"
 
+test(Sprite_ShapeOf_ShouldReturnExpectedValues) {
+  assert(GBA_SPRITE_SHAPE_OF( 8,  8) == 0);
+  assert(GBA_SPRITE_SHAPE_OF(16, 16) == 0);
+  assert(GBA_SPRITE_SHAPE_OF(32, 32) == 0);
+  assert(GBA_SPRITE_SHAPE_OF(64, 64) == 0);
+
+  assert(GBA_SPRITE_SHAPE_OF(16,  8) == 1);
+  assert(GBA_SPRITE_SHAPE_OF(32,  8) == 1);
+  assert(GBA_SPRITE_SHAPE_OF(32, 16) == 1);
+  assert(GBA_SPRITE_SHAPE_OF(64, 32) == 1);
+
+  assert(GBA_SPRITE_SHAPE_OF( 8, 16) == 2);
+  assert(GBA_SPRITE_SHAPE_OF( 8, 32) == 2);
+  assert(GBA_SPRITE_SHAPE_OF(16, 32) == 2);
+  assert(GBA_SPRITE_SHAPE_OF(32, 64) == 2);
+}
+
+test(Sprite_SizeOf_ShouldReturnExpectedValues) {
+  assert(GBA_SPRITE_SIZE_OF( 8,  8) == 0); // >= 64px²
+  assert(GBA_SPRITE_SIZE_OF(16,  8) == 0);
+  assert(GBA_SPRITE_SIZE_OF( 8, 16) == 0); // <= 128px²
+
+  assert(GBA_SPRITE_SIZE_OF(16, 16) == 1); // <= 256px²
+  assert(GBA_SPRITE_SIZE_OF(32,  8) == 1);
+  assert(GBA_SPRITE_SIZE_OF( 8, 32) == 1); // <= 256px²
+
+  assert(GBA_SPRITE_SIZE_OF(32, 32) == 2); // >= 512px²
+  assert(GBA_SPRITE_SIZE_OF(32, 16) == 2);
+  assert(GBA_SPRITE_SIZE_OF(16, 32) == 2); // <= 1024px²
+
+  assert(GBA_SPRITE_SIZE_OF(64, 64) == 3); // >= 248px²
+  assert(GBA_SPRITE_SIZE_OF(64, 32) == 3);
+  assert(GBA_SPRITE_SIZE_OF(32, 64) == 3); // <= 4096px²
+}
+
 test(Sprite_Allocate_ShouldReturnNewSpriteInstanceForEachCall) {
   // arrange
   GBA_Sprite_ResetAll();
@@ -226,6 +261,8 @@ test(Bitmap8_GetPixel_ShouldReturnExpectedPixels) {
 }
 
 suite(
+  Sprite_ShapeOf_ShouldReturnExpectedValues,
+  Sprite_SizeOf_ShouldReturnExpectedValues,
   Sprite_Allocate_ShouldReturnNewSpriteInstanceForEachCall,
   Sprite_Release_ShouldMakeReleasedSpriteAvailableAgain,
   Sprite_ResetAll_ShouldMakeAllUsedSpritesAvailableAgain,

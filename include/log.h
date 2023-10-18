@@ -40,6 +40,11 @@ Logger_PrintHex16(
     unsigned short num);
 
 void
+Logger_PrintHex32(
+    Logger *logger,
+    unsigned int num);
+
+void
 Logger_PrintBuffer(
     Logger *logger,
     unsigned char *buffer,

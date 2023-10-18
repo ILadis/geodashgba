@@ -19,14 +19,33 @@ GBA_GetSystem() {
     .input = {{.value = 0x03FF}, {.value = 0x03FF}},
     .keypad = GBA_KEYPAD(MEM_IO + 0x0130),
 
-    .directMemcpy0 = GBA_MEMCPY(MEM_IO + 0x00B0),
-    .directMemcpy1 = GBA_MEMCPY(MEM_IO + 0x00BC),
-    .directMemcpy2 = GBA_MEMCPY(MEM_IO + 0x00C8),
-    .directMemcpy3 = GBA_MEMCPY(MEM_IO + 0x00D4),
+    .timerData[0] = GBA_TIMER_DATA(MEM_IO + 0x0100),
+    .timerData[1] = GBA_TIMER_DATA(MEM_IO + 0x0104),
+    .timerData[2] = GBA_TIMER_DATA(MEM_IO + 0x0108),
+    .timerData[3] = GBA_TIMER_DATA(MEM_IO + 0x010C),
 
+    .timerControl[0] = GBA_TIMER_CONTROL(MEM_IO + 0x0102),
+    .timerControl[1] = GBA_TIMER_CONTROL(MEM_IO + 0x0106),
+    .timerControl[2] = GBA_TIMER_CONTROL(MEM_IO + 0x010A),
+    .timerControl[3] = GBA_TIMER_CONTROL(MEM_IO + 0x010E),
+
+    .directMemcpy[0] = GBA_MEMCPY(MEM_IO + 0x00B0),
+    .directMemcpy[1] = GBA_MEMCPY(MEM_IO + 0x00BC),
+    .directMemcpy[2] = GBA_MEMCPY(MEM_IO + 0x00C8),
+    .directMemcpy[3] = GBA_MEMCPY(MEM_IO + 0x00D4),
+
+    .vcount = GBA_DISPLAY_VCOUNT(GBA_MEM_IO + 0x0006),
     .displayControl = GBA_DISPLAY_CONTROL(MEM_IO + 0x0000),
-    .backgroundControls = GBA_BACKGROUND_CONTROLS(MEM_IO + 0x0008),
-    .backgroundOffsets  = GBA_BACKGROUND_OFFSETS(MEM_IO + 0x0010),
+
+    .backgroundControls[0] = GBA_BACKGROUND_CONTROL(MEM_IO + 0x0008),
+    .backgroundControls[1] = GBA_BACKGROUND_CONTROL(MEM_IO + 0x000A),
+    .backgroundControls[2] = GBA_BACKGROUND_CONTROL(MEM_IO + 0x000C),
+    .backgroundControls[3] = GBA_BACKGROUND_CONTROL(MEM_IO + 0x000E),
+
+    .backgroundOffsets[0]  = GBA_BACKGROUND_OFFSET(MEM_IO + 0x0010),
+    .backgroundOffsets[1]  = GBA_BACKGROUND_OFFSET(MEM_IO + 0x0014),
+    .backgroundOffsets[2]  = GBA_BACKGROUND_OFFSET(MEM_IO + 0x0018),
+    .backgroundOffsets[3]  = GBA_BACKGROUND_OFFSET(MEM_IO + 0x001C),
 
     .blendControl = GBA_BLEND_CONTROL(MEM_IO + 0x0050),
     .blendFace    = GBA_BLEND_FACE(MEM_IO + 0x0054),
@@ -76,7 +95,7 @@ GBA_EnableBackgroundLayer(
   value &= 0b1111111101111111; // unset force blank
 
   system->displayControl->value = value;
-  system->backgroundControls[layer] = control;
+  system->backgroundControls[layer]->value = control.value;
 }
 
 void
@@ -91,16 +110,61 @@ GBA_DisableBackgroundLayer(int layer) {
 }
 
 void
+GBA_StartTimerCascade(
+    GBA_TimerFrequency frequency,
+    GBA_TimerData *overflows)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  int count = 0;
+  GBA_TimerControl timers[4] = {0};
+
+  for (int index = 0; index < length(timers); index++) {
+    GBA_TimerControl *timer = &timers[index];
+
+    // prepare timer settings
+    timer->enable = 1;
+    timer->frequency = index > 0 ? 0 : frequency;
+    timer->cascade = index > 0;
+
+    // disable this timer first
+    system->timerControl[index]->value = 0;
+
+    if (count == 0 && overflows[index].value == 0) {
+      count = index + 1;
+    }
+  }
+
+  while (count > 0) {
+    int index = --count;
+
+    system->timerData[index]->value = overflows[index].value;
+    system->timerControl[index]->value = timers[index].value;
+  }
+}
+
+int
+GBA_GetTimerValue(
+    int index,
+    GBA_TimerData *overflows)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  int offset = 0xFFFF + overflows[index].value;
+  int value = (system->timerData[index]->value - offset) & 0xFFFF;
+
+  return value;
+}
+
+void
 GBA_OffsetBackgroundLayer(
     int layer,
     int px, int py)
 {
   GBA_System *system = GBA_GetSystem();
 
-  system->backgroundOffsets[layer] = (GBA_BackgroundOffset) {
-    .hOffset = px,
-    .vOffset = py,
-  };
+  system->backgroundOffsets[layer]->hOffset = px;
+  system->backgroundOffsets[layer]->vOffset = py;
 }
 
 void
@@ -112,7 +176,7 @@ GBA_TileMapRef_FromBackgroundLayer(
   static const int heights[] = { 32, 32, 64, 64 };
 
   GBA_System *system = GBA_GetSystem();
-  GBA_BackgroundControl background = system->backgroundControls[layer];
+  GBA_BackgroundControl background = { system->backgroundControls[layer]->value };
 
   int mapIndex = background.tileMapIndex;
   int setIndex = background.tileSetIndex;
@@ -217,15 +281,17 @@ GBA_TileMapRef_SetPixel(
 void
 GBA_VSync() {
 #ifndef NOGBA
-  while(GBA_REG_VCOUNT >= 160); // wait till VDraw
-  while(GBA_REG_VCOUNT < 160);  // wait till VBlank
+  GBA_System *system = GBA_GetSystem();
+
+  while(system->vcount->value >= 160); // wait till VDraw
+  while(system->vcount->value < 160);  // wait till VBlank
 #endif
 }
 
 void
 GBA_Memcpy32(void *dst, const void *src, int size) {
   GBA_System *system = GBA_GetSystem();
-  GBA_DirectMemcpy *dma3 = system->directMemcpy3;
+  GBA_DirectMemcpy *dma3 = system->directMemcpy[3];
 
   GBA_DirectMemcpy copy = {0};
   copy.dst = dst;
@@ -242,7 +308,7 @@ GBA_Memcpy32(void *dst, const void *src, int size) {
 void
 GBA_Memcpy16(void *dst, const void *src, int size) {
   GBA_System *system = GBA_GetSystem();
-  GBA_DirectMemcpy *dma3 = system->directMemcpy3;
+  GBA_DirectMemcpy *dma3 = system->directMemcpy[3];
 
   GBA_DirectMemcpy copy = {0};
   copy.dst = dst;
@@ -260,16 +326,16 @@ void
 GBA_EnableSprites() {
   GBA_System *system = GBA_GetSystem();
 
-  u16 value = system->displayControl->value;
-  value |= 1 << 6; // 1D mapping
-  value |= 1 << 12; // enable sprites
+  GBA_DisplayControl control = { system->displayControl->value };
+  control.sprite1DMapping = 1;
+  control.enableOBJ = 1;
 
-  system->displayControl->value = value;
+  system->displayControl->value = control.value;
 }
 
 static inline void
 GBA_Sprite_Reset(GBA_Sprite *sprite) {
-  static GBA_Sprite empty = { .objMode = 2 }; // hidden
+  static GBA_Sprite empty = { .objMode = GBA_SPRITE_MODE_HIDE };
 
   sprite->attr0 = empty.attr0;
   sprite->attr1 = empty.attr1;
@@ -368,7 +434,7 @@ GBA_Affine_Release(GBA_Affine *affine) {
 void
 GBA_Sprite_SetObjMode(
     GBA_Sprite *sprite,
-    int mode)
+    GBA_SpriteObjectMode mode)
 {
   u16 attr0 = sprite->attr0 & 0xFCFF;
   attr0 += (mode & 0x03) << 8;

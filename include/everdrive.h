@@ -186,9 +186,6 @@ void
 Everdrive_UnlockSystem();
 
 bool
-Everdrive_CardInit();
-
-bool
 Everdrive_CardInitialize();
 
 bool
