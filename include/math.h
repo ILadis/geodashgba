@@ -17,6 +17,12 @@ int
 Math_clamp(int num, int min, int max);
 
 int
+Math_log2(int num);
+
+int
+Math_mod2(int num, int mod);
+
+int
 Math_sin(int alpha);
 
 int

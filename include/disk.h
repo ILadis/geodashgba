@@ -2,6 +2,7 @@
 #define DISK_H
 
 #include <types.h>
+#include <math.h>
 #include <io.h>
 
 typedef bool (*Disk_ReadFn)(unsigned int sector, void *buffer);
@@ -18,13 +19,11 @@ typedef struct DiskEntry {
 
 typedef struct Disk {
   unsigned char buffer[512]; // TODO support sectors greater than 512 bytes
-  unsigned int offset;
   bool (*read)(unsigned int sector, void *buffer);
 
   struct DiskInfo {
-    unsigned short bytesPerSector;
-    unsigned short sectorsPerCluster;
-    unsigned short sectorsPerFAT;
+    unsigned short sectorSize;
+    unsigned short clusterSize;
 
     unsigned int rootDirCluster;
     unsigned int firstDataSector;
@@ -41,16 +40,37 @@ typedef struct Disk {
   } reader;
 } Disk;
 
+#define Disk_EntrySize   0x20
 #define Disk_ClusterMask 0x0FFFFFFF
 #define Disk_BadCluster  0x0FFFFFF7
 
 typedef struct DiskInfo DiskInfo;
 typedef struct DiskReader DiskReader;
 
+static inline unsigned int
+DiskInfo_BytesPerSector(DiskInfo *info) {
+  return 1 << info->sectorSize;
+}
+
+static inline unsigned int
+DiskInfo_BytesPerCluster(DiskInfo *info) {
+  return 1 << (info->sectorSize + info->clusterSize);
+}
+
+static inline unsigned int
+DiskInfo_SectorsPerCluster(DiskInfo *info) {
+  return 1 << info->clusterSize;
+}
+
 bool
 Disk_Initialize(
     Disk *disk,
     Disk_ReadFn read);
+
+DataSource*
+Disk_OpenFile(
+    Disk *disk,
+    const DiskEntry *entry);
 
 bool
 Disk_OpenDirectory(
@@ -61,18 +81,6 @@ bool
 Disk_ReadDirectory(
     Disk *disk,
     DiskEntry *entry);
-
-bool
-Disk_ReadFile(
-    Disk *disk,
-    const DiskEntry *entry,
-    unsigned char *buffer,
-    unsigned int length);
-
-DataSource*
-Disk_OpenFile(
-    Disk *disk,
-    const DiskEntry *entry);
 
 bool
 DiskEntry_NameEquals(

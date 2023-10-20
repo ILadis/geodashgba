@@ -38,7 +38,18 @@ test(Rand_ShouldReturnExpectedNumberSequence) {
   assert(num4 == 1449466924);
 }
 
+test(Log2_ShouldReturnExpectedValues) {
+  // act
+  for (int pow = 0; pow < 5; pow++) {
+    int num = Math_log2(1 << pow);
+
+    // assert
+    assert(num == pow);
+  }
+}
+
 suite(
   Abs_ShouldReturnPositiveIntegerForNegativeNumber,
   Abs_ShouldReturnSameIntegerForPositiveNumber,
-  Rand_ShouldReturnExpectedNumberSequence);
+  Rand_ShouldReturnExpectedNumberSequence,
+  Log2_ShouldReturnExpectedValues);

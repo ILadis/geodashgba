@@ -29,6 +29,23 @@ Math_clamp(int num, int min, int max) {
 }
 
 int
+Math_log2(int num) {
+  int value = 0;
+
+  while ((num & 0x1) == 0) {
+    num >>= 1;
+    value++;
+  }
+
+  return value;
+}
+
+int
+Math_mod2(int num, int mod) {
+  return num & ((1 << mod) - 1);
+}
+
+int
 Math_cos(int alpha) {
   return Math_sin(alpha + 64);
 }

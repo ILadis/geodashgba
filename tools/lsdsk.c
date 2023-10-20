@@ -80,19 +80,6 @@ int main(int argc, char **argv) {
     }
   } while (!DiskEntry_NameEquals(&entry, filename));
 
-#if false
-  static unsigned char buffer[1024 * 1024 * 32] = {0};
-  unsigned int capacity = sizeof(buffer);
-
-  if (!Disk_ReadFile(&disk, &entry, buffer, capacity)) {
-    Logger_PrintLine(log, "Could not open file.");
-    return 1;
-  }
-
-  for (int i = 0; i < entry.fileSize; i++) {
-    Writer_Write(writer, buffer[i]);
-  }
-#else
   DataSource *source = Disk_OpenFile(&disk, &entry);
   if (source == NULL) {
     Logger_PrintLine(log, "Could not open file.");
@@ -110,7 +97,6 @@ int main(int argc, char **argv) {
     int byte = Reader_Read(reader);
     Writer_Write(writer, (unsigned char) byte);
   }
-#endif
 
   return 0;
 }

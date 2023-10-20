@@ -22,7 +22,7 @@ OBJCOPY  := arm-none-eabi-objcopy
 ARCH     := -mthumb-interwork -mthumb
 SPECS    := -specs=gba.specs
 
-CFLAGS   := $(ARCH) -O2 -Wall -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -Iinclude
+CFLAGS   := $(ARCH) -O2 -Wall -Wextra -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -Iinclude
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases

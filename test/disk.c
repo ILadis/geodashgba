@@ -17,6 +17,12 @@ static unsigned char superBlock[] = {
   [510] = 0x55, 0xaa
 };
 
+static unsigned char fatSector32[512] = {
+  [  0] = 0x01, 0x32, 0x00, 0x00,
+  [  4] = 0x02, 0x32, 0x00, 0x00,
+  [  8] = 0xff, 0xff, 0xff, 0x0f,
+};
+
 static unsigned char rootDir[] = {
   [  0] = 0x47, 0x42, 0x41, 0x53, 0x59, 0x53, 0x20, 0x20, 0x20, 0x20, 0x20, 0x10, 0x00, 0x88, 0x87, 0xaa,
           0x3e, 0x54, 0x3e, 0x54, 0x00, 0x00, 0x87, 0xaa, 0x3e, 0x54, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -28,6 +34,8 @@ static unsigned char rootDir[] = {
           0x31, 0x00, 0x2e, 0x00, 0x30, 0x00, 0x35, 0x00, 0x2e, 0x00, 0x00, 0x00, 0x75, 0x00, 0x70, 0x00,
           0x42, 0x4f, 0x4f, 0x54, 0x2d, 0x56, 0x7e, 0x31, 0x55, 0x50, 0x44, 0x20, 0x00, 0x55, 0x33, 0x9b,
           0x85, 0x53, 0x3b, 0x56, 0x00, 0x00, 0x2d, 0x9b, 0x85, 0x53, 0x1e, 0x15, 0x00, 0x70, 0x00, 0x00,
+          0x4c, 0x45, 0x56, 0x45, 0x4c, 0x20, 0x20, 0x20, 0x42, 0x49, 0x4e, 0x20, 0x00, 0xb6, 0x78, 0xb4,
+          0x4e, 0x57, 0x4e, 0x57, 0x00, 0x00, 0x78, 0xb4, 0x4e, 0x57, 0x00, 0x32, 0x00, 0x80, 0x01, 0x00,
   [511] = 0x00
 };
 
@@ -98,6 +106,7 @@ static unsigned char registeryDat[] = {
   [511] = 0x00
 };
 
+static unsigned char levelBinSectors[3][512] = {{0}, {0}, {0}};
 static unsigned char emptySector[512] = {0};
 
 static bool
@@ -105,15 +114,21 @@ Disk_ReadStatic(unsigned int index, void *buffer) {
   static unsigned char *sectors[] = {
     [0x00000] = bootRecord,
     [0x02000] = superBlock,
-    [0x02492] = NULL, // first FAT
+    // first FAT
+    [0x02492] = NULL,
+    [0x024f6] = fatSector32,
+    // data sectors
     [0x06000] = rootDir,
     [0x06040] = gbasysDir,
     [0x06a00] = sysDir,
     [0x5a740] = registeryDat,
+    [0xcdf80] = levelBinSectors[0], // start of 1st cluster
+    [0xcdfc0] = levelBinSectors[1], // start of 2nd cluster
+    [0xce000] = levelBinSectors[2], // start of 3rd cluster
   };
 
   unsigned char *source = emptySector;
-  if (sectors[index] != NULL) {
+  if (index < length(sectors) && sectors[index] != NULL) {
     source = sectors[index];
   }
 
@@ -135,9 +150,8 @@ test(Initialize_ShouldReadDiskInfo) {
 
   // assert
   assert(result == true);
-  assert(info->bytesPerSector == 512);
-  assert(info->sectorsPerCluster == 64);
-  assert(info->sectorsPerFAT == 7607);
+  assert(info->sectorSize == 9);
+  assert(info->clusterSize == 6);
   assert(info->rootDirCluster == 2);
   assert(info->firstFATSector == 9362);
   assert(info->firstDataSector == 24576);
@@ -152,9 +166,10 @@ test(ReadDirectory_ShouldReturnExpectedEntries) {
   Disk_OpenDirectory(&disk, path);
 
   DiskEntry entries[] = {
-    { .type = DISK_ENTRY_DIRECTORY, .name = { "GBASYS     " }, .fileSize = 0, .startCluster = 3 },
-    { .type = DISK_ENTRY_DIRECTORY, .name = { "ROMS       " }, .fileSize = 0, .startCluster = 45 },
+    { .type = DISK_ENTRY_DIRECTORY, .name = { "GBASYS     " }, .fileSize = -1, .startCluster = 3 },
+    { .type = DISK_ENTRY_DIRECTORY, .name = { "ROMS       " }, .fileSize = -1, .startCluster = 45 },
     { .type = DISK_ENTRY_FILE, .name = { "BOOT-V~1UPD" }, .fileSize = 28672, .startCluster = 5406 },
+    { .type = DISK_ENTRY_FILE, .name = { "LEVEL   BIN" }, .fileSize = 98304, .startCluster = 12800 },
   };
 
   // act
@@ -187,7 +202,7 @@ test(ReadDirectory_ShouldReturnFalseWhenAllEntriesAreRead) {
   }
 
   // assert
-  assert(count == 3);
+  assert(count == 4);
 }
 
 test(OpenDirectory_ShouldReturnTrueIfSubdirectoriesExist) {
@@ -271,44 +286,10 @@ test(OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother) {
   }
 
   // assert
-  assert(count == 10);
+  assert(count == 11);
 }
 
-test(ReadFile_ShouldFillBufferWithContentsOfFileAndReturnTrue) {
-  // arrange
-  Disk disk = {0};
-  Disk_Initialize(&disk, Disk_ReadStatic);
-
-  char *path[] = {
-    "GBASYS     ",
-    "SYS        ",
-    NULL
-  };
-
-  Disk_OpenDirectory(&disk, path);
-
-  DiskEntry entry = {0};
-  while (Disk_ReadDirectory(&disk, &entry)) {
-    if (DiskEntry_NameEquals(&entry, "REGIST~1DAT")) {
-      break;
-    }
-  }
-
-  unsigned char buffer[1024] = {0};
-  unsigned int length = sizeof(buffer);
-
-  // act
-  bool result = Disk_ReadFile(&disk, &entry, buffer, length);
-
-  // assert
-  assert(result == true);
-
-  for (int i = 0; i < entry.fileSize; i++) {
-    assert(buffer[i] == registeryDat[i]);
-  }
-}
-
-test(OpenFile_ShouldReturnReaderAndReadFileByteByByte) {
+test(OpenFile_ShouldReturnReaderAndReadFileBytewise) {
   // arrange
   Disk disk = {0};
   Disk_Initialize(&disk, Disk_ReadStatic);
@@ -342,6 +323,52 @@ test(OpenFile_ShouldReturnReaderAndReadFileByteByByte) {
 
   int byte = Reader_Read(reader);
   assert(byte == -1);
+}
+
+test(SeekTo_ShouldAdjustPositionAndReturnExpectedBytes) {
+  // arrange
+  Disk disk = {0};
+  Disk_Initialize(&disk, Disk_ReadStatic);
+
+  char *path[] = { NULL };
+  Disk_OpenDirectory(&disk, path);
+
+  DiskEntry entry = {0};
+  while (Disk_ReadDirectory(&disk, &entry)) {
+    if (DiskEntry_NameEquals(&entry, "LEVEL   BIN")) {
+      break;
+    }
+  }
+
+  DataSource *source = Disk_OpenFile(&disk, &entry);
+  Reader *reader = DataSource_AsReader(source);
+
+  const int bytesPerCluster = DiskInfo_BytesPerCluster(&disk.info);
+
+  const struct {
+    int position;
+    unsigned char *values;
+  } seeks[] = {
+    { bytesPerCluster * 2, levelBinSectors[2] },
+    { bytesPerCluster * 0, levelBinSectors[0] },
+    { bytesPerCluster * 1, levelBinSectors[1] },
+  };
+
+  for (int i = 0; i < length(seeks); i++) {
+    // arrange
+    for (int j = 0; j < 512; j++) {
+      seeks[i].values[j] = (unsigned char) Math_rand();
+    }
+
+    // act
+    Reader_SeekTo(reader, seeks[i].position);
+
+    // assert
+    for (int j = 0; j < 512; j++) {
+      int byte = Reader_Read(reader);
+      assert(byte == seeks[i].values[j]);
+    }
+  }
 }
 
 test(NormalizePath_ShouldReturnExpectedNormalizedPath) {
@@ -484,8 +511,8 @@ suite(
   OpenDirectory_ShouldReturnFalseIfSubdirectoryDoesNotExist,
   OpenDirectory_ShouldReturnFalseIfSubdirectoryIsFile,
   OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother,
-  ReadFile_ShouldFillBufferWithContentsOfFileAndReturnTrue,
-  OpenFile_ShouldReturnReaderAndReadFileByteByByte,
+  OpenFile_ShouldReturnReaderAndReadFileBytewise,
+  SeekTo_ShouldAdjustPositionAndReturnExpectedBytes,
   NormalizePath_ShouldReturnExpectedNormalizedPath,
   NormalizePath_ShouldReturnExpectedNormalizedPathForRootDirectory,
   NormalizePath_ShouldReturnFalseWhenPathnameContainsInvalidCharacters,

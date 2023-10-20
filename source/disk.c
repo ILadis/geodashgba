@@ -3,7 +3,6 @@
 
 static inline bool
 Disk_BufferFill(Disk *disk, unsigned int sector) {
-  disk->offset = 0;
   return disk->read(sector, disk->buffer);
 }
 
@@ -49,7 +48,6 @@ Disk_Initialize(
     Disk *disk,
     Disk_ReadFn read)
 {
-  disk->offset = 0;
   disk->read = read;
 
   if (!Disk_BufferFill(disk, 0)) {
@@ -83,15 +81,19 @@ Disk_Initialize(
 
   DiskInfo *info = &disk->info;
 
-  info->bytesPerSector = Disk_BufferGetU16At(disk, 0x000B);
-  info->sectorsPerCluster = Disk_BufferGetU8At(disk, 0x000D);
-  info->sectorsPerFAT = Disk_BufferGetU16At(disk, 0x0024);
+  unsigned int bytesPerSector = Disk_BufferGetU16At(disk, 0x000B);
+  unsigned int sectorsPerCluster = Disk_BufferGetU8At(disk, 0x000D);
+
+  info->sectorSize = Math_log2(bytesPerSector);
+  info->clusterSize = Math_log2(sectorsPerCluster);
+
+  unsigned short sectorsPerFAT = Disk_BufferGetU16At(disk, 0x0024);
 
   unsigned short reservedSectors = Disk_BufferGetU16At(disk, 0x000E);
   unsigned short numberOfFATs = Disk_BufferGetU8At(disk, 0x0010);
 
   unsigned int rootDirCluster = Disk_BufferGetU32At(disk, 0x002C);
-  unsigned int firstDataSector = offset + reservedSectors + numberOfFATs * info->sectorsPerFAT;
+  unsigned int firstDataSector = offset + reservedSectors + numberOfFATs * sectorsPerFAT;
   unsigned int firstFATSector = offset + reservedSectors;
 
   info->rootDirCluster = rootDirCluster;
@@ -103,30 +105,16 @@ Disk_Initialize(
 
 static inline unsigned int
 Disk_GetSectorOfCluster(Disk *disk, unsigned int cluster) {
-  return disk->info.firstDataSector + (cluster - 2) * disk->info.sectorsPerCluster;
+  return disk->info.firstDataSector + (cluster - 2) * (1 << disk->info.clusterSize);
 }
 
 static inline unsigned int
 Disk_GetNextCluster(Disk *disk, unsigned int cluster) {
-  const unsigned int shifts[] = {
-    // bytes per sector:
-    [1] =  9, //  512
-    [2] = 10, // 1024
-    [4] = 11, // 2048
-    [8] = 12, // 4096
-  };
-
-  int index = disk->info.bytesPerSector >> 9;
-  unsigned int shift = shifts[index];
-  unsigned int modulo = disk->info.bytesPerSector - 1;
-
-  if (shift == 0) {
-    return Disk_BadCluster;
-  }
+  DiskInfo *info = &disk->info;
 
   unsigned int fatOffset = cluster * 4;
-  unsigned int fatSector = disk->info.firstFATSector + (fatOffset >> shift);
-  unsigned int fatEntry = fatOffset & modulo;
+  unsigned int fatSector = disk->info.firstFATSector + (fatOffset >> info->sectorSize);
+  unsigned int fatEntry = Math_mod2(fatOffset, info->sectorSize);
 
   if (!Disk_BufferFill(disk, fatSector)) {
     return Disk_BadCluster;
@@ -136,133 +124,11 @@ Disk_GetNextCluster(Disk *disk, unsigned int cluster) {
   return next;
 }
 
-bool
-Disk_OpenDirectory(
-    Disk *disk,
-    char *path[])
-{
-  DiskInfo *info = &disk->info;
-  unsigned int sector = Disk_GetSectorOfCluster(disk, info->rootDirCluster);
-  if (!Disk_BufferFill(disk, sector)) {
-    return false;
-  }
-
-  int index = 0;
-  while (path[index] != NULL) {
-    char *name = path[index++];
-
-    DiskEntry entry = {0};
-    do {
-      if (!Disk_ReadDirectory(disk, &entry)) {
-        return false;
-      }
-    } while (!DiskEntry_NameEquals(&entry, name));
-
-    if (entry.type != DISK_ENTRY_DIRECTORY) {
-      return false;
-    }
-
-    unsigned int sector = Disk_GetSectorOfCluster(disk, entry.startCluster);
-    if (!Disk_BufferFill(disk, sector)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool
-Disk_ReadDirectory(
-    Disk *disk,
-    DiskEntry *entry)
-{
-  unsigned char *buffer = NULL;
-  unsigned int offset = disk->offset;
-  unsigned char flags = 0;
-
-  next: {
-    buffer = &disk->buffer[offset];
-    if (*buffer == 0x00) {
-      return false;
-    }
-
-    flags = Disk_BufferGetU8At(disk, offset + 11);
-
-    // skip hidden or system files
-    if (flags & 0b00110) {
-      offset += 32;
-      goto next;
-    }
-  }
-
-  const int length = strlen(entry->name);
-  for (int i = 0; i < length; i++) {
-    entry->name[i] = buffer[i];
-  }
-
-  entry->name[length] = '\0';
-  entry->type = flags & 0b10000 ? DISK_ENTRY_DIRECTORY : DISK_ENTRY_FILE;
-  entry->startCluster = Disk_BufferGetU16At(disk, offset + 26);
-  entry->fileSize = Disk_BufferGetU32At(disk, offset + 28);
-
-  disk->offset = offset + 32;
-
-  return true;
-}
-
 static inline bool
 Disk_SectorIsAlignedWithCluster(Disk *disk, unsigned int sector) {
   DiskInfo *info = &disk->info;
-  return (sector & (info->sectorsPerCluster - 1)) == 0;
-}
-
-bool
-Disk_ReadFile(
-    Disk *disk,
-    const DiskEntry *entry,
-    unsigned char *buffer,
-    unsigned int length)
-{
-  if (entry->type != DISK_ENTRY_FILE) {
-    return false;
-  }
-
-  unsigned int cluster = entry->startCluster;
-  unsigned int size = entry->fileSize;
-
-  DiskInfo *info = &disk->info;
-  unsigned int sector = Disk_GetSectorOfCluster(disk, cluster);
-
-next:
-  do {
-    // buffer to small
-    if (length <= info->bytesPerSector) {
-      return false;
-    }
-
-    if (!disk->read(sector, buffer)) {
-      return false;
-    }
-
-    // last chunk was read
-    if (size <= info->bytesPerSector) {
-      return true;
-    }
-
-    length -= info->bytesPerSector;
-    size   -= info->bytesPerSector;
-    buffer += info->bytesPerSector;
-    sector += 1;
-  } while (!Disk_SectorIsAlignedWithCluster(disk, sector));
-
-  cluster = Disk_GetNextCluster(disk, cluster);
-  switch (cluster) {
-    case Disk_BadCluster:  return false;
-    case Disk_ClusterMask: return true;
-  }
-  sector = Disk_GetSectorOfCluster(disk, cluster);
-
-  goto next;
+  const unsigned int sectorsPerCluster = DiskInfo_SectorsPerCluster(info);
+  return (sector & (sectorsPerCluster - 1)) == 0;
 }
 
 static int
@@ -310,7 +176,9 @@ DiskReader_ReadNext(void *self) {
   }
 
   unsigned int position = reader->position++;
-  if (reader->position >= info->bytesPerSector) {
+  const unsigned int bytesPerSector = DiskInfo_BytesPerSector(info);
+
+  if (reader->position >= bytesPerSector) {
     DataSource *source = &disk->source;
     source->reader.Read = DiskReader_ReadAdvance;
   }
@@ -319,44 +187,58 @@ DiskReader_ReadNext(void *self) {
   return Disk_BufferGetU8At(disk, position);
 }
 
-static int
-DiskReader_InitializeRead(void *self) {
+static bool
+DiskReader_SeekTo(void *self, int position) {
   Disk *disk = self;
-  DiskReader *reader = &disk->reader;
+  DiskInfo *info = &disk->info;
   DiskEntry *entry = &disk->entry;
 
-  unsigned int sector = Disk_GetSectorOfCluster(disk, entry->startCluster);
-  if (!Disk_BufferFill(disk, sector)) {
-    return -1;
+  if (position > entry->fileSize || position < 0) {
+    return false;
   }
 
-  reader->cluster = entry->startCluster;
-  reader->size = entry->fileSize;
+  unsigned int cluster = entry->startCluster;
+  const int seeks = position >> (info->clusterSize + info->sectorSize);
+
+  for (int i = 0; i < seeks; i++) {
+    cluster = Disk_GetNextCluster(disk, cluster);
+    switch (cluster) {
+      case Disk_BadCluster:  return false;
+      case Disk_ClusterMask: return false;
+    }
+  }
+
+  unsigned int sector = Disk_GetSectorOfCluster(disk, cluster);
+
+  const int delta = (position >> info->sectorSize) - (1 << info->clusterSize) * seeks;
+  const int offset = Math_mod2(position, info->sectorSize);
+
+  sector += delta;
+  if (disk->reader.sector != sector) {
+    if (!Disk_BufferFill(disk, sector)) {
+      return false;
+    }
+  }
+
+  DiskReader *reader = &disk->reader;
+  reader->cluster = cluster;
+  reader->size = entry->fileSize - position;
   reader->sector = sector;
-  reader->position = 0;
+  reader->position = offset;
 
   DataSource *source = &disk->source;
   source->reader.Read = DiskReader_ReadNext;
 
-  return DiskReader_ReadNext(self);
+  return true;
 }
 
-static bool
-DiskReader_SeekTo(void *self, int position) { // TODO improve this
-  Disk *disk = self;
-  if (DiskReader_InitializeRead(self) < 0) {
-    return false;
+static int
+DiskReader_InitializeRead(void *self) {
+  if (DiskReader_SeekTo(self, 0)) {
+    return DiskReader_ReadNext(self);
   }
 
-  disk->reader.position = 0;
-  while (position-- > 0) {
-    if (Reader_Read(&disk->source.reader) < 0) {
-      // allow seeking to end of buffer (where next read would return -1)
-      return position == 0 ? true : false;
-    }
-  }
-
-  return true;
+  return -1;
 }
 
 DataSource*
@@ -366,17 +248,106 @@ Disk_OpenFile(
 {
   DataSource *source = &disk->source;
 
-  if (entry->type != DISK_ENTRY_FILE) {
-    return NULL;
-  }
-
   source->reader.self = disk;
   source->reader.Read = DiskReader_InitializeRead;
   source->reader.SeekTo = DiskReader_SeekTo;
 
   disk->entry = *entry;
 
+  DiskReader *reader = &disk->reader;
+  reader->cluster = entry->startCluster;
+  reader->size = entry->fileSize;
+  reader->sector = 0;
+  reader->position = 0;
+
   return source;
+}
+
+bool
+Disk_OpenDirectory(
+    Disk *disk,
+    char *path[])
+{
+  DiskInfo *info = &disk->info;
+  DiskEntry root = {
+    .startCluster = info->rootDirCluster,
+    .type = DISK_ENTRY_DIRECTORY,
+    .fileSize = 0xFFFFFFFF,
+  };
+
+  int index = 0;
+  Disk_OpenFile(disk, &root);
+
+  while (path[index] != NULL) {
+    char *name = path[index++];
+
+    DiskEntry entry = {0};
+    do {
+      if (!Disk_ReadDirectory(disk, &entry)) {
+        return false;
+      }
+    } while (!DiskEntry_NameEquals(&entry, name));
+
+    if (entry.type != DISK_ENTRY_DIRECTORY) {
+      return false;
+    }
+
+    Disk_OpenFile(disk, &entry);
+  }
+
+  return true;
+}
+
+bool
+Disk_ReadDirectory(
+    Disk *disk,
+    DiskEntry *entry)
+{
+  DiskInfo *info = &disk->info;
+  Reader *reader = DataSource_AsReader(&disk->source);
+
+  if (disk->entry.type != DISK_ENTRY_DIRECTORY) {
+    return false;
+  }
+
+  unsigned int position = 0;
+  unsigned char flags = 0;
+
+  next: {
+    for (int i = 0; i < Disk_EntrySize; i++) {
+      int byte = Reader_Read(reader);
+      if (byte < 0) return false;
+    }
+
+    position = disk->reader.position - Disk_EntrySize;
+    flags = Disk_BufferGetU8At(disk, position);
+    // check end of entries marker
+    if (flags == 0x00) {
+      return false;
+    }
+
+    flags = Disk_BufferGetU8At(disk, position + 11);
+    // skip hidden and system files
+    if (flags & 0b00110) {
+      goto next;
+    }
+  }
+
+  const int length = strlen(entry->name);
+  for (int i = 0; i < length; i++) {
+    entry->name[i] = Disk_BufferGetU8At(disk, position + i);
+  }
+
+  entry->name[length] = '\0';
+  entry->type = flags & 0b10000 ? DISK_ENTRY_DIRECTORY : DISK_ENTRY_FILE;
+  entry->startCluster = Disk_BufferGetU16At(disk, position + 26);
+  entry->fileSize = Disk_BufferGetU32At(disk, position + 28);
+
+  if (entry->type == DISK_ENTRY_DIRECTORY) {
+    entry->fileSize = 0xFFFFFFFF;
+  }
+
+  return true;
 }
 
 bool
