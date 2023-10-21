@@ -20,7 +20,7 @@ static const int Octave[] = {
 static int
 NoteSample_Get(
     void *self,
-    int index)
+    unsigned int index)
 {
   NoteSample *sample = self;
   Note note = sample->note;
@@ -57,7 +57,7 @@ NoteSample_FromSamples(union Samples *samples) {
 
 static inline bool
 NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
-  int index = channel->track.index;
+  unsigned int index = channel->track.index;
   char *notes = channel->track.notes;
 
   char symbol = notes[index];
@@ -67,9 +67,9 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
 
   enum Note note = (symbol - 'A') * 2;
 
-  int octave = 4;
-  int dotted = 0;
-  int length = channel->tempo;
+  unsigned int octave = 4;
+  unsigned int dotted = 0;
+  unsigned int length = channel->tempo;
   bool shorten = false;
 
   while (true) {
@@ -93,6 +93,9 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
     break;
   }
 
+  // FIXME improve this
+  channel->position -= channel->samples.note.length << 12;
+
   NoteSample *sample = NoteSample_FromSamples(&channel->samples);
   sample->note = note;
   sample->octave = octave;
@@ -101,8 +104,6 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
 
   channel->track.index = index;
   channel->sample = &sample->super;
-  channel->length = length;
-  channel->position = 0;
 
   return true;
 }
@@ -113,9 +114,11 @@ NoteSoundChannel_Create(
     char *notes,
     int rate)
 {
-  int NoteSoundChannel_Fill(void *channel, int *buffer, int size);
+  void NoteSoundChannel_Pitch(void *channel, unsigned int frequency);
+  int NoteSoundChannel_Fill(void *channel, int *buffer, unsigned int size);
 
   channel->super.self = channel;
+  channel->super.Pitch = NoteSoundChannel_Pitch;
   channel->super.Fill = NoteSoundChannel_Fill;
 
   channel->track.notes = notes;
@@ -123,42 +126,177 @@ NoteSoundChannel_Create(
   channel->rate = rate;
   channel->tempo = 2500;
   channel->position = 0;
-  channel->length = 0;
+  channel->increment = 1 << 12;
 
   NoteSoundChannel_NextSample(channel);
 
   return &channel->super;
 }
 
+void
+NoteSoundChannel_Pitch(
+    void *self,
+    unsigned int frequency)
+{
+  NoteSoundChannel *channel = self;
+
+  unsigned int increment = Math_div(1 << (channel->rate + 12), frequency);
+  channel->increment = increment;
+}
+
 int
 NoteSoundChannel_Fill(
     void *self,
     int *buffer,
-    int size)
+    unsigned int size)
 {
   NoteSoundChannel *channel = self;
-  Sample *sample = channel->sample;
+  NoteSample *sample = &channel->samples.note;
 
-  int length = channel->length;
-  int offset = 0;
-
-  if (channel->position >= length) {
+  unsigned int position = channel->position >> 12;
+  if (position >= sample->length) {
+    if (!NoteSoundChannel_NextSample(channel)) {
       return 0; // end of track
+    }
   }
 
-  while (offset < size) {
-    int value = Sample_Get(sample, channel->position++);
-    buffer[offset++] += value;
+  unsigned int index = 0;
+  while (index < size) {
+    unsigned int position = channel->position >> 12;
+    int value = Sample_Get(channel->sample, position);
 
-    if (channel->position < length) {
+    channel->position += channel->increment;
+    buffer[index++] += value;
+
+    if (position < sample->length) {
       continue;
     }
 
-    // advance to next sample (note or pause)
+    // advance to next note/sample
     if (!NoteSoundChannel_NextSample(channel)) {
       break;
     }
   }
 
-  return offset;
+  return index;
+}
+
+SoundPlayer*
+SoundPlayer_GetInstance() {
+  static SoundPlayer player = {0};
+  return &player;
+}
+
+void
+SoundPlayer_Enable(SoundPlayer *player) {
+  const unsigned int frequency = 10512;
+  const unsigned int size = 176;
+
+  static char buffer1[176];
+  static char buffer2[176];
+
+  player->buffers[0] = buffer1;
+  player->buffers[1] = buffer2;
+  player->frequency = frequency;
+  player->active = buffer1;
+  player->size = size;
+
+  GBA_EnableSound();
+
+  GBA_SoundControl enable = {
+    .soundARatio = 1,  // volume at 100%
+    .soundAEnable = 3, // left and right speaker
+    .soundATimer = 0,  // use timer 0
+    .soundAReset = 1,
+  };
+
+  GBA_TimerData data = { 0xFFFF - Math_div(16777216, frequency) };
+  GBA_TimerControl timer = {
+    .frequency = 0,
+    .enable = 1,
+  };
+
+  GBA_System *system = GBA_GetSystem();
+
+  GBA_SoundControl *sound = system->soundControl;
+  sound->value = enable.value;
+
+  GBA_TimerControl *timer0 = system->timerControl[0];
+  timer0->value = timer.value;
+
+  GBA_TimerData *data0 = system->timerData[0];
+  data0->value = data.value;
+}
+
+bool
+SoundPlayer_AddChannel(
+    SoundPlayer *player,
+    SoundChannel *channel)
+{
+  SoundChannel_Pitch(channel, player->frequency);
+
+  for (int i = 0; i < length(player->channels); i++) {
+    if (player->channels[i] == NULL) {
+      player->channels[i] = channel;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void
+SoundPlayer_MixChannels(SoundPlayer *player) {
+  const unsigned int size = player->size;
+
+  int buffer[size];
+  GBA_Memset32(buffer, 0, size * sizeof(int));
+
+  for (int i = 0; i < length(player->channels); i++) {
+    SoundChannel *channel = player->channels[i];
+    if (channel == NULL) {
+      break;
+    }
+
+    SoundChannel_Fill(channel, buffer, size);
+  }
+
+  for (int i = 0; i < size; i++) {
+    player->active[i] = (char) (buffer[i] >> 2); // divide by 4 channels
+  }
+}
+
+void
+SoundPlayer_VSync(SoundPlayer *player) {
+  char *buffer1 = player->buffers[0];
+  char *buffer2 = player->buffers[1];
+
+  GBA_System *system = GBA_GetSystem();
+  GBA_DirectMemcpy *dma1 = system->directMemcpy[1];
+
+  GBA_DirectMemcpy copy = {0};
+  copy.chunkSize = 1; // copy words
+  copy.dstAdjust = 2; // fixed destination address
+  copy.repeat = 1; // copy at VBlank
+  copy.timingMode = 3; // fifo mode
+  copy.enable = 1;
+
+  if (player->active == buffer1) {
+    dma1->cnt = 0;
+
+    dma1->src = buffer1;
+    dma1->dst = system->soundDataA;
+    dma1->cnt = copy.cnt;
+
+    player->active = buffer2;
+  }
+  else {
+    dma1->cnt = 0;
+
+    dma1->src = buffer2;
+    dma1->dst = system->soundDataA;
+    dma1->cnt = copy.cnt;
+
+    player->active = buffer1;
+  }
 }

@@ -303,9 +303,7 @@ Disk_ReadDirectory(
     Disk *disk,
     DiskEntry *entry)
 {
-  DiskInfo *info = &disk->info;
   Reader *reader = DataSource_AsReader(&disk->source);
-
   if (disk->entry.type != DISK_ENTRY_DIRECTORY) {
     return false;
   }
@@ -375,10 +373,9 @@ DiskEntry_NormalizePathSegment(
   static char charmap[] = {
     // special characters:
     [0x21] = '!', [0x23] = '#', [0x24] = '$', [0x25] = '%',
-    [0x26] = '&', [0x27] = '\'',[0x25] = '(', [0x26] = ')',
-    [0x27] = '*', [0x28] = '+', [0x28] = ',', [0x29] = '-',
-    [0x40] = '@', [0x60] = '`', [0x7B] = '{', [0x7D] = '}',
-    [0x7E] = '~',
+    [0x26] = '&', [0x27] = '\'',[0x28] = '(', [0x29] = ')',
+    [0x2D] = '-', [0x40] = '@', [0x60] = '`', [0x7B] = '{',
+    [0x7D] = '}', [0x7E] = '~',
 
     // numbers/digits:
     [0x30] = '0', [0x31] = '1', [0x32] = '2', [0x33] = '3',

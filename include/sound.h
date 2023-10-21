@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <math.h>
+#include <gba.h>
 
 typedef enum Note {
   NOTE_C = 4,
@@ -21,29 +22,35 @@ typedef enum Note {
 
 typedef struct Sample {
   void *self;
-  int (*Get)(void *self, int index);
+  int (*Get)(void *self, unsigned int index);
 } Sample;
 
 static inline int
-Sample_Get(Sample *sample, int index) {
+Sample_Get(Sample *sample, unsigned int index) {
   return sample->Get(sample->self, index);
 }
 
 typedef struct NoteSample {
   Sample super;
   Note note;
-  int octave;
-  int length;
-  int rate;
+  unsigned int octave;
+  unsigned int length; // total values in this sample
+  unsigned int rate;
 } NoteSample;
 
 typedef struct SoundChannel {
   void *self;
-  int (*Fill)(void *self, int *buffer, int size);
+  void (*Pitch)(void *self, unsigned int frequency);
+  int (*Fill)(void *self, int *buffer, unsigned int size);
 } SoundChannel;
 
+static inline void
+SoundChannel_Pitch(SoundChannel *channel, unsigned int frequency) {
+  return channel->Pitch(channel->self, frequency);
+}
+
 static inline int
-SoundChannel_Fill(SoundChannel *channel, int *buffer, int size) {
+SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
   return channel->Fill(channel->self, buffer, size);
 }
 
@@ -51,17 +58,16 @@ typedef struct NoteSoundChannel {
   struct SoundChannel super;
   struct {
     char *notes;
-    int index;
+    unsigned int index;
   } track;
   union Samples {
     NoteSample note;
   } samples;
   Sample *sample;
-  int rate; // sample rate
-  int tempo;
-  // TODO implement volume
-  int position;
-  int length;
+  unsigned int rate;      // sample rate as power of two (for example 13 = 8kHz)
+  unsigned int tempo;
+  unsigned int position;  // position in current sample (20.12 fixed point integer)
+  unsigned int increment; // increment (20.12 fixed point integer)
 } NoteSoundChannel;
 
 SoundChannel*
@@ -69,5 +75,30 @@ NoteSoundChannel_Create(
     NoteSoundChannel *channel,
     char *notes,
     int rate);
+
+typedef struct SoundPlayer {
+  char *buffers[2];
+  char *active;
+  unsigned int size;
+  unsigned int frequency;
+  struct SoundChannel *channels[4];
+} SoundPlayer;
+
+SoundPlayer*
+SoundPlayer_GetInstance();
+
+void
+SoundPlayer_Enable(SoundPlayer *player);
+
+bool
+SoundPlayer_AddChannel(
+    SoundPlayer *player,
+    SoundChannel *channel);
+
+void
+SoundPlayer_MixChannels(SoundPlayer *player);
+
+void
+SoundPlayer_VSync(SoundPlayer *player);
 
 #endif

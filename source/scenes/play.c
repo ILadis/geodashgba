@@ -1,6 +1,7 @@
 
 #include <gba.h>
 #include <log.h>
+#include <sound.h>
 #include <scene.h>
 
 #include <game/camera.h>
@@ -44,6 +45,7 @@ Scene_DoPlay() {
 
   GBA_Input_PollStates();
 
+  SoundPlayer *player = SoundPlayer_GetInstance();
   Cube *cube = Cube_GetInstance();
   Checkpoint *checkpoint = Checkpoint_GetInstance();
   Camera *camera = Camera_GetInstance();
@@ -79,7 +81,9 @@ Scene_DoPlay() {
   Progress_Update(progress, cube);
   Particle_UpdateAll();
 
+  SoundPlayer_VSync(player);
   GBA_VSync();
+  SoundPlayer_MixChannels(player);
 
   if (debug && Cube_InState(cube, STATE_DESTROYED)) {
     extern void Debug_DrawHitboxes();

@@ -22,7 +22,7 @@ OBJCOPY  := arm-none-eabi-objcopy
 ARCH     := -mthumb-interwork -mthumb
 SPECS    := -specs=gba.specs
 
-CFLAGS   := $(ARCH) -O2 -Wall -Wextra -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -Iinclude
+CFLAGS   := $(ARCH) -O2 -Wall -fno-strict-aliasing -nostdinc -mcpu=arm7tdmi -mtune=arm7tdmi -fomit-frame-pointer -ffast-math -Iinclude
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases
@@ -34,7 +34,7 @@ ifdef DEBUG
   CFLAGS  += -O0 -g
   LDFLAGS += -g
   RUNNER  := gdbserver :2345
-  EMU     := mgba -l 8 -3 --gdb
+  EMU     := mgba-qt -l 8 -3 --gdb
 endif
 
 .PHONY : tools utils assets build run clean purge

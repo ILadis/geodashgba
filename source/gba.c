@@ -29,6 +29,11 @@ GBA_GetSystem() {
     .timerControl[2] = GBA_TIMER_CONTROL(MEM_IO + 0x010A),
     .timerControl[3] = GBA_TIMER_CONTROL(MEM_IO + 0x010E),
 
+    .soundControl = GBA_SOUND_CONTROL(MEM_IO + 0x0082),
+    .soundStatus = GBA_SOUND_STATUS(MEM_IO + 0x0084),
+    .soundDataA = GBA_SOUND_DATA(MEM_IO + 0x00A0),
+    .soundDataB = GBA_SOUND_DATA(MEM_IO + 0x00A4),
+
     .directMemcpy[0] = GBA_MEMCPY(MEM_IO + 0x00B0),
     .directMemcpy[1] = GBA_MEMCPY(MEM_IO + 0x00BC),
     .directMemcpy[2] = GBA_MEMCPY(MEM_IO + 0x00C8),
@@ -110,6 +115,17 @@ GBA_DisableBackgroundLayer(int layer) {
 }
 
 void
+GBA_OffsetBackgroundLayer(
+    int layer,
+    int px, int py)
+{
+  GBA_System *system = GBA_GetSystem();
+
+  system->backgroundOffsets[layer]->hOffset = px;
+  system->backgroundOffsets[layer]->vOffset = py;
+}
+
+void
 GBA_StartTimerCascade(
     GBA_TimerFrequency frequency,
     GBA_TimerData *overflows)
@@ -157,14 +173,17 @@ GBA_GetTimerValue(
 }
 
 void
-GBA_OffsetBackgroundLayer(
-    int layer,
-    int px, int py)
-{
+GBA_EnableSound() {
   GBA_System *system = GBA_GetSystem();
+  GBA_SoundStatus *status = system->soundStatus;
+  status->value = 1 << 7;
+}
 
-  system->backgroundOffsets[layer]->hOffset = px;
-  system->backgroundOffsets[layer]->vOffset = py;
+void
+GBA_DisableSound() {
+  GBA_System *system = GBA_GetSystem();
+  GBA_SoundStatus *status = system->soundStatus;
+  status->value = 0;
 }
 
 void
@@ -315,6 +334,24 @@ GBA_Memcpy16(void *dst, const void *src, int size) {
   copy.src = src;
   copy.numTransfers = size >> 1;
   copy.chunkSize = 0; // copy half-words
+  copy.enable = 1;
+
+  dma3->dst = copy.dst;
+  dma3->src = copy.src;
+  dma3->cnt = copy.cnt;
+}
+
+void
+GBA_Memset32(void *dst, int value, int size) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_DirectMemcpy *dma3 = system->directMemcpy[3];
+
+  GBA_DirectMemcpy copy = {0};
+  copy.dst = dst;
+  copy.src = &value;
+  copy.numTransfers = size >> 2;
+  copy.srcAdjust = 2; // fixed
+  copy.chunkSize = 1; // copy words
   copy.enable = 1;
 
   dma3->dst = copy.dst;

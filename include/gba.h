@@ -198,14 +198,40 @@ typedef union GBA_TimerControl {
 #define GBA_TIMER_DATA(ADDR)    ((GBA_TimerData *)    (ADDR))
 #define GBA_TIMER_CONTROL(ADDR) ((GBA_TimerControl *) (ADDR))
 
-typedef struct GBA_Color {
-  union {
-    u16 value;
-    struct {
-      u16 red: 5;
-      u16 green: 5;
-      u16 blue: 5;
-    };
+typedef union GBA_SoundControl {
+  u16 value;
+  struct {
+    u16 unused1: 2;
+    u16 soundARatio: 1; // volume ratio 50% (if clear) or 100% (if set)
+    u16 soundBRatio: 1;
+    u16 unused2: 4;
+    u16 soundAEnable: 2;// enable sound on right and/or left speaker
+    u16 soundATimer: 1; // use timer 0 (if clear) or timer 1 (if set)
+    u16 soundAReset: 1;
+    u16 soundBEnable: 2;
+    u16 soundBTimer: 1;
+    u16 soundBReset: 1;
+  };
+} GBA_SoundControl;
+
+typedef struct GBA_SoundStatus {
+  u16 value;
+} GBA_SoundStatus;
+
+typedef struct GBA_SoundData {
+  u32 value;
+} GBA_SoundData;
+
+#define GBA_SOUND_CONTROL(ADDR) ((GBA_SoundControl *) (ADDR))
+#define GBA_SOUND_STATUS(ADDR)  ((GBA_SoundStatus *)  (ADDR))
+#define GBA_SOUND_DATA(ADDR)    ((GBA_SoundData *)  (ADDR))
+
+typedef union GBA_Color {
+  u16 value;
+  struct {
+    u16 red: 5;
+    u16 green: 5;
+    u16 blue: 5;
   };
 } GBA_Color;
 
@@ -355,6 +381,11 @@ typedef struct GBA_System {
   GBA_TimerData *const volatile timerData[4];
   GBA_TimerControl *const volatile timerControl[4];
 
+  GBA_SoundControl *const volatile soundControl;
+  GBA_SoundStatus *const volatile soundStatus;
+  GBA_SoundData *const volatile soundDataA;
+  GBA_SoundData *const volatile soundDataB;
+
   GBA_DirectMemcpy *const volatile directMemcpy[4];
 
   GBA_DisplayVCount *const volatile vcount;
@@ -403,6 +434,11 @@ void
 GBA_DisableBackgroundLayer(int layer);
 
 void
+GBA_OffsetBackgroundLayer(
+    int layer,
+    int px, int py);
+
+void
 GBA_StartTimerCascade(
     GBA_TimerFrequency frequency,
     GBA_TimerData *overflows);
@@ -413,9 +449,10 @@ GBA_GetTimerValue(
     GBA_TimerData *overflows);
 
 void
-GBA_OffsetBackgroundLayer(
-    int layer,
-    int px, int py);
+GBA_EnableSound();
+
+void
+GBA_DisableSound();
 
 void
 GBA_TileMapRef_FromBackgroundLayer(
@@ -452,6 +489,9 @@ GBA_Memcpy32(void *dst, const void *src, int size);
 
 void
 GBA_Memcpy16(void *dst, const void *src, int size);
+
+void
+GBA_Memset32(void *dst, int value, int size);
 
 void
 GBA_EnableSprites();
