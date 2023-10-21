@@ -111,9 +111,9 @@ Scene_DoPlay() {
     Progress_SetCollectedCoins(progress, coins);
   }
 
-  SoundPlayer_VSync(player);
-  GBA_VSync();
   SoundPlayer_MixChannels(player);
+  GBA_VSync();
+//SoundPlayer_VSync(player);
 
   Course_Draw(course, camera);
   Selector_Draw(selector);

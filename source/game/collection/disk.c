@@ -25,7 +25,9 @@ DiskCollection_GetInstance() {
 
 static bool
 DiskCollection_InitializeDisk(DiskCollection *collection) {
-  Everdrive_UnlockSystem();
+  if (!Everdrive_UnlockSystem()) {
+    return false;
+  }
 
   Disk *disk = &collection->disk;
   if (!Everdrive_CardInitialize()) {

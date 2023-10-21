@@ -12,7 +12,7 @@ Object_IsHit(
   extern bool Object_HitCoin(Object *object, Shape *shape);
   extern bool Object_HitPortal(Object *object, Shape *shape);
 
-  const bool (*hit[TYPE_COUNT])(Object *object, Shape *shape) = {
+  bool (*const hit[TYPE_COUNT])(Object *object, Shape *shape) = {
     [TYPE_SPIKE] = Object_HitSpike,
     [TYPE_PAD] = Object_HitPad,
     [TYPE_RING] = Object_HitRing,
@@ -34,7 +34,7 @@ Object_Move(
 {
   extern void Object_MoveSpike(Object *object, Vector *position);
 
-  const void (*move[TYPE_COUNT])(Object *object, Vector *position) = {
+  void (*const move[TYPE_COUNT])(Object *object, Vector *position) = {
     [TYPE_SPIKE] = Object_MoveSpike,
   };
 
@@ -65,7 +65,7 @@ Object_Draw(
   extern void Object_DrawPortal(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawGoalWall(Object *object, GBA_TileMapRef *target);
 
-  const void (*draw[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
+  void (*const draw[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
     [TYPE_DISK] = Object_DrawDisk,
     [TYPE_BOX] = Object_DrawBox,
     [TYPE_BOX_WITH_POLE] = Object_DrawBoxWithPole,
@@ -93,7 +93,7 @@ Object_Animate(
   extern bool Object_AnimateBoxWithPole(Object *object, GBA_TileMapRef *target, int frame);
   extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target, int frame);
 
-  const bool (*animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
+  bool (*const animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
     [TYPE_BOX_WITH_POLE] = Object_AnimateBoxWithPole,
     [TYPE_COIN] = Object_AnimateCoin,
   };

@@ -40,7 +40,7 @@ Cube_ApplySpawn(
     const Vector *position = Cube_GetPosition(cube);
 
     const int delays[] = { 0, 5, 8 };
-    for (int i = 0; i < length(delays); i++) {
+    for (unsigned int i = 0; i < length(delays); i++) {
       int count = 10;
       while (count-- > 0) {
         Particle *particle = Particle_NewInstance(position, &dynamics, 16, delays[i]);

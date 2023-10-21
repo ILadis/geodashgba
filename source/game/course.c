@@ -10,7 +10,7 @@ Course_GetInstance() {
 static inline Chunk*
 Course_LoadChunk(
     Course *course,
-    int index)
+    unsigned int index)
 {
   Chunk *chunk = Course_GetChunkAt(course, index);
 
@@ -53,7 +53,7 @@ Course_CalculateBounds(Course *course) {
 static inline void
 Course_ResetChunks(Course *course) {
   const Chunk empty = {0};
-  for (int i = 0; i < length(course->chunks); i++) {
+  for (unsigned int i = 0; i < length(course->chunks); i++) {
     course->chunks[i] = empty;
   }
 }
@@ -104,7 +104,7 @@ Course_ResetTo(
   const Bounds *bounds = Chunk_GetBounds(current);
   int width = bounds->size.x * 2;
 
-  int index = Math_div(position->x, width);
+  unsigned int index = Math_div(position->x, width);
   Course_ResetChunks(course);
   Course_ResetState(course, index);
 
@@ -225,7 +225,6 @@ Course_DrawFloor(
 static inline void
 Course_DrawAttempts(
     Course *course,
-    Chunk *chunk,
     GBA_TileMapRef *target)
 {
   extern const Font consoleFont;
@@ -297,7 +296,7 @@ Course_PrepareChunk(
 
   case STEP_DRAW_ATTEMPTS:
     if (chunk->index == 0) {
-      Course_DrawAttempts(course, chunk, &target);
+      Course_DrawAttempts(course, &target);
     }
     break;
 
@@ -353,11 +352,11 @@ Course_AnimateObjects(Course *course) {
     Course_GetNextChunk(course),
   };
 
-  for (int i = 0; i < length(chunks); i++) {
+  for (unsigned int i = 0; i < length(chunks); i++) {
     Chunk *chunk = chunks[i];
 
-    int count = chunk->count;
-    for (int j = 0; j < count; j++) {
+    unsigned int count = chunk->count;
+    for (unsigned int j = 0; j < count; j++) {
       Object *object = &chunk->objects[j];
       Object_Animate(object, &target, course->frame);
     }
@@ -381,7 +380,7 @@ Course_Draw(
     Course *course,
     Camera *camera)
 {
-  int index = course->index;
+  unsigned int index = course->index;
 
   Chunk *current = Course_GetChunkAt(course, index);
   if (!Chunk_InViewport(current, camera)) {

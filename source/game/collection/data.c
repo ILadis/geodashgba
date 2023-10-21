@@ -88,7 +88,7 @@ DataCollection_AddLevel(
     DataCollection *collection,
     const Binv1Level *level)
 {
-  int index = collection->count;
+  unsigned int index = collection->count;
   if (index >= length(collection->allocations)) {
     return false;
   }
@@ -156,15 +156,15 @@ DataCollection_ReadFrom(
     DataCollection *collection,
     const Reader *reader)
 {
-  int index = sizeof(collection->signature);
+  unsigned int index = sizeof(collection->signature);
 
   if (!DataCollection_FindSignature(reader)) {
     return false;
   }
 
   unsigned char *buffer = (unsigned char *) collection;
-  const int header = sizeof(*collection);
-  const int length = collection->length;
+  const unsigned int header = sizeof(*collection);
+  const unsigned int length = collection->length;
 
   while (index < header) {
     int byte = Reader_Read(reader);
@@ -179,7 +179,7 @@ DataCollection_ReadFrom(
     return false;
   }
 
-  const int limit = collection->length;
+  const unsigned int limit = collection->length;
   do {
     int byte = Reader_Read(reader);
     if (byte < 0) {
@@ -198,9 +198,9 @@ DataCollection_WriteTo(
     const Writer *writer)
 {
   const unsigned char *buffer = (const unsigned char *) collection;
-  const int length = collection->length;
+  const unsigned int length = collection->length;
 
-  int index = sizeof(collection->signature);
+  unsigned int index = sizeof(collection->signature);
   while (index < length) {
     if (!Writer_Write(writer, buffer[index++])) {
       return false;

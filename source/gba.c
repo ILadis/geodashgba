@@ -135,7 +135,7 @@ GBA_StartTimerCascade(
   int count = 0;
   GBA_TimerControl timers[4] = {0};
 
-  for (int index = 0; index < length(timers); index++) {
+  for (unsigned int index = 0; index < length(timers); index++) {
     GBA_TimerControl *timer = &timers[index];
 
     // prepare timer settings

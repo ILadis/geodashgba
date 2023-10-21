@@ -82,6 +82,11 @@ Binv1Level_ReadInt8(Binv1Level *level, int *value) {
 }
 
 static inline bool
+Binv1Level_ReadUInt8(Binv1Level *level, unsigned int *value) {
+  return Binv1Level_ReadValue(level, value, 1);
+}
+
+static inline bool
 Binv1Level_ReadInt16(Binv1Level *level, int *value) {
   return Binv1Level_ReadValue(level, value, 2);
 }
@@ -113,6 +118,11 @@ Binv1Level_WriteInt8(Binv1Level *level, int value) {
 }
 
 static inline bool
+Binv1Level_WriteUInt8(Binv1Level *level, unsigned int value) {
+  return Binv1Level_WriteValue(level, &value, 1);
+}
+
+static inline bool
 Binv1Level_WriteInt16(Binv1Level *level, int value) {
   return Binv1Level_WriteValue(level, &value, 2);
 }
@@ -128,10 +138,10 @@ Binv1Level_SetCursorTo(
   Reader_SeekTo(reader, 0);
 
   // skip header
-  int header = 0;
-  Binv1Level_ReadInt8(level, &header);
+  unsigned int header = 0;
+  Binv1Level_ReadUInt8(level, &header);
 
-  int offset = header + 1;
+  unsigned int offset = header + 1;
   Reader_SeekTo(reader, offset);
 
   int index = chunk->index;
@@ -152,7 +162,7 @@ Binv1Level_SetCursorTo(
   return true;
 }
 
-static int
+static unsigned int
 Binv1Level_GetMetaData(
     Binv1Level *level,
     int key)
@@ -161,10 +171,10 @@ Binv1Level_GetMetaData(
   Reader_SeekTo(reader, 0);
 
   // TODO limit further reading to size of header
-  int header = 0;
-  Binv1Level_ReadInt8(level, &header);
+  unsigned int header = 0;
+  Binv1Level_ReadUInt8(level, &header);
 
-  int offset = 1;
+  unsigned int offset = 1;
   while (true) {
     int tag = 0;
     if (!Binv1Level_ReadInt8(level, &tag)) {
@@ -172,8 +182,8 @@ Binv1Level_GetMetaData(
       return -1;
     }
 
-    int length = 0;
-    if (!Binv1Level_ReadInt8(level, &length)) {
+    unsigned int length = 0;
+    if (!Binv1Level_ReadUInt8(level, &length)) {
       // no more data to read
       return -1;
     }
@@ -195,12 +205,13 @@ Binv1Level_GetId(void *self) {
   Binv1Level *level = self;
 
   int id = 0;
-  int length = Binv1Level_GetMetaData(level, 'i');
-  while (length-- > 0) {
+  unsigned int length = Binv1Level_GetMetaData(level, 'i');
+  while (length > 0) {
     int byte;
     Binv1Level_ReadInt8(level, &byte);
 
     id = (id << 8) | (byte & 0xFF);
+    length--;
   }
 
   return id;
@@ -213,9 +224,10 @@ Binv1Level_GetName(
 {
   Binv1Level *level = self;
 
-  int length = Binv1Level_GetMetaData(level, 'n');
-  while (length-- > 0) {
+  unsigned int length = Binv1Level_GetMetaData(level, 'n');
+  while (length > 0) {
     Binv1Level_ReadInt8(level, (int*) name++);
+    length--;
   }
   *name = '\0';
 }
@@ -276,8 +288,8 @@ Binv1Level_GetChunk(
     return false;
   }
 
-  int count = 0;
-  Binv1Level_ReadInt8(level, &count);
+  unsigned int count = 0;
+  Binv1Level_ReadUInt8(level, &count);
 
   while (count-- > 0) {
     Object *object = Chunk_AllocateObject(chunk);
@@ -296,28 +308,28 @@ Binv1Level_WriteMetaData(
     Binv1Level *level,
     int key,
     char *value,
-    int length)
+    unsigned int length)
 {
   Reader *reader = DataSource_AsReader(level->source);
   Reader_SeekTo(reader, 0);
 
-  int header = 0;
-  Binv1Level_ReadInt8(level, &header);
+  unsigned int header = 0;
+  Binv1Level_ReadUInt8(level, &header);
 
-  int offset = header + 1;
+  unsigned int offset = header + 1;
   Reader_SeekTo(reader, offset);
 
   Binv1Level_WriteInt8(level, key);
-  Binv1Level_WriteInt8(level, length);
+  Binv1Level_WriteUInt8(level, length);
 
-  for (int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++) {
     Binv1Level_WriteInt8(level, value[i]);
   }
 
   header += length + 2;
 
   Reader_SeekTo(reader, 0);
-  Binv1Level_WriteInt8(level, header);
+  Binv1Level_WriteUInt8(level, header);
 }
 
 void
@@ -382,9 +394,9 @@ Binv1Level_AddChunk(
   if (!Binv1Level_SetCursorTo(level, chunk)) {
     return false;
   }
-  Binv1Level_WriteInt8(level, chunk->count);
+  Binv1Level_WriteUInt8(level, chunk->count);
 
-  for (int i = 0; i < chunk->count; i++) {
+  for (unsigned int i = 0; i < chunk->count; i++) {
     Object *object = &chunk->objects[i];
     Binv1Level_WriteObject(level, object);
   }

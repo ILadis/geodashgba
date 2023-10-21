@@ -228,8 +228,7 @@ static const GBA_TileMapRef block = {
 static void
 Object_DrawRegularBoxes(
     Object *object,
-    GBA_TileMapRef *target,
-    int width, int height)
+    GBA_TileMapRef *target)
 {
   Vector lower = Bounds_Lower(&object->viewbox);
   Vector upper = Bounds_Upper(&object->viewbox);
@@ -247,8 +246,7 @@ Object_DrawRegularBoxes(
 static void
 Object_DrawGridBoxes(
     Object *object,
-    GBA_TileMapRef *target,
-    int width, int height)
+    GBA_TileMapRef *target)
 {
   Vector lower = Bounds_Lower(&object->viewbox);
   Vector upper = Bounds_Upper(&object->viewbox);
@@ -379,7 +377,7 @@ Object_DrawBox(
 
   enum Variant variant = props->variant;
   if (variant == BOX_VARIANT_REGULAR) {
-    return Object_DrawRegularBoxes(object, target, width, height);
+    return Object_DrawRegularBoxes(object, target);
   }
 
   int size = width * height;
@@ -390,7 +388,7 @@ Object_DrawBox(
   } else if (size == width) {
     Object_DrawHbox(object, target, width);
   } else {
-    Object_DrawGridBoxes(object, target, width, height);
+    Object_DrawGridBoxes(object, target);
   }
 }
 

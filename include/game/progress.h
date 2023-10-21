@@ -46,7 +46,7 @@ Progress_SetProgress(
 void
 Progress_SetCollectedCoin(
     Progress *progress,
-    int index);
+    unsigned int index);
 
 void
 Progress_SetCollectedCoins(

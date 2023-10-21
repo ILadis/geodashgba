@@ -15,7 +15,7 @@ typedef union Color {
 } Color;
 
 void header(FILE *fp, const char *format, ...);
-void pixel(FILE *fp, int depth, Color *color);
+void pixel(FILE *fp, float depth, Color *color);
 
 // https://en.wikipedia.org/wiki/Netpbm
 int main(int argc, char **argv) {
@@ -168,12 +168,14 @@ void header(FILE *fp, const char *format, ...) {
   va_end(arguments);
 }
 
-void pixel(FILE *fp, int depth, Color *color) {
+
+
+void pixel(FILE *fp, float depth, Color *color) {
   int red   = fgetc(fp);
   int green = fgetc(fp);
   int blue  = fgetc(fp);
 
-  color->red = red;
-  color->green = green;
-  color->blue = blue;
+  color->red = (red / depth) * 0xFF;
+  color->green = (green / depth) * 0xFF;
+  color->blue = (blue / depth) * 0xFF;
 }

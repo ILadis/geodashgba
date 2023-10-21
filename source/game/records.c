@@ -8,12 +8,12 @@ Records_GetInstance() {
 }
 
 void
-Records_LoadFromSave(Records *records) {
+Records_LoadFromSave(unused Records *records) {
   // TODO implement this
 }
 
 void
-Records_StoreToSave(Records *records) {
+Records_StoreToSave(unused Records *records) {
   // TODO implement this
 }
 
@@ -39,7 +39,7 @@ Records_AddNewEntryForLevel(
     Records *records,
     LevelId id)
 {
-  int index = records->count;
+  unsigned int index = records->count;
   if (index + 1 >= length(records->entries)) {
     return NULL;
   }

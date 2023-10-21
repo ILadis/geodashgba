@@ -115,7 +115,7 @@ NoteSoundChannel_Create(
     int rate)
 {
   void NoteSoundChannel_Pitch(void *channel, unsigned int frequency);
-  int NoteSoundChannel_Fill(void *channel, int *buffer, unsigned int size);
+  unsigned int NoteSoundChannel_Fill(void *channel, int *buffer, unsigned int size);
 
   channel->super.self = channel;
   channel->super.Pitch = NoteSoundChannel_Pitch;
@@ -144,7 +144,7 @@ NoteSoundChannel_Pitch(
   channel->increment = increment;
 }
 
-int
+unsigned int
 NoteSoundChannel_Fill(
     void *self,
     int *buffer,
@@ -189,11 +189,11 @@ SoundPlayer_GetInstance() {
 
 void
 SoundPlayer_Enable(SoundPlayer *player) {
-  const unsigned int frequency = 10512;
-  const unsigned int size = 176;
+  const unsigned int frequency = 11468;
+  const unsigned int size = 192;
 
-  static char buffer1[176];
-  static char buffer2[176];
+  static char buffer1[192];
+  static char buffer2[192];
 
   player->buffers[0] = buffer1;
   player->buffers[1] = buffer2;
@@ -235,7 +235,7 @@ SoundPlayer_AddChannel(
 {
   SoundChannel_Pitch(channel, player->frequency);
 
-  for (int i = 0; i < length(player->channels); i++) {
+  for (unsigned int i = 0; i < length(player->channels); i++) {
     if (player->channels[i] == NULL) {
       player->channels[i] = channel;
       return true;
@@ -252,7 +252,7 @@ SoundPlayer_MixChannels(SoundPlayer *player) {
   int buffer[size];
   GBA_Memset32(buffer, 0, size * sizeof(int));
 
-  for (int i = 0; i < length(player->channels); i++) {
+  for (unsigned int i = 0; i < length(player->channels); i++) {
     SoundChannel *channel = player->channels[i];
     if (channel == NULL) {
       break;
@@ -261,7 +261,7 @@ SoundPlayer_MixChannels(SoundPlayer *player) {
     SoundChannel_Fill(channel, buffer, size);
   }
 
-  for (int i = 0; i < size; i++) {
+  for (unsigned int i = 0; i < size; i++) {
     player->active[i] = (char) (buffer[i] >> 2); // divide by 4 channels
   }
 }
@@ -289,8 +289,7 @@ SoundPlayer_VSync(SoundPlayer *player) {
     dma1->cnt = copy.cnt;
 
     player->active = buffer2;
-  }
-  else {
+  } else {
     dma1->cnt = 0;
 
     dma1->src = buffer2;

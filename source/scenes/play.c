@@ -81,9 +81,9 @@ Scene_DoPlay() {
   Progress_Update(progress, cube);
   Particle_UpdateAll();
 
-  SoundPlayer_VSync(player);
-  GBA_VSync();
   SoundPlayer_MixChannels(player);
+  GBA_VSync();
+//SoundPlayer_VSync(player);
 
   if (debug && Cube_InState(cube, STATE_DESTROYED)) {
     extern void Debug_DrawHitboxes();

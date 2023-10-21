@@ -34,7 +34,7 @@ DataSource*
 Buffer_From(
     Buffer *buffer,
     void *data,
-    int length)
+    unsigned int length)
 {
   buffer->data = data;
 
@@ -52,7 +52,7 @@ DataSource*
 Buffer_AsDataSource(Buffer *buffer) {
   int Buffer_Read(void *buffer);
   bool Buffer_Write(void *buffer, unsigned char byte);
-  bool Buffer_SeekTo(void *buffer, int position);
+  bool Buffer_SeekTo(void *buffer, unsigned int position);
 
   Reader *reader = &buffer->source.reader;
   reader->self = buffer;
@@ -70,7 +70,7 @@ Buffer_AsDataSource(Buffer *buffer) {
 int
 Buffer_Read(void *self) {
   Buffer *buffer = self;
-  int index = buffer->position;
+  unsigned int index = buffer->position;
 
   if (index >= buffer->length) {
     return -1;
@@ -88,7 +88,7 @@ Buffer_Write(
     unsigned char byte)
 {
   Buffer *buffer = self;
-  int index = buffer->position;
+  unsigned int index = buffer->position;
 
   if (index >= buffer->length) {
     return false;
@@ -103,7 +103,7 @@ Buffer_Write(
 bool
 Buffer_SeekTo(
     void *self,
-    int position)
+    unsigned int position)
 {
   Buffer *buffer = self;
   // allow seeking to end of buffer (where next read would return -1)
@@ -144,7 +144,7 @@ File_From(
 
   int File_Read(void *file);
   bool File_Write(void *file, unsigned char byte);
-  bool File_SeekTo(void *file, int position);
+  bool File_SeekTo(void *file, unsigned int position);
 
   Reader *reader = &file->source.reader;
   reader->self = file;
@@ -179,7 +179,7 @@ File_Write(
 bool
 File_SeekTo(
     void *self,
-    int position)
+    unsigned int position)
 {
   File *file = self;
   FILE *fp = file->fp;

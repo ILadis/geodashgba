@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
   char segments[31][12] = {0};
   char *path[32] = {0};
-  for (int i = 0; i < length(segments); i++) {
+  for (unsigned int i = 0; i < length(segments); i++) {
     path[i] = segments[i];
   }
 
@@ -89,11 +89,11 @@ int main(int argc, char **argv) {
   Reader *reader = DataSource_AsReader(source);
   if (argc > 3) {
     extern int atoi(const char *string);
-    int position = atoi(argv[3]);
+    unsigned int position = atoi(argv[3]);
     Reader_SeekTo(reader, position);
   }
 
-  for (int i = 0; i < entry.fileSize; i++) {
+  for (unsigned int i = 0; i < entry.fileSize; i++) {
     int byte = Reader_Read(reader);
     Writer_Write(writer, (unsigned char) byte);
   }

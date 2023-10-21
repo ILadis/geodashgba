@@ -346,7 +346,7 @@ test(SeekTo_ShouldAdjustPositionAndReturnExpectedBytes) {
   const int bytesPerCluster = DiskInfo_BytesPerCluster(&disk.info);
 
   const struct {
-    int position;
+    unsigned int position;
     unsigned char *values;
   } seeks[] = {
     { bytesPerCluster * 2, levelBinSectors[2] },

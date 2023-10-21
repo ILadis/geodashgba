@@ -41,7 +41,7 @@ typedef struct NoteSample {
 typedef struct SoundChannel {
   void *self;
   void (*Pitch)(void *self, unsigned int frequency);
-  int (*Fill)(void *self, int *buffer, unsigned int size);
+  unsigned int (*Fill)(void *self, int *buffer, unsigned int size);
 } SoundChannel;
 
 static inline void
@@ -49,7 +49,7 @@ SoundChannel_Pitch(SoundChannel *channel, unsigned int frequency) {
   return channel->Pitch(channel->self, frequency);
 }
 
-static inline int
+static inline unsigned int
 SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
   return channel->Fill(channel->self, buffer, size);
 }

@@ -57,9 +57,9 @@ Progress_SetProgress(
 void
 Progress_SetCollectedCoin(
     Progress *progress,
-    int index)
+    unsigned int index)
 {
-  if (index >= 0 && index < length(progress->coins)) {
+  if (index < length(progress->coins)) {
     progress->coins[index] = true;
   }
 }
@@ -71,7 +71,7 @@ Progress_SetCollectedCoins(
 {
   progress->redraw = progress->mode == MODE_SELECT;
 
-  for (int i = 0; i < length(progress->coins); i++) {
+  for (unsigned int i = 0; i < length(progress->coins); i++) {
     progress->coins[i] = coins[i];
   }
 }
@@ -226,7 +226,7 @@ Progress_DrawCoins(Progress *progress) {
   int tx = 19;
   int ty = 10;
 
-  for (int i = 0; i < length(progress->coins); i++) {
+  for (unsigned int i = 0; i < length(progress->coins); i++) {
     bool index = progress->coins[i] ? 0 : 1;
     const GBA_TileMapRef *tiles = &coin[index];
     GBA_TileMapRef_Blit(&target, tx + i * tiles->width, ty, tiles);

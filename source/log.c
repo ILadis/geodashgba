@@ -5,7 +5,7 @@ static bool
 Logger_NoopEnable() { return true; }
 
 static void
-Logger_NoopLog(const char* message) { return; }
+Logger_NoopLog(unused const char* message) { return; }
 
 extern bool mGBA_DebugEnable();
 extern void mGBA_DebugLog(const char* message);
@@ -33,7 +33,7 @@ Logger_GetInstance() {
   static Logger *logger = NULL;
 
   if (logger == NULL) {
-    for (int i = 0; i < sizeof(interfaces); i++) {
+    for (unsigned int i = 0; i < sizeof(interfaces); i++) {
       logger = &interfaces[i];
       if (logger->enable()) break;
     }
@@ -77,9 +77,9 @@ void
 Logger_PrintBuffer(
     Logger *logger,
     unsigned char *buffer,
-    int length)
+    unsigned int length)
 {
-  int index = 0, cols = 0;
+  unsigned int index = 0, cols = 0;
   while (index < length) {
     Logger_PrintHex8(logger, buffer[index++]);
 

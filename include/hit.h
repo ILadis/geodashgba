@@ -108,7 +108,7 @@ Bounds_Embed(
 Vector
 Shape_GetAxis(
     const Shape *shape,
-    int index);
+    unsigned int index);
 
 Projection
 Shape_ProjectOnto(

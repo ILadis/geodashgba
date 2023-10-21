@@ -39,7 +39,7 @@ Shape_Intersects(
     const Shape *shape,
     const Shape *other)
 {
-  for (int i = 0; i < shape->length; i++) {
+  for (unsigned int i = 0; i < shape->length; i++) {
     Vector axis = Shape_GetAxis(shape, i);
 
     Projection p1 = Shape_ProjectOnto(shape, &axis);
@@ -50,7 +50,7 @@ Shape_Intersects(
     }
   }
 
-  for (int i = 0; i < other->length; i++) {
+  for (unsigned int i = 0; i < other->length; i++) {
     Vector axis = Shape_GetAxis(other, i);
 
     Projection p1 = Shape_ProjectOnto(shape, &axis);
@@ -277,7 +277,7 @@ Bounds_Embed(
 iwram Vector
 Shape_GetAxis(
     const Shape *shape,
-    int index)
+    unsigned int index)
 {
   Vector axis = Vector_Of(0, 0);
   if (index > shape->length) {
@@ -301,7 +301,7 @@ Shape_ProjectOnto(
   int min = Vector_DotProduct(axis, &shape->vertices[0]);
   int max = min;
 
-  for (int i = 1; i < shape->length; i++) {
+  for (unsigned int i = 1; i < shape->length; i++) {
     int p = Vector_DotProduct(axis, &shape->vertices[i]);
 
     if (p < min) {

@@ -3,7 +3,7 @@
 #include <math.h>
 
 // see: https://stackoverflow.com/questions/10067510/fixed-point-arithmetic-in-c-programming
-int main(int argc, char **argv) {
+int main() {
   const double pi = 3.14159265358979323846;
 
   int size = 256;
@@ -30,4 +30,6 @@ int main(int argc, char **argv) {
 
   fputs("};", out);
   fclose(out);
+
+  return 0;
 }

@@ -6,8 +6,8 @@
 
 int nexttok(FILE *fp, char *buffer, char *delims);
 
-int main(int argc, char **argv) {
-  FILE *in = stdin, *out = stdout, *log = stderr;
+int main() {
+  FILE *in = stdin, *out = stdout;
 
   char buffer[512];
   char *delims = " ,\"=<>\t\r\n";

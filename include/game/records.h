@@ -5,7 +5,7 @@
 #include <game/level.h>
 
 typedef struct Records {
-  int count;
+  unsigned int count;
   struct Entry {
     LevelId id;
     // TODO add number of attempts etc.

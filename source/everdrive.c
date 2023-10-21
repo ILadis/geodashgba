@@ -5,7 +5,7 @@
 extern Logger* Debug_GetLogger();
 
 void
-Everdrive_NoopCallback(Everdrive_CardCommand command) {
+Everdrive_NoopCallback(unused Everdrive_CardCommand command) {
   // does nothing
 }
 
@@ -64,8 +64,7 @@ Everdrive_GetSystem() {
   return &system;
 }
 
-// TODO make this return a boolean (true if successful)
-void
+bool
 Everdrive_UnlockSystem() {
   Everdrive_System *system = Everdrive_GetSystem();
   *(system->unlockKey) = 0x00A5; // "magic" unlock key
@@ -76,6 +75,9 @@ Everdrive_UnlockSystem() {
   };
 
   system->deviceControl->value = control.value;
+
+  // TODO return false if not running off everdrive
+  return true;
 }
 
 static void
@@ -244,10 +246,10 @@ Everdrive_CardSendCommand(
   Everdrive_CardSetMode(EVERDRIVE_CARD_MODE8, false, false);
   Everdrive_CardWriteCommand(0xFF);
 
-  for (int i = 0; i < length(commands); i++) {
+  for (unsigned int i = 0; i < length(commands); i++) {
     checksum ^= Everdrive_CardWriteCommand(commands[i]);
 
-    for (int j = 0; j < 8; j++) {
+    for (unsigned int j = 0; j < 8; j++) {
       checksum <<= 1;
       if (checksum & (1 << 8)) {
         checksum ^= 0x12;

@@ -48,6 +48,6 @@ void
 Logger_PrintBuffer(
     Logger *logger,
     unsigned char *buffer,
-    int length);
+    unsigned int length);
 
 #endif

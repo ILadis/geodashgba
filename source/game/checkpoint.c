@@ -11,7 +11,7 @@ void
 Checkpoint_Reset(Checkpoint *checkpoint) {
   const Checkpoint empty = {0};
 
-  for (int i = 0; i < length(checkpoint->sprites); i++) {
+  for (unsigned int i = 0; i < length(checkpoint->sprites); i++) {
     GBA_Sprite *sprite = checkpoint->sprites[i];
     if (sprite != NULL) {
       GBA_Sprite_Release(sprite);
@@ -112,7 +112,7 @@ Checkpoint_Draw(
 {
   Bounds bounds = Bounds_Of(0, 0, 4, 8);
 
-  for (int i = 0; i < length(checkpoint->positions); i++) {
+  for (unsigned int i = 0; i < length(checkpoint->positions); i++) {
     const Vector *position = &checkpoint->positions[i];
     const Vector zero = Vector_Of(0, 0);
 

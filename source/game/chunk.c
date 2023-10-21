@@ -26,7 +26,7 @@ Chunk_AssignIndex(
 
 Object*
 Chunk_AllocateObject(Chunk *chunk) {
-  int index = chunk->count;
+  unsigned int index = chunk->count;
   Object *object = NULL;
 
   if (index < length(chunk->objects)) {
@@ -58,8 +58,8 @@ Chunk_FindObjectByType(
     Chunk *chunk,
     Type type)
 {
-  int count = chunk->count;
-  for (int i = 0; i < count; i++) {
+  unsigned int count = chunk->count;
+  for (unsigned int i = 0; i < count; i++) {
     Object *object = &chunk->objects[i];
 
     if (object->type == type) {

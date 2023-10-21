@@ -177,12 +177,12 @@ typedef struct Everdrive_System {
   unsigned int cardSector;
 } Everdrive_System;
 
-#define Everdrive_CardSectorNone ~0
+#define Everdrive_CardSectorNone ~0U
 
 Everdrive_System*
 Everdrive_GetSystem();
 
-void
+bool
 Everdrive_UnlockSystem();
 
 bool

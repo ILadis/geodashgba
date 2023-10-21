@@ -15,7 +15,7 @@ typedef struct Chunk {
   Cell cells[20];
   Grid grid;
   Bounds bounds;
-  int index, count;
+  unsigned int index, count;
 } Chunk;
 
 static inline void

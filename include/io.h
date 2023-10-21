@@ -6,7 +6,7 @@
 typedef struct Reader {
   void *self;
   int  (*Read)(void *self);
-  bool (*SeekTo)(void *self, int position);
+  bool (*SeekTo)(void *self, unsigned int position);
 } Reader;
 
 static inline int
@@ -15,14 +15,14 @@ Reader_Read(const Reader *reader) {
 }
 
 static inline bool
-Reader_SeekTo(const Reader *reader, int position) {
+Reader_SeekTo(const Reader *reader, unsigned int position) {
   return reader->SeekTo(reader->self, position);
 }
 
 typedef struct Writer {
   void *self;
   bool (*Write)(void *self, unsigned char byte);
-  bool (*SeekTo)(void *self, int position);
+  bool (*SeekTo)(void *self, unsigned int position);
 } Writer;
 
 static inline bool
@@ -31,7 +31,7 @@ Writer_Write(const Writer *writer, unsigned char byte) {
 }
 
 static inline bool
-Writer_SeekTo(const Writer *writer, int position) {
+Writer_SeekTo(const Writer *writer, unsigned int position) {
   return writer->SeekTo(writer->self, position);
 }
 
@@ -57,7 +57,7 @@ DataSource_CopyFrom(
 
 typedef struct Buffer {
   unsigned char *data;
-  int length, position;
+  unsigned int length, position;
   DataSource source;
 } Buffer;
 
@@ -70,7 +70,7 @@ DataSource*
 Buffer_From(
     Buffer *buffer,
     void *data,
-    int length);
+    unsigned int length);
 
 DataSource*
 Buffer_AsDataSource(Buffer *buffer);

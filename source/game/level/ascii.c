@@ -622,24 +622,24 @@ AsciiLevel_GetChunk(
 
 void
 AsciiLevel_SetId(
-    void *self,
-    int id)
+    unused void *self,
+    unused int id)
 {
   // not implemented
 }
 
 void
 AsciiLevel_SetName(
-    void *self,
-    char *name)
+    unused void *self,
+    unused char *name)
 {
   // not implemented
 }
 
 bool
 AsciiLevel_AddChunk(
-    void *self,
-    Chunk *chunk)
+    unused void *self,
+    unused Chunk *chunk)
 {
   // not implemented
   return false;

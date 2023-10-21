@@ -36,9 +36,9 @@ DiskCollection_GetInstance();
 
 typedef struct DataCollection {
   char signature[16];
-  int length;
-  volatile short count;
-  volatile int allocations[20];
+  unsigned int length;
+  volatile unsigned short count;
+  volatile unsigned int allocations[20];
 } packed DataCollection;
 
 const Collection*

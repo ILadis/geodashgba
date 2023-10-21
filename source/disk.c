@@ -188,12 +188,15 @@ DiskReader_ReadNext(void *self) {
 }
 
 static bool
-DiskReader_SeekTo(void *self, int position) {
+DiskReader_SeekTo(
+    void *self,
+    unsigned int position)
+{
   Disk *disk = self;
   DiskInfo *info = &disk->info;
   DiskEntry *entry = &disk->entry;
 
-  if (position > entry->fileSize || position < 0) {
+  if (position > entry->fileSize) {
     return false;
   }
 
@@ -411,7 +414,7 @@ DiskEntry_NormalizePathSegment(
 
   do {
     char byte = (*segment)[index];
-    if (byte >= sizeof(charmap)) {
+    if (byte >= (char) length(charmap)) {
       return false; // invalid character
     }
 

@@ -59,7 +59,7 @@ Object_CreateSpike(
   props->direction = direction;
   props->variant = variant;
 
-  for (int i = 0; i < length(props->vertices); i++) {
+  for (unsigned int i = 0; i < length(props->vertices); i++) {
     props->vertices[i] = vertices[variant + direction][i];
   }
 
@@ -84,7 +84,7 @@ Object_CreateTinySpike(Object *object) {
   props->direction = 0;
   props->variant = variant;
 
-  for (int i = 0; i < length(props->vertices); i++) {
+  for (unsigned int i = 0; i < length(props->vertices); i++) {
     props->vertices[i] = vertices[variant][i];
   }
 
@@ -158,7 +158,7 @@ Object_MoveSpike(
   int dx = position->x * 8;
   int dy = position->y * 8;
 
-  for (int i = 0; i < length(props->vertices); i++) {
+  for (unsigned int i = 0; i < length(props->vertices); i++) {
     props->vertices[i].x += dx;
     props->vertices[i].y += dy;
   }
