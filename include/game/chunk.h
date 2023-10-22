@@ -11,7 +11,7 @@
 typedef void (*HitCallback)(Unit *unit, Object *object, Hit *hit);
 
 typedef struct Chunk {
-  Object objects[20];
+  Object objects[32];
   Cell cells[20];
   Grid grid;
   Bounds bounds;
