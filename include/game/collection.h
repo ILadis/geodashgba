@@ -39,7 +39,7 @@ typedef struct DataCollection {
   unsigned int length;
   volatile unsigned short count;
   volatile unsigned int allocations[20];
-} packed DataCollection;
+} packed align4 DataCollection;
 
 const Collection*
 DataCollection_GetInstance();
@@ -48,7 +48,7 @@ DataCollection_GetInstance();
 #define DataCollection_DefineWithTotalSpace(size) DataCollection_DefineNew(, size)
 
 #define DataCollection_DefineNew(modifier, size) (DataCollection *) \
-((align8 modifier unsigned char[size]) { \
+((modifier unsigned char[size]) { \
   'L', 'e', 'v', 'e', 'l', 'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'o', 'n', '!', \
   (unsigned char) (((size) >>  0) & 0xFF), \
   (unsigned char) (((size) >>  8) & 0xFF), \

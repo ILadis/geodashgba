@@ -130,8 +130,6 @@ DataCollection_AddLevel(
 
 bool
 DataCollection_FindSignature(const Reader *reader) {
-  const DataCollection *collection = DataCollection_DefineWithUsableSpace(0);
-
   const int length = sizeof(collection->signature);
   int index = 0;
 
