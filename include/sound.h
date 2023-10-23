@@ -57,7 +57,7 @@ SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
 typedef struct NoteSoundChannel {
   struct SoundChannel super;
   struct {
-    char *notes;
+    const char *notes;
     unsigned int index;
   } track;
   union Samples {
@@ -73,7 +73,7 @@ typedef struct NoteSoundChannel {
 SoundChannel*
 NoteSoundChannel_Create(
     NoteSoundChannel *channel,
-    char *notes,
+    const char *notes,
     int rate);
 
 typedef struct SoundPlayer {
@@ -95,7 +95,7 @@ SoundPlayer_AddChannel(
     SoundPlayer *player,
     SoundChannel *channel);
 
-void
+bool
 SoundPlayer_MixChannels(SoundPlayer *player);
 
 void

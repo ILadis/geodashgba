@@ -307,6 +307,45 @@ GBA_VSync() {
 #endif
 }
 
+#ifdef NOGBA
+
+void
+GBA_Memcpy32(void *dst, const void *src, int size) {
+  unsigned char *target = dst;
+  const unsigned char *source = src;
+
+  for (int i = 0; i < size; i++) {
+    target[i] = source[i];
+  }
+}
+
+void
+GBA_Memcpy16(void *dst, const void *src, int size) {
+  return GBA_Memcpy32(dst, src, size);
+}
+
+void
+GBA_Memset32(void *dst, int value, int size) {
+  unsigned char *target = dst;
+  unsigned char *source = (unsigned char *) &value;
+
+  for (int i = 0; i < size; i++) {
+    target[i] = source[i % sizeof(value)];
+  }
+}
+
+void
+GBA_Memset16(void *dst, short value, int size) {
+  unsigned char *target = dst;
+  unsigned char *source = (unsigned char *) &value;
+
+  for (int i = 0; i < size; i++) {
+    target[i] = source[i % sizeof(value)];
+  }
+}
+
+#else
+
 void
 GBA_Memcpy32(void *dst, const void *src, int size) {
   GBA_System *system = GBA_GetSystem();
@@ -376,6 +415,8 @@ GBA_Memset16(void *dst, short value, int size) {
   dma3->src = copy.src;
   dma3->cnt = copy.cnt;
 }
+
+#endif
 
 void
 GBA_EnableSprites() {

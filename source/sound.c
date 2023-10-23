@@ -58,7 +58,7 @@ NoteSample_FromSamples(union Samples *samples) {
 static inline bool
 NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
   unsigned int index = channel->track.index;
-  char *notes = channel->track.notes;
+  const char *notes = channel->track.notes;
 
   char symbol = notes[index];
   if (symbol == '\0' || symbol < 'A' || symbol > 'Z') {
@@ -111,7 +111,7 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
 SoundChannel*
 NoteSoundChannel_Create(
     NoteSoundChannel *channel,
-    char *notes,
+    const char *notes,
     int rate)
 {
   void NoteSoundChannel_Pitch(void *channel, unsigned int frequency);
@@ -245,25 +245,30 @@ SoundPlayer_AddChannel(
   return false;
 }
 
-void
+bool
 SoundPlayer_MixChannels(SoundPlayer *player) {
   const unsigned int size = player->size;
 
   int buffer[size];
   GBA_Memset32(buffer, 0, size * sizeof(int));
 
+  bool done = true;
   for (unsigned int i = 0; i < length(player->channels); i++) {
     SoundChannel *channel = player->channels[i];
     if (channel == NULL) {
       break;
     }
 
-    SoundChannel_Fill(channel, buffer, size);
+    if (SoundChannel_Fill(channel, buffer, size) > 0) {
+      done = false;
+    }
   }
 
-  for (unsigned int i = 0; i < size; i++) {
+  for (unsigned int i = 0; i < size && !done; i++) {
     player->active[i] = (char) (buffer[i] >> 2); // divide by 4 channels
   }
+
+  return !done;
 }
 
 void
