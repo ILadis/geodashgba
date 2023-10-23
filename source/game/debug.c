@@ -31,11 +31,30 @@ Debug_DrawHitbox(
   GBA_Bitmap_DrawRect(px1, py1, px2, py2, color);
 }
 
+
+static inline void
+Debug_DrawShape(
+    Camera *camera,
+    Shape *shape,
+    GBA_Color color)
+{
+  for (unsigned int i = 0; i < shape->length; i++) {
+    Vector point1 = shape->vertices[i];
+    Camera_RelativeTo(camera, &point1);
+
+    Vector point2 = shape->vertices[(i + 1) % shape->length];
+    Camera_RelativeTo(camera, &point2);
+
+    GBA_Bitmap_DrawLine(point1.x, point1.y, point2.x, point2.y, color);
+  }
+}
+
 void
 Debug_DrawHitboxes() {
   const GBA_Color black = { .value = 0  };
   const GBA_Color green = { .green = 31 };
   const GBA_Color blue  = { .blue = 31  };
+  const GBA_Color red   = { .red = 31   };
 
   GBA_EnableMode(3);
   GBA_Bitmap_FillRect(0, 0, 240, 160, black);
@@ -45,6 +64,9 @@ Debug_DrawHitboxes() {
   Cube *cube = Cube_GetInstance();
   Bounds *hitbox = &cube->hitbox;
   Debug_DrawHitbox(camera, hitbox, blue);
+
+  Shape shape = Shape_Of(cube->vertices);
+  Debug_DrawShape(camera, &shape, red);
 
   Course *course = Course_GetInstance();
 
@@ -60,6 +82,12 @@ Debug_DrawHitboxes() {
 
     Bounds *hitbox = &object->hitbox;
     Debug_DrawHitbox(camera, hitbox, green);
+
+    if (object->type == TYPE_SPIKE) {
+      Vector *vertices = (Vector *) &object->properties[4];
+      Shape shape = { .length = 3, .vertices = vertices };
+      Debug_DrawShape(camera, &shape, red);
+    }
   }
 
   Chunk *next = Course_GetChunkAt(course, course->index + 1);
@@ -71,6 +99,12 @@ Debug_DrawHitboxes() {
 
     Bounds *hitbox = &object->hitbox;
     Debug_DrawHitbox(camera, hitbox, green);
+
+    if (object->type == TYPE_SPIKE) {
+      Vector *vertices = (Vector *) &object->properties[4];
+      Shape shape = { .length = 3, .vertices = vertices };
+      Debug_DrawShape(camera, &shape, red);
+    }
   }
 }
 

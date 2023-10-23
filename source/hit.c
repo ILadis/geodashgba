@@ -225,8 +225,8 @@ Bounds_Rotate(
     int px = vertices[i].x;
     int py = vertices[i].y;
 
-    int dx = (Math_cos(angle) * px - Math_sin(angle) * py) >> 8;
-    int dy = (Math_cos(angle) * py + Math_sin(angle) * px) >> 8;
+    int dx = Math_round((Math_cos(angle) * px - Math_sin(angle) * py), 8);
+    int dy = Math_round((Math_cos(angle) * py + Math_sin(angle) * px), 8);
 
     shape->vertices[i].x = position->x + dx;
     shape->vertices[i].y = position->y + dy;

@@ -26,9 +26,13 @@ Cube_CalculateRotationVelocity(
 
   int frames = 0;
   do {
-    frames++;
+    frames += 4;
 
     Cube_ApplyMovement(&shadow);
+    Cube_ApplyMovement(&shadow);
+    Cube_ApplyMovement(&shadow);
+    Cube_ApplyMovement(&shadow);
+
     Cube_ApplyHit(&shadow, course);
   } while (Cube_InState(&shadow, STATE_AIRBORNE));
 

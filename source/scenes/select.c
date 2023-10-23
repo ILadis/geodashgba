@@ -83,7 +83,7 @@ static void
 Scene_DoPlay() {
   GBA_Input_PollStates();
 
-  SoundPlayer *player = SoundPlayer_GetInstance();
+//SoundPlayer *player = SoundPlayer_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
   Selector *selector = Selector_GetInstance();
@@ -111,7 +111,7 @@ Scene_DoPlay() {
     Progress_SetCollectedCoins(progress, coins);
   }
 
-  SoundPlayer_MixChannels(player);
+//SoundPlayer_MixChannels(player);
   GBA_VSync();
 //SoundPlayer_VSync(player);
 

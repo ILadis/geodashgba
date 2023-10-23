@@ -45,7 +45,7 @@ Scene_DoPlay() {
 
   GBA_Input_PollStates();
 
-  SoundPlayer *player = SoundPlayer_GetInstance();
+//SoundPlayer *player = SoundPlayer_GetInstance();
   Cube *cube = Cube_GetInstance();
   Checkpoint *checkpoint = Checkpoint_GetInstance();
   Camera *camera = Camera_GetInstance();
@@ -81,14 +81,14 @@ Scene_DoPlay() {
   Progress_Update(progress, cube);
   Particle_UpdateAll();
 
-  SoundPlayer_MixChannels(player);
+//SoundPlayer_MixChannels(player);
   GBA_VSync();
 //SoundPlayer_VSync(player);
 
-  if (debug && Cube_InState(cube, STATE_DESTROYED)) {
+  if (GBA_Input_IsHit(GBA_KEY_START)) {
     extern void Debug_DrawHitboxes();
     Debug_DrawHitboxes();
-    while (debug);
+    while (true);
   }
 
   Course_Draw(course, camera);

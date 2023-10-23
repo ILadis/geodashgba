@@ -48,13 +48,13 @@ Cube_Update(
 {
   extern void Cube_ApplyMovement(Cube *cube);
   extern void Cube_ApplySpawn(Cube *cube, Course *course);
-  extern void Cube_ApplyHit(Cube *cube, Course *course);
   extern void Cube_ApplyRotation(Cube *cube, Course *course);
+  extern void Cube_ApplyHit(Cube *cube, Course *course);
 
   Cube_ApplySpawn(cube, course);
   Cube_ApplyMovement(cube);
-  Cube_ApplyHit(cube, course);
   Cube_ApplyRotation(cube, course);
+  Cube_ApplyHit(cube, course);
 }
 
 static inline GBA_Sprite*

@@ -29,6 +29,12 @@ Math_clamp(int num, int min, int max) {
 }
 
 int
+Math_round(int num, int decimals) {
+  int round = (1 << (decimals - 1)) + 1;
+  return (num + round) >> decimals;
+}
+
+int
 Math_log2(int num) {
   int value = 0;
 

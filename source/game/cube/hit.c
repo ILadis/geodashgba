@@ -110,11 +110,15 @@ Cube_HitCallback(
 
 static inline void
 Cube_ApplyShape(Cube *cube) {
-  Bounds *hitbox = &cube->hitbox;
+  Bounds hitbox = cube->hitbox;
   Shape shape = Shape_Of(cube->vertices);
 
+  // shrink hitbox
+  hitbox.size.x -= 1;
+  hitbox.size.y -= 1;
+
   int angle = cube->rotation.angle;
-  Bounds_Rotate(hitbox, &shape, angle);
+  Bounds_Rotate(&hitbox, &shape, angle);
 }
 
 void

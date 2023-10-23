@@ -352,10 +352,10 @@ test(Rotate_ShouldReturnExpectedVertices) {
   // assert
   assert(vertices[0].x ==  8);
   assert(vertices[0].y ==  2);
-  assert(vertices[1].x == 13);
+  assert(vertices[1].x == 14);
   assert(vertices[1].y ==  8);
   assert(vertices[2].x ==  8);
-  assert(vertices[2].y == 13);
+  assert(vertices[2].y == 14);
   assert(vertices[3].x ==  2);
   assert(vertices[3].y ==  8);
 }

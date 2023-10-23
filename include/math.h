@@ -17,6 +17,9 @@ int
 Math_clamp(int num, int min, int max);
 
 int
+Math_round(int num, int decimals);
+
+int
 Math_log2(int num);
 
 int
