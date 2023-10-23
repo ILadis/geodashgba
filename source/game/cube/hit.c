@@ -111,26 +111,10 @@ Cube_HitCallback(
 static inline void
 Cube_ApplyShape(Cube *cube) {
   Bounds *hitbox = &cube->hitbox;
-  Vector *vertices = &cube->vertices[0];
+  Shape shape = Shape_Of(cube->vertices);
 
   int angle = cube->rotation.angle;
-
-  Vector *position = &hitbox->center;
-
-  int dx = (Math_sin(angle) * hitbox->size.x) >> 8;
-  int dy = (Math_cos(angle) * hitbox->size.y) >> 8;
-
-  vertices[0].x = position->x - dx;
-  vertices[0].y = position->y - dy;
-
-  vertices[1].x = position->x + dx;
-  vertices[1].y = position->y - dy;
-
-  vertices[2].x = position->x + dx;
-  vertices[2].y = position->y + dy;
-
-  vertices[3].x = position->x - dx;
-  vertices[3].y = position->y + dy;
+  Bounds_Rotate(hitbox, &shape, angle);
 }
 
 void

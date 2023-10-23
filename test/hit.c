@@ -136,32 +136,32 @@ test(Intersects_ShouldReturnHitWithDeltaWhenBoundsHaveSameCenter) {
 
 test(Intersects_ShouldReturnTrueForGivenShapes) {
   // arrange
-  const Vector vertices1[] = {
+  Vector vertices1[] = {
     Vector_Of(5, 2),
     Vector_Of(10, 4),
     Vector_Of(7, 11),
     Vector_Of(1, 3),
   };
 
-  const Vector vertices2[] = {
+  Vector vertices2[] = {
     Vector_Of(7, 6),
     Vector_Of(16, 6),
     Vector_Of(10, 10),
   };
 
-  const Vector vertices3[] = {
+  Vector vertices3[] = {
     Vector_Of(9, 8),
     Vector_Of(9, 10),
     Vector_Of(6, 11),
   };
 
-  const Vector vertices4[] = {
+  Vector vertices4[] = {
     Vector_Of(152, 464),
     Vector_Of(144, 480),
     Vector_Of(160, 480),
   };
 
-  const Vector vertices5[] = {
+  Vector vertices5[] = {
     Vector_Of(135, 464),
     Vector_Of(151, 464),
     Vector_Of(151, 480),
@@ -189,20 +189,20 @@ test(Intersects_ShouldReturnTrueForGivenShapes) {
 
 test(Intersects_ShouldReturnFalseForGivenShapes) {
   // arrange
-  const Vector vertices1[] = {
+  Vector vertices1[] = {
     Vector_Of(5, 2),
     Vector_Of(10, 4),
     Vector_Of(7, 11),
     Vector_Of(1, 3),
   };
 
-  const Vector vertices2[] = {
+  Vector vertices2[] = {
     Vector_Of(9, 7),
     Vector_Of(16, 6),
     Vector_Of(10, 10),
   };
 
-  const Vector vertices3[] = {
+  Vector vertices3[] = {
     Vector_Of(9, 8),
     Vector_Of(9, 10),
     Vector_Of(7, 12),
@@ -339,6 +339,27 @@ test(Embed_ShouldReturnEmbeddedBoundsWhenGivenBoundsContainEachOther) {
   assert(embed.size.y == 2);
 }
 
+test(Rotate_ShouldReturnExpectedVertices) {
+  // arrange
+  const Bounds bounds = Bounds_Of(8, 8, 4, 4);
+
+  Vector vertices[4] = {0};
+  Shape shape = Shape_Of(vertices);
+
+  // act
+  Bounds_Rotate(&bounds, &shape, 32);
+
+  // assert
+  assert(vertices[0].x ==  8);
+  assert(vertices[0].y ==  2);
+  assert(vertices[1].x == 13);
+  assert(vertices[1].y ==  8);
+  assert(vertices[2].x ==  8);
+  assert(vertices[2].y == 13);
+  assert(vertices[3].x ==  2);
+  assert(vertices[3].y ==  8);
+}
+
 suite(
   Intersects_ShouldReturnHitWhenRaycastIntersectsBounds,
   Intersects_ShouldReturnNoHitWhenRaycastDoesNotIntersectBounds,
@@ -357,4 +378,5 @@ suite(
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsDoNotIntersect,
   Expand_ShouldReturnExpandedBoundsWhenGivenBoundsContainEachOther,
   Embed_ShouldReturnEmbeddedBoundsWhenGivenBoundsIntersect,
-  Embed_ShouldReturnEmbeddedBoundsWhenGivenBoundsContainEachOther);
+  Embed_ShouldReturnEmbeddedBoundsWhenGivenBoundsContainEachOther,
+  Rotate_ShouldReturnExpectedVertices);

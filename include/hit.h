@@ -15,7 +15,7 @@ typedef struct Bounds {
 } Bounds;
 
 typedef struct Shape {
-  const Vector *vertices;
+  Vector *vertices;
   unsigned int length;
 } Shape;
 
@@ -64,6 +64,12 @@ Hit
 Bounds_Contains(
     const Bounds *bounds,
     const Vector *point);
+
+void
+Bounds_Rotate(
+    const Bounds *bounds,
+    Shape *shape,
+    int angle);
 
 static inline Vector
 Bounds_Lower(const Bounds *bounds) {

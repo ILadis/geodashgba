@@ -205,6 +205,34 @@ Bounds_Contains(
   return hit;
 }
 
+void
+Bounds_Rotate(
+    const Bounds *bounds,
+    Shape *shape,
+    int angle)
+{
+  const Vector *position = &bounds->center;
+  const Vector *size = &bounds->size;
+
+  const Vector vertices[] = {
+    { -size->x, -size->y },
+    { +size->x, -size->y },
+    { +size->x, +size->y },
+    { -size->x, +size->y },
+  };
+
+  for (unsigned int i = 0; i < length(vertices); i++) {
+    int px = vertices[i].x;
+    int py = vertices[i].y;
+
+    int dx = (Math_cos(angle) * px - Math_sin(angle) * py) >> 8;
+    int dy = (Math_cos(angle) * py + Math_sin(angle) * px) >> 8;
+
+    shape->vertices[i].x = position->x + dx;
+    shape->vertices[i].y = position->y + dy;
+  }
+}
+
 static Bounds
 Bounds_Combine(
     const Bounds *bounds,
