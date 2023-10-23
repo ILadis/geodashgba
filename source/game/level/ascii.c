@@ -465,7 +465,7 @@ AsciiLevel_GetId(void *self) {
   int id = 0;
   int length = AsciiLevel_GetMetaData(level, 'i');
   while (length-- > 0) {
-    char byte;
+    char byte = 0;
     AsciiLevel_NextSymbol(level, DIRECTION_RIGHT, &byte);
 
     if (byte >= '0' && byte <= '9') byte = byte - '0';

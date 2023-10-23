@@ -95,16 +95,18 @@ Math_sin(int alpha) {
 
 int
 Math_div(int num, int denom) {
-  int result;
-  asm volatile("swi 0x06" : "=r" (result));
-  return result;
+  register int r0 asm("r0") = num;
+  register int r1 asm("r1") = denom;
+  asm volatile("swi 0x06" : "=r"(r0) : "r"(r0), "r"(r1));
+  return r0;
 }
 
 short
 Math_atan2(short x, short y) {
-  short result;
-  asm volatile("swi 0x0a" : "=r" (result));
-  return (result >> 8) - 64;
+  register short r0 asm("r0") = x;
+  register short r1 asm("r1") = y;
+  asm volatile("swi 0x0a" : "=r"(r0) : "r"(r0), "r"(r1));
+  return (r0 >> 8) - 64;
 }
 
 #endif

@@ -207,7 +207,7 @@ Binv1Level_GetId(void *self) {
   int id = 0;
   unsigned int length = Binv1Level_GetMetaData(level, 'i');
   while (length > 0) {
-    int byte;
+    int byte = 0;
     Binv1Level_ReadInt8(level, &byte);
 
     id = (id << 8) | (byte & 0xFF);
