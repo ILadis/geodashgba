@@ -20,6 +20,7 @@ LibC_DebugLog(const char* message) {
 
 static Logger interfaces[] = {
   { Logger_NoopEnable, LibC_DebugLog },
+  { Logger_NoopEnable, Logger_NoopLog },
 };
 #else
 static Logger interfaces[] = {

@@ -81,7 +81,19 @@ Math_div(int num, int denom) {
 
 short
 Math_atan2(short x, short y) {
-  return 0;
+  extern double atan2(double y, double x);
+  extern double round(double arg);
+
+  const double pi = 3.14159265358979323846;
+  double size = 256;
+
+  double xrads = 2*pi * (x / size);
+  double yrads = 2*pi * (y / size);
+
+  double number = atan2(xrads, yrads);
+  int fixed = (int) round(number * size);
+
+  return fixed;
 }
 
 #else

@@ -15,7 +15,7 @@ LEVELS   := $(patsubst %.txt,%.bin,$(wildcard levels/*.txt))
 LEVELS   := $(filter-out levels/99_%.bin, $(LEVELS))
 
 # toolchain and flags
-EMU      := visualboyadvance-m
+EMU      := mgba-qt
 CC       := arm-none-eabi-gcc
 OBJCOPY  := arm-none-eabi-objcopy
 
@@ -57,17 +57,17 @@ purge: clean
 		tools/lvl2rom
 
 tools:
-	@gcc tools/sinlut.c -o tools/sinlut -lm
-	@gcc tools/bezlut.c -o tools/bezlut -lm
-	@gcc tools/ppm2font.c -o tools/ppm2font
-	@gcc tools/tmx2tiles.c -o tools/tmx2tiles
+	@gcc tools/sinlut.c -o tools/sinlut -lm -Wall -Wextra
+	@gcc tools/bezlut.c -o tools/bezlut -lm -Wall -Wextra
+	@gcc tools/ppm2font.c -o tools/ppm2font -Wall -Wextra
+	@gcc tools/tmx2tiles.c -o tools/tmx2tiles -Wall -Wextra
 
 utils: CFILES := $(filter-out source/main.c, $(CFILES))
 utils:
-	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA
-	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA
-	@gcc tools/mksnd.c $(CFILES) -o tools/mksnd -lm -Iinclude -DNOGBA
-	@gcc tools/lsdsk.c $(CFILES) -o tools/lsdsk -lm -Iinclude -DNOGBA
+	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA -Wall -Wextra
+	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA -Wall -Wextra
+	@gcc tools/mksnd.c $(CFILES) -o tools/mksnd -lm -Iinclude -DNOGBA -Wall -Wextra
+	@gcc tools/lsdsk.c $(CFILES) -o tools/lsdsk -lm -Iinclude -DNOGBA -Wall -Wextra
 
 assets:
 	@mkdir -p assets/graphics assets/tiles
