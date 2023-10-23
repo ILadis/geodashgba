@@ -322,8 +322,8 @@ Disk_ReadDirectory(
 
     position = disk->reader.position - Disk_EntrySize;
     flags = Disk_BufferGetU8At(disk, position);
-    // check end of entries marker
-    if (flags == 0x00) {
+    // check end of entries marker or deleted entry
+    if (flags == 0x00 || flags == 0xE5) {
       return false;
     }
 
