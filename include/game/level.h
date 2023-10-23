@@ -19,6 +19,7 @@ typedef struct Level {
   int  (*GetChunkCount)(void *self);
   bool (*GetChunk)(void *self, Chunk *chunk);
   bool (*AddChunk)(void *self, Chunk *chunk);
+  Object* (*NextObject)(void *self, Chunk *chunk);
 } Level;
 
 static inline LevelId
@@ -56,6 +57,11 @@ Level_AddChunk(Level *level, Chunk *chunk) {
   return level->AddChunk(level->self, chunk);
 }
 
+static inline Object*
+Level_NextObject(Level *level, Chunk *chunk) {
+  return level->NextObject(level->self, chunk);
+}
+
 int
 Level_Convert(
     Level *from,
@@ -76,7 +82,6 @@ AsciiLevel_From(
 
 typedef struct Binv1Level {
   DataSource *source;
-  Chunk *chunk;
   int size;
   struct Level base;
 } Binv1Level;

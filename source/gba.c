@@ -128,7 +128,7 @@ GBA_OffsetBackgroundLayer(
 void
 GBA_StartTimerCascade(
     GBA_TimerFrequency frequency,
-    GBA_TimerData *overflows)
+    const GBA_TimerData *overflows)
 {
   GBA_System *system = GBA_GetSystem();
 
@@ -162,7 +162,7 @@ GBA_StartTimerCascade(
 int
 GBA_GetTimerValue(
     int index,
-    GBA_TimerData *overflows)
+    const GBA_TimerData *overflows)
 {
   GBA_System *system = GBA_GetSystem();
 
@@ -352,6 +352,24 @@ GBA_Memset32(void *dst, int value, int size) {
   copy.numTransfers = size >> 2;
   copy.srcAdjust = 2; // fixed
   copy.chunkSize = 1; // copy words
+  copy.enable = 1;
+
+  dma3->dst = copy.dst;
+  dma3->src = copy.src;
+  dma3->cnt = copy.cnt;
+}
+
+void
+GBA_Memset16(void *dst, short value, int size) {
+  GBA_System *system = GBA_GetSystem();
+  GBA_DirectMemcpy *dma3 = system->directMemcpy[3];
+
+  GBA_DirectMemcpy copy = {0};
+  copy.dst = dst;
+  copy.src = &value;
+  copy.numTransfers = size >> 1;
+  copy.srcAdjust = 2; // fixed
+  copy.chunkSize = 0; // copy half-words
   copy.enable = 1;
 
   dma3->dst = copy.dst;

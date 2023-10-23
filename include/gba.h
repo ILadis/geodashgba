@@ -441,12 +441,12 @@ GBA_OffsetBackgroundLayer(
 void
 GBA_StartTimerCascade(
     GBA_TimerFrequency frequency,
-    GBA_TimerData *overflows);
+    const GBA_TimerData *overflows);
 
 int
 GBA_GetTimerValue(
     int index,
-    GBA_TimerData *overflows);
+    const GBA_TimerData *overflows);
 
 void
 GBA_EnableSound();
@@ -492,6 +492,9 @@ GBA_Memcpy16(void *dst, const void *src, int size);
 
 void
 GBA_Memset32(void *dst, int value, int size);
+
+void
+GBA_Memset16(void *dst, short value, int size);
 
 void
 GBA_EnableSprites();

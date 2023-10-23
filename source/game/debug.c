@@ -74,6 +74,38 @@ Debug_DrawHitboxes() {
   }
 }
 
+int
+Debug_GetElapsedTime() {
+  static const GBA_TimerData overflows[] = { {-16}, {-1024}, {0} };
+  static bool once = true;
+
+  if (once) {
+    GBA_StartTimerCascade(GBA_TIMER_FREQUENCY_1024, overflows);
+    once = false;
+  }
+
+  int seconds = GBA_GetTimerValue(2, overflows);
+  int millis = GBA_GetTimerValue(1, overflows);
+
+  return seconds * 1024 + millis;
+}
+
+void
+Debug_LogElapsedTime(
+    char *message,
+    int timestamp)
+{
+  Logger *logger = Logger_GetInstance();
+  int timespan = Debug_GetElapsedTime() - timestamp;
+
+  if (timespan > 5) {
+    Logger_Print(logger, message);
+    Logger_Print(logger, "  0x");
+    Logger_PrintHex16(logger, timespan);
+    Logger_PrintNewline(logger);
+  }
+}
+
 static Text*
 Debug_GetText() {
   static bool once = true;

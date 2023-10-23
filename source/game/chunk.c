@@ -10,8 +10,8 @@ Chunk_AssignIndex(
   Grid_Reset(grid);
   Grid_SetCells(grid, chunk->cells);
 
-  const int width  = 240; // 30 tiles
-  const int height = 480; // 60 tiles
+  const int width  = 256; // 32 tiles
+  const int height = 496; // 62 tiles
 
   int x = width * index + width/2;
   int y = height/2;

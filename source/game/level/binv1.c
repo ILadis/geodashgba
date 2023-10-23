@@ -21,7 +21,6 @@ Binv1Level_From(
 {
   level->source = source;
   level->base.self = level;
-  level->chunk = NULL;
 
   int  Binv1Level_GetId(void *self);
   void Binv1Level_SetId(void *self, int id);
@@ -30,6 +29,7 @@ Binv1Level_From(
   int  Binv1Level_GetChunkCount(void *self);
   bool Binv1Level_GetChunk(void *self, Chunk *chunk);
   bool Binv1Level_AddChunk(void *self, Chunk *chunk);
+  Object* Binv1Level_NextObject(void *self, Chunk *chunk);
 
   level->base.GetId = Binv1Level_GetId;
   level->base.SetId = Binv1Level_SetId;
@@ -38,6 +38,7 @@ Binv1Level_From(
   level->base.GetChunkCount = Binv1Level_GetChunkCount;
   level->base.GetChunk = Binv1Level_GetChunk;
   level->base.AddChunk = Binv1Level_AddChunk;
+  level->base.NextObject = Binv1Level_NextObject;
 
   Binv1Level_DetermineSize(level);
 
@@ -132,8 +133,6 @@ Binv1Level_SetCursorTo(
     Binv1Level *level,
     Chunk *chunk)
 {
-  level->chunk = chunk;
-
   Reader *reader = DataSource_AsReader(level->source);
   Reader_SeekTo(reader, 0);
 
@@ -301,6 +300,34 @@ Binv1Level_GetChunk(
   }
 
   return true;
+}
+
+Object*
+Binv1Level_NextObject(
+    void *self,
+    Chunk *chunk)
+{
+  Binv1Level *level = self;
+  if (!Binv1Level_SetCursorTo(level, chunk)) {
+    return NULL;
+  }
+
+  unsigned int count = 0;
+  Binv1Level_ReadUInt8(level, &count);
+
+  if (chunk->count < count) {
+    Object *object = Chunk_AllocateObject(chunk);
+    if (object != NULL) {
+      for (unsigned int i = 0; i < chunk->count; i++) {
+        Binv1Level_ReadObject(level, object);
+      }
+      Chunk_AddObject(chunk, object);
+    }
+
+    return object;
+  }
+
+  return NULL;
 }
 
 static void

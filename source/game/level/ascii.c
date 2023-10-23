@@ -46,6 +46,7 @@ AsciiLevel_From(
   int  AsciiLevel_GetChunkCount(void *self);
   bool AsciiLevel_GetChunk(void *self, Chunk *chunk);
   bool AsciiLevel_AddChunk(void *self, Chunk *chunk);
+  Object* AsciiLevel_NextObject(void *self, Chunk *chunk);
 
   level->base.GetId = AsciiLevel_GetId;
   level->base.SetId = AsciiLevel_SetId;
@@ -643,4 +644,13 @@ AsciiLevel_AddChunk(
 {
   // not implemented
   return false;
+}
+
+Object*
+AsciiLevel_NextObject(
+    unused void *self,
+    unused Chunk *chunk)
+{
+  // not implemented
+  return NULL;
 }

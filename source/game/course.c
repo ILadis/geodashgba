@@ -16,7 +16,6 @@ Course_LoadChunk(
 
   if (index == 0 || chunk->index != index) {
     Chunk_AssignIndex(chunk, index);
-    Level_GetChunk(course->level, chunk);
   }
 
   return chunk;
@@ -63,7 +62,7 @@ Course_ResetState(
     Course *course,
     int index)
 {
-  course->prepare.chunk = NULL;
+  course->prepare = NULL;
   course->frame = 0;
   course->redraw = true;
   course->index = index;
@@ -182,49 +181,25 @@ Course_DrawBackground(
   GBA_OffsetBackgroundLayer(1, position->x, position->y);
 }
 
-static inline const GBA_Tile*
-Course_FloorTile(
-    Course *course,
-    int y)
-{
-  static const GBA_Tile empty = {0};
-  static const GBA_Tile floor[] = {{ .tileId = 2 }, { .tileId = 10 }};
-
-  int dy = y - course->floor/8;
-
-  if (dy < 0) {
-    return &empty;
-  } else if (dy == 0) {
-    return &floor[0];
-  } else {
-    return &floor[1];
-  }
-}
-
-static inline void
-Course_DrawFloor(
+static inline bool
+Course_DrawObjects(
     Course *course,
     Chunk *chunk,
     GBA_TileMapRef *target)
 {
-  const Bounds *bounds = Chunk_GetBounds(chunk);
-  Vector lower = Bounds_Lower(bounds);
-  Vector upper = Bounds_Upper(bounds);
-
-  Vector_Rshift(&lower, 3);
-  Vector_Rshift(&upper, 3);
-
-  for (int y = 0; y < target->height; y++) {
-    for (int x = lower.x; x < upper.x; x++) {
-      const GBA_Tile *tile = Course_FloorTile(course, y);
-      GBA_TileMapRef_BlitTile(target, x, y, tile);
-    }
+  Object *object = Level_NextObject(course->level, chunk);
+  if (object != NULL) {
+    Object_Draw(object, target);
+    return false;
   }
+
+  return true;
 }
 
-static inline void
+static inline bool
 Course_DrawAttempts(
     Course *course,
+    Chunk *chunk,
     GBA_TileMapRef *target)
 {
   extern const Font consoleFont;
@@ -243,25 +218,53 @@ Course_DrawAttempts(
   }
 
   Counter counter = course->attempts;
-  if (Counter_IsBlank(counter)) {
-    return; // nothing to do
-  }
+  if (chunk->index == 0 && !Counter_IsBlank(counter)) {
+    int tx = 2;
+    int ty = course->floor/8 - 13;
 
-  int tx = 2;
-  int ty = course->floor/8 - 13;
-
-  GBA_Tile tile = { .tileId = 129 };
-  for (int y = 0; y < 2; y++) {
-    for (int x = 0; x < 20; x++) {
-      GBA_TileMapRef_BlitTile(target, tx + x, ty + y, &tile);
-      GBA_TileMapRef_FillTile(target, tile.tileId++, 0);
+    GBA_Tile tile = { .tileId = 129 };
+    for (int y = 0; y < 2; y++) {
+      for (int x = 0; x < 20; x++) {
+        GBA_TileMapRef_BlitTile(target, tx + x, ty + y, &tile);
+        GBA_TileMapRef_FillTile(target, tile.tileId++, 0);
+      }
     }
+
+    Text_SetCanvas(text, target);
+    Text_SetCursor(text, tx * 8, ty * 8);
+    Text_WriteLine(text, "Attempt ");
+    Text_WriteLine(text, course->attempts);
   }
 
-  Text_SetCanvas(text, target);
-  Text_SetCursor(text, tx * 8, ty * 8);
-  Text_WriteLine(text, "Attempt ");
-  Text_WriteLine(text, course->attempts);
+  course->prepare = Course_DrawObjects;
+  return false;
+}
+
+static inline bool
+Course_DrawFloor(
+    Course *course,
+    Chunk *chunk,
+    GBA_TileMapRef *target)
+{
+  static const GBA_Tile empty = {0};
+  static const GBA_Tile floor[] = {{ .tileId = 2 }, { .tileId = 10 }};
+
+  const int count = sizeof(GBA_TileMap) / sizeof(GBA_Tile);
+  int index = (chunk->index % 2) * count;
+
+  GBA_Tile *top = &target->tiles[index];
+  GBA_Tile *bottom = &target->tiles[index + count*2];
+
+  int dy = course->floor/8 - 32;
+  int size = 32 * sizeof(GBA_Tile);
+
+  GBA_Memset32(top, empty.value, 32 * size);
+  GBA_Memset16(&bottom[32 * 0], empty.value, dy * size);
+  GBA_Memset16(&bottom[32 * dy++], floor[0].value, size);
+  GBA_Memset16(&bottom[32 * dy], floor[1].value, (32 - dy) * size);
+
+  course->prepare = Course_DrawAttempts;
+  return false;
 }
 
 static inline bool
@@ -276,43 +279,11 @@ Course_PrepareChunk(
     .bitmaps = system->tileSets8[0],
   };
 
-  enum Step {
-    STEP_DRAW_FLOOR,
-    STEP_DRAW_ATTEMPTS,
-    STEP_DRAW_COUNT
-  };
-
-  if (course->prepare.chunk != chunk) {
-    course->prepare.chunk = chunk;
-    course->prepare.step = 0;
-    return false;
+  if (course->prepare == NULL) {
+    course->prepare = Course_DrawFloor;
   }
 
-  int step = course->prepare.step++;
-  switch (step) {
-  case STEP_DRAW_FLOOR:
-    Course_DrawFloor(course, chunk, &target);
-    break;
-
-  case STEP_DRAW_ATTEMPTS:
-    if (chunk->index == 0) {
-      Course_DrawAttempts(course, &target);
-    }
-    break;
-
-  default:
-    int index = step - STEP_DRAW_COUNT;
-    int count = chunk->count;
-    if (index >= count) {
-      return true;
-    }
-
-    Object *object = &chunk->objects[index];
-    Object_Draw(object, &target);
-    break;
-  }
-
-  return false;
+  return course->prepare(course, chunk, &target);
 }
 
 static inline void
@@ -329,17 +300,16 @@ Course_DrawChunk(
   };
 
   while (!Course_PrepareChunk(course, chunk));
+  course->prepare = NULL;
 
   GBA_System *system = GBA_GetSystem();
-  const GBA_TileMapRef source = {
-    .width = 64, .height = 64,
-    .tiles = system->tileMaps[14],
-  };
-
-  GBA_Tile *target = system->tileMaps[10];
-  GBA_Memcpy32(target, source.tiles, sizeof(GBA_Tile) * source.width * source.height);
-
   GBA_EnableBackgroundLayer(1, layer);
+
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  GBA_Tile *source = system->tileMaps[14];
+  GBA_Memcpy32(target.tiles, source, sizeof(GBA_Tile) * target.width * target.height);
 }
 
 static inline void
@@ -375,7 +345,7 @@ Course_DrawChunks(Course *course) {
   else Course_AnimateObjects(course);
 }
 
-iwram void
+void
 Course_Draw(
     Course *course,
     Camera *camera)

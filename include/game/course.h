@@ -21,11 +21,7 @@ typedef struct Course {
   Chunk chunks[4];
   Text text;
   char attempts[4];
-  // TODO consider keeping references to objects that need to be animated
-  struct {
-    Chunk *chunk;
-    int step;
-  } prepare;
+  bool (*prepare)(struct Course *course, Chunk *chunk, GBA_TileMapRef *target);
   int frame;
   bool redraw;
 } Course;
