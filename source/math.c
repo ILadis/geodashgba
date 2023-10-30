@@ -70,7 +70,7 @@ Math_sin(int alpha) {
   extern double round(double arg);
 
   const double pi = 3.14159265358979323846;
-  double size = 256;
+  const double size = 256;
 
   double rads = 2*pi * (alpha / size);
 
@@ -85,19 +85,20 @@ Math_div(int num, int denom) {
   return num / denom;
 }
 
-short
-Math_atan2(short x, short y) {
+int
+Math_atan2(int x, int y) {
   extern double atan2(double y, double x);
   extern double round(double arg);
 
   const double pi = 3.14159265358979323846;
-  double size = 256;
+  const double size = 256;
 
-  double xrads = 2*pi * (x / size);
-  double yrads = 2*pi * (y / size);
+  double rads = size / (2*pi);
 
-  double number = atan2(xrads, yrads);
-  int fixed = (int) round(number * size);
+  double number = atan2(y, x);
+  if (number < 0) number += pi;
+
+  int fixed = (int) round(number * rads);
 
   return fixed;
 }
@@ -106,7 +107,7 @@ Math_atan2(short x, short y) {
 
 int
 Math_sin(int alpha) {
-  // signed 8w fixed-point integer
+  // returns signed 1.8 fixed-point integer
   extern const signed short sinlut[256];
   return sinlut[alpha & 0xFF];
 }
@@ -119,12 +120,13 @@ Math_div(int num, int denom) {
   return r0;
 }
 
-short
-Math_atan2(short x, short y) {
-  register short r0 asm("r0") = x;
-  register short r1 asm("r1") = y;
+int
+Math_atan2(int x, int y) {
+  // returns unsigned 1.16 fixed-point integer
+  register int r0 asm("r0") = x;
+  register int r1 asm("r1") = y;
   asm volatile("swi 0x0a" : "=r"(r0) : "r"(r0), "r"(r1));
-  return (r0 >> 8) - 64;
+  return r0;
 }
 
 #endif

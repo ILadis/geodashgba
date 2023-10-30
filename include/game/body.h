@@ -7,6 +7,7 @@
 
 typedef struct Dynamics {
   Vector friction;
+  const Vector *center;
   Vector gravity;
   Vector limits;
 } Dynamics;
@@ -25,6 +26,7 @@ Dynamics_OfInverseGravity(const Dynamics *dynamics) {
   return (Dynamics) {
     .friction = dynamics->friction,
     .limits = dynamics->limits,
+    .center = dynamics->center,
     .gravity = Vector_Of(-dynamics->gravity.x, -dynamics->gravity.y)
   };
 }

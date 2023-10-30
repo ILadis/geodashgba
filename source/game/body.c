@@ -11,8 +11,20 @@ void
 Body_Update(Body *body) {
   const Dynamics *dynamics = body->dynamics;
 
-  int vx = body->velocity.x + body->acceleration.x + dynamics->gravity.x;
-  int vy = body->velocity.y + body->acceleration.y + dynamics->gravity.y;
+  Vector gravity = dynamics->gravity;
+  if (dynamics->center != NULL) {
+    // both body position and gravity center must use a 24.8 fixed-point integer
+    int dx = Math_floor(dynamics->center->x - body->position.x, 8);
+    int dy = Math_floor(dynamics->center->y - body->position.y, 8);
+
+    int angle = Math_floor(Math_atan2(dx, dy) * 256, 16);
+
+    gravity.x = Math_floor(Math_cos(angle) * gravity.x, 8);
+    gravity.y = Math_floor(Math_sin(angle) * gravity.y, 8);
+  }
+
+  int vx = body->velocity.x + body->acceleration.x + gravity.x;
+  int vy = body->velocity.y + body->acceleration.y + gravity.y;
 
   // apply friction
   if (vx < 0) {

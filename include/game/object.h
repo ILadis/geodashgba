@@ -2,6 +2,7 @@
 #define OBJECT_H
 
 #include <gba.h>
+#include <math.h>
 #include <vector.h>
 #include <hit.h>
 

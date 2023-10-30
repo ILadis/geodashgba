@@ -19,6 +19,11 @@ Math_clamp(int num, int min, int max);
 int
 Math_round(int num, int decimals);
 
+static inline int
+Math_floor(int num, int decimals) {
+  return (num >> decimals);
+}
+
 int
 Math_log2(int num);
 
@@ -37,7 +42,7 @@ Math_rand();
 int
 Math_div(int num, int denom);
 
-short
-Math_atan2(short x, short y);
+int
+Math_atan2(int x, int y);
 
 #endif

@@ -39,7 +39,7 @@ Particle_NewInstance(
   Body *body = &particle->body;
   // body is using 8w fixed-point integer
   Body_SetDynamics(body, dynamics);
-  Body_SetPosition(body, (position->x << 8) + 4, (position->y << 8) + 4);
+  Body_SetPosition(body, position->x << 8, position->y << 8);
 
   particle->size = PARTICLE_SIZE_SMALL;
   particle->life = life;
@@ -146,8 +146,8 @@ Particle_Draw(Particle *particle) {
   Vector *position = Body_GetPosition(body);
 
   // revert 8w fixed-point integer
-  int x = position->x >> 8;
-  int y = position->y >> 8;
+  int x = (position->x >> 8) - 4;
+  int y = (position->y >> 8) - 4;
 
   Bounds bounds = {
     .size = Vector_Of(4, 4),

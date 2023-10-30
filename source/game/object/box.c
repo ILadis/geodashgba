@@ -452,6 +452,12 @@ static const GBA_TileMapRef pole[] = {
       { .tileId = 23, .vFlip = 0, .hFlip = 1 },
     }
   },
+  { .width = 2, .height = 1,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 22, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 22, .vFlip = 0, .hFlip = 1 },
+    }
+  }
 };
 
 void
@@ -488,7 +494,7 @@ Object_AnimateBoxWithPole(
     GBA_TileMapRef *target,
     int frame)
 {
-  int index = (frame / 4) % 7;
+  int index = Math_mod2(frame / 4, 3);
 
   Vector position = Bounds_Lower(&object->viewbox);
 
