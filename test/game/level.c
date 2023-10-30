@@ -36,7 +36,7 @@ test(From_ShouldInitializeBinv1LevelAsExpected) {
 
   // assert
   assert(level->self == &binv1);
-  assert(binv1.size == 3);
+  assert(binv1.source == source);
 }
 
 test(GetId_ShouldReturnZeroWhenLevelHasNoId) {
@@ -159,7 +159,7 @@ test(GetChunkCount_ShouldReturnExpectedChunkCount) {
 
 test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
   // arrange
-  int offset = 432;
+  int offset = 448;
   unsigned char data[] =
     "       \n"
     "       \n"
@@ -183,7 +183,7 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
   // arrange
-  int offset = 432;
+  int offset = 448;
   unsigned char data[] =
     "               \n"
     "              @\n"
@@ -216,7 +216,7 @@ test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
   // arrange
-  int offset = 432;
+  int offset = 448;
   unsigned char data[] =
     "   i   \n"
     "   x   \n"
@@ -240,7 +240,7 @@ test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
 
 test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
   // arrange
-  int offset = 432;
+  int offset = 448;
   unsigned char data[] =
     "x     x\n"
     "   x   \n"
@@ -276,7 +276,7 @@ test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
 
 test(GetChunk_ShouldCreateBoxesWithExpectedSizes) {
   // arrange
-  int offset = 320;
+  int offset = 336;
   unsigned char data[] =
     "               \n"
     "       ^^^^    \n"
@@ -331,12 +331,12 @@ test(GetChunk_ShouldReturnEqualObjectsForSameLevelData) {
     // meta data
     0x00,
     // chunk data
-    0x01, 0x06, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
-    0x08, 0x00, 0x98, 0x00, 0xd8, 0x01, 0x08, 0x00,
+    0x01, 0x06, 0x98, 0x00, 0xe8, 0x01, 0x08, 0x00,
+    0x08, 0x00, 0x98, 0x00, 0xe8, 0x01, 0x08, 0x00,
     0x08, 0x00, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00,
-    0x98, 0x00, 0x00, 0x00, 0xd0, 0x01, 0x00, 0x00,
-    0x90, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
-    0xa0, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
+    0x98, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x00, 0x00,
+    0x90, 0x00, 0x00, 0x00, 0xf0, 0x01, 0x00, 0x00,
+    0xa0, 0x00, 0x00, 0x00, 0xf0, 0x01, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   };
 

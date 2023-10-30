@@ -371,6 +371,36 @@ test(SeekTo_ShouldAdjustPositionAndReturnExpectedBytes) {
   }
 }
 
+test(GetLength_ShouldReturnExpectedFileSize) {
+  // arrange
+  Disk disk = {0};
+  Disk_Initialize(&disk, Disk_ReadStatic);
+
+  char *path[] = {
+    "GBASYS     ",
+    "SYS        ",
+    NULL
+  };
+
+  Disk_OpenDirectory(&disk, path);
+
+  DiskEntry entry = {0};
+  while (Disk_ReadDirectory(&disk, &entry)) {
+    if (DiskEntry_NameEquals(&entry, "REGIST~1DAT")) {
+      break;
+    }
+  }
+
+  DataSource *source = Disk_OpenFile(&disk, &entry);
+  Reader *reader = DataSource_AsReader(source);
+
+  // act
+  unsigned int length = Reader_GetLength(reader);
+
+  // assert
+  assert(length == 368);
+}
+
 test(NormalizePath_ShouldReturnExpectedNormalizedPath) {
   // arrange
   const char *pathname = "/GBASYS/sys/registery.dat";
@@ -513,6 +543,7 @@ suite(
   OpenDirectory_ShouldOpenDifferentSubdirectoriesAfterOneAnother,
   OpenFile_ShouldReturnReaderAndReadFileBytewise,
   SeekTo_ShouldAdjustPositionAndReturnExpectedBytes,
+  GetLength_ShouldReturnExpectedFileSize,
   NormalizePath_ShouldReturnExpectedNormalizedPath,
   NormalizePath_ShouldReturnExpectedNormalizedPathForRootDirectory,
   NormalizePath_ShouldReturnFalseWhenPathnameContainsInvalidCharacters,

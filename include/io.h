@@ -6,12 +6,18 @@
 typedef struct Reader {
   void *self;
   int  (*Read)(void *self);
+  unsigned int (*GetLength)(void *self);
   bool (*SeekTo)(void *self, unsigned int position);
 } Reader;
 
 static inline int
 Reader_Read(const Reader *reader) {
   return reader->Read(reader->self);
+}
+
+static inline unsigned int
+Reader_GetLength(const Reader *reader) {
+  return reader->GetLength(reader->self);
 }
 
 static inline bool

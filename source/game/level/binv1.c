@@ -1,19 +1,6 @@
 
 #include <game/level.h>
 
-static inline void
-Binv1Level_DetermineSize(Binv1Level *level) {
-  Reader *reader = DataSource_AsReader(level->source);
-
-  int size = 0;
-  while (Reader_Read(reader) >= 0) {
-    size++;
-  }
-
-  level->size = size;
-  Reader_SeekTo(reader, 0);
-}
-
 Level*
 Binv1Level_From(
     Binv1Level *level,
@@ -39,8 +26,6 @@ Binv1Level_From(
   level->base.GetChunk = Binv1Level_GetChunk;
   level->base.AddChunk = Binv1Level_AddChunk;
   level->base.NextObject = Binv1Level_NextObject;
-
-  Binv1Level_DetermineSize(level);
 
   return &level->base;
 }

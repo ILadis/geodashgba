@@ -237,11 +237,29 @@ DiskReader_SeekTo(
 
 static int
 DiskReader_InitializeRead(void *self) {
-  if (DiskReader_SeekTo(self, 0)) {
-    return DiskReader_ReadNext(self);
+  Disk *disk = self;
+  DiskReader *reader = &disk->reader;
+  DiskEntry *entry = &disk->entry;
+
+  unsigned int cluster = entry->startCluster;
+  unsigned int sector = Disk_GetSectorOfCluster(disk, cluster);
+
+  if (!Disk_BufferFill(disk, sector)) {
+    return -1;
   }
 
-  return -1;
+  reader->cluster = cluster;
+  reader->sector = sector;
+
+  return DiskReader_ReadNext(self);
+}
+
+static unsigned int
+DiskReader_GetLength(void *self) {
+  Disk *disk = self;
+  DiskEntry *entry = &disk->entry;
+
+  return entry->fileSize;
 }
 
 DataSource*
@@ -254,12 +272,13 @@ Disk_OpenFile(
   source->reader.self = disk;
   source->reader.Read = DiskReader_InitializeRead;
   source->reader.SeekTo = DiskReader_SeekTo;
+  source->reader.GetLength = DiskReader_GetLength;
 
   disk->entry = *entry;
 
   DiskReader *reader = &disk->reader;
-  reader->cluster = entry->startCluster;
   reader->size = entry->fileSize;
+  reader->cluster = 0;
   reader->sector = 0;
   reader->position = 0;
 

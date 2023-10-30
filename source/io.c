@@ -53,10 +53,12 @@ Buffer_AsDataSource(Buffer *buffer) {
   int Buffer_Read(void *buffer);
   bool Buffer_Write(void *buffer, unsigned char byte);
   bool Buffer_SeekTo(void *buffer, unsigned int position);
+  unsigned int Buffer_GetLength(void *buffer);
 
   Reader *reader = &buffer->source.reader;
   reader->self = buffer;
   reader->Read = Buffer_Read;
+  reader->GetLength = Buffer_GetLength;
   reader->SeekTo = Buffer_SeekTo;
 
   Writer *writer = &buffer->source.writer;
@@ -115,6 +117,12 @@ Buffer_SeekTo(
   return true;
 }
 
+unsigned int
+Buffer_GetLength(void *self) {
+  Buffer *buffer = self;
+  return buffer->length;
+}
+
 #ifdef NOGBA
 
 DataSource*
@@ -145,11 +153,13 @@ File_From(
   int File_Read(void *file);
   bool File_Write(void *file, unsigned char byte);
   bool File_SeekTo(void *file, unsigned int position);
+  unsigned int File_GetLength(void *file);
 
   Reader *reader = &file->source.reader;
   reader->self = file;
   reader->Read = File_Read;
   reader->SeekTo = File_SeekTo;
+  reader->GetLength = File_GetLength;
 
   Writer *writer = &file->source.writer;
   writer->self = file;
@@ -184,6 +194,26 @@ File_SeekTo(
   File *file = self;
   FILE *fp = file->fp;
   return fseek(fp, position, SEEK_SET) == 0;
+}
+
+unsigned int
+File_GetLength(void *self) {
+  File *file = self;
+  FILE *fp = file->fp;
+
+  long position = ftell(fp);
+  if (position < 0) {
+    return 0;
+  }
+
+  fseek(fp, 0, SEEK_END);
+  long length = ftell(fp);
+  if (length < 0) {
+    return 0;
+  }
+
+  fseek(fp, position, SEEK_SET);
+  return (unsigned int) length;
 }
 
 #endif

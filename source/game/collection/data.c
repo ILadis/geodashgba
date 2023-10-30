@@ -98,7 +98,10 @@ DataCollection_AddLevel(
     offset += collection->allocations[i];
   }
 
-  int length = level->size;
+  DataSource *source = level->source;
+  Reader *reader = DataSource_AsReader(source);
+
+  int length = Reader_GetLength(reader);
   if (!DataCollection_CanAllocate(collection, offset, length)) {
     return false;
   }
@@ -107,9 +110,6 @@ DataCollection_AddLevel(
 
   DataSource *target = Buffer_From(&(Buffer) {0}, &data[offset], length);
   Writer *writer = DataSource_AsWriter(target);
-
-  DataSource *source = level->source;
-  Reader *reader = DataSource_AsReader(source);
 
   for (int i = 0; i < length; i++) {
     int byte = Reader_Read(reader);

@@ -113,9 +113,9 @@ test(GetLevelByIndex_ShouldReturnExpectedLevel) {
 
   // assert
   assert(level != NULL);
-  assert(level->size == 3);
 
   Reader *reader = DataSource_AsReader(level->source);
+  assert(   3 == Reader_GetLength(reader));
   assert(0x07 == Reader_Read(reader));
   assert(0x08 == Reader_Read(reader));
   assert(0x09 == Reader_Read(reader));

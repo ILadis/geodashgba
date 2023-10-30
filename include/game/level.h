@@ -82,7 +82,6 @@ AsciiLevel_From(
 
 typedef struct Binv1Level {
   DataSource *source;
-  int size;
   struct Level base;
 } Binv1Level;
 
