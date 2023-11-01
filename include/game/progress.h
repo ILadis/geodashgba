@@ -16,10 +16,15 @@ typedef enum Mode {
 typedef struct Progress {
   int previous, current;
   int best, total;
+  int colors[2];
   bool coins[3];
   enum Mode mode;
   bool redraw;
 } Progress;
+
+#define PROGRESS_MAX_VALUE 256
+#define PROGRESS_PER_TILE  (PROGRESS_MAX_VALUE / 16)  // 16 tiles per progress bar
+#define PROGRESS_PER_PIXEL (PROGRESS_MAX_VALUE / 128) // -"- and 8 bytes per tile
 
 Progress*
 Progress_GetInstance();

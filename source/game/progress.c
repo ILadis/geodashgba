@@ -17,19 +17,6 @@ Progress_GetPosition(Progress *progress) {
   return &positions[progress->mode];
 }
 
-static inline const GBA_TileMapRef*
-Progress_GetTileMap(Progress *progress) {
-  extern const GBA_TileMapRef progressPlayTileMap;
-  extern const GBA_TileMapRef progressSelectorTileMap;
-
-  static const GBA_TileMapRef *tileMaps[] = {
-    [MODE_PLAY] = &progressPlayTileMap,
-    [MODE_SELECT] = &progressSelectorTileMap,
-  };
-
-  return tileMaps[progress->mode];
-}
-
 void
 Progress_SetCourse(
     Progress *progress,
@@ -49,8 +36,7 @@ Progress_SetProgress(
     Progress *progress,
     int value)
 {
-  progress->previous = progress->current;
-  progress->current = Math_min(value, 1 << 8);
+  progress->current = Math_min(value, PROGRESS_MAX_VALUE);
   progress->best = Math_max(progress->best, progress->current);
 }
 
@@ -89,53 +75,111 @@ Progress_Update(
     progress->coins[2] = false;
   }
 
-  int value = Math_div(position->x << 8, progress->total);
+  int value = Math_div(position->x * PROGRESS_MAX_VALUE, progress->total);
   Progress_SetProgress(progress, value);
 }
 
 static inline void
-Progress_DrawPixels(
+Progress_DrawBarPixels(
     Progress *progress,
-    int value, bool state)
+    int index)
 {
-  const Vector dimensions[] = {
-    [MODE_PLAY] = Vector_Of(123, 2),
-    [MODE_SELECT] = Vector_Of(125, 9),
+  const Vector widths[][3] = {
+    [MODE_PLAY]   = { Vector_Of(2, 8), Vector_Of(0, 8), Vector_Of(0, 6) },
+    [MODE_SELECT] = { Vector_Of(1, 8), Vector_Of(0, 8), Vector_Of(0, 7) },
   };
 
-  const Vector offsets[] = {
-    [MODE_PLAY] = Vector_Of(2, 3),
-    [MODE_SELECT] = Vector_Of(1, 6),
+  const Vector heights[][3][8] = {
+    [MODE_PLAY] = {
+      { Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5) },
+      { Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5) },
+      { Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5), Vector_Of(3, 5) },
+    },
+    [MODE_SELECT] = {
+      { Vector_Of(0,  0), Vector_Of(8, 13), Vector_Of(7, 14), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15) },
+      { Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15) },
+      { Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(6, 15), Vector_Of(7, 14), Vector_Of(8, 13), Vector_Of(0,  0) },
+    }
   };
 
   GBA_TileMapRef target;
   GBA_TileMapRef_FromBackgroundLayer(&target, 2);
 
-  GBA_System *system = GBA_GetSystem();
-  GBA_Bitmap8 *bitmap = &system->tileSets8[0][state ? 80: 79];
-
-  int color = GBA_Bitmap8_GetPixel(bitmap, 0, 0);
-
   const Vector *position = Progress_GetPosition(progress);
+  const int px = position->x * 8 + index * 8;
+  const int py = position->y * 8;
 
-  int width = (dimensions[progress->mode].x * value) >> 8;
-  int height = dimensions[progress->mode].y;
-
-  int px = offsets[progress->mode].x + position->x * 8 + width;
-  int py = offsets[progress->mode].y + position->y * 8;
-
-  // TODO workaround to achieve rounded corners
-  if (progress->mode == MODE_SELECT) {
-    switch (width) {
-      case   0: py += 2; height = 5; break;
-      case   1: py += 1; height = 7; break;
-      case 124: py += 1; height = 7; break;
-      case 125: py += 2; height = 5; break;
-    }
+  const Vector *width = NULL;
+  switch (index) {
+    case  0: width = &widths[progress->mode][0]; break;
+    case 15: width = &widths[progress->mode][2]; break;
+    default: width = &widths[progress->mode][1]; break;
   }
 
-  for (int dy = 0; dy < height; dy++) {
-    GBA_TileMapRef_SetPixel(&target, px, py + dy, color);
+  const Vector *height = NULL;
+  switch (index) {
+    case  0: height = heights[progress->mode][0]; break;
+    case 15: height = heights[progress->mode][2]; break;
+    default: height = heights[progress->mode][1]; break;
+  }
+
+  int value = index * PROGRESS_PER_TILE;
+
+  for (int x = width->x; x < width->y; x++) {
+    bool state = progress->current > value;
+    int color = progress->colors[state];
+
+    for (int y = height[x].x; y < height[x].y; y++) {
+      GBA_TileMapRef_SetPixel(&target, px + x, py + y, color);
+    }
+
+    value += PROGRESS_PER_PIXEL;
+  }
+}
+
+static const GBA_TileMapRef bars[][5] = {
+  [MODE_PLAY] = {
+    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 48, } } },
+    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 49, } } },
+    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 50, } } },
+    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 51, } } },
+    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 52, } } },
+  },
+  [MODE_SELECT] = {
+    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  96 }, { .tileId = 104 }, } },
+    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  97 }, { .tileId = 105 }, } },
+    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  98 }, { .tileId = 106 }, } },
+    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  99 }, { .tileId = 107 }, } },
+    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId = 100 }, { .tileId = 108 }, } },
+  }
+};
+
+static inline void
+Progress_DrawBarTiles(
+    Progress *progress,
+    int index)
+{
+  int lower = index * PROGRESS_PER_TILE;
+  int upper = lower + PROGRESS_PER_TILE;
+
+  bool progressing = progress->current > lower && progress->current < upper;
+  bool completed = progress->current >= upper;
+
+  const GBA_TileMapRef *tileMap = NULL;
+  switch (index) {
+    case  0: tileMap = &bars[progress->mode][0]; progressing = true; break;
+    case 15: tileMap = &bars[progress->mode][4]; progressing = true; break;
+    default: tileMap = &bars[progress->mode][progressing ? 2 : completed ? 3 : 1]; break;
+  }
+
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 2);
+
+  const Vector *position = Progress_GetPosition(progress);
+  GBA_TileMapRef_Blit(&target, position->x + index, position->y, tileMap);
+
+  if (progressing) {
+    Progress_DrawBarPixels(progress, index);
   }
 }
 
@@ -143,19 +187,20 @@ static inline void
 Progress_DrawDelta(Progress *progress) {
   int current = progress->current;
   int delta = current - progress->previous;
+
   if (delta != 0) {
     int step = Math_signum(delta);
-    bool state = step > 0;
 
-    int value = current;
-    for (int i = 0; i != delta; i += step, value -= step) {
-      Progress_DrawPixels(progress, value, state);
+    int index = (current - delta) >> 4;
+    int target = Math_min(15, current >> 4);
+
+    for (; index != target; index += step) {
+      Progress_DrawBarTiles(progress, index);
     }
 
-    Progress_DrawPixels(progress, value, state);
+    Progress_DrawBarTiles(progress, index);
+    progress->previous = current;
   }
-
-  progress->previous = current;
 }
 
 static inline void
@@ -178,22 +223,17 @@ Progress_DrawBar(Progress *progress) {
     }
   };
 
+  // store "on" and "off" colors
+  progress->colors[true]  = GBA_Palette_FindColor(GBA_Color_From(0x7BFF00));
+  progress->colors[false] = GBA_Palette_FindColor(GBA_Color_From(0x10006B));
+
   GBA_EnableBackgroundLayer(2, layers[progress->mode]);
 
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 2);
-
-  const Vector *position = Progress_GetPosition(progress);
-  const GBA_TileMapRef *tileMap = Progress_GetTileMap(progress);
-
-  GBA_TileMapRef_Blit(&target, position->x, position->y, tileMap);
-
-  int current = progress->current;
-  for (int value = 0; value <= 1 << 8; value++) {
-    bool state = current == 0 ? false : value <= current;
-    Progress_DrawPixels(progress, value, state);
+  for (int index = 0; index < 16; index++) {
+    Progress_DrawBarTiles(progress, index);
   }
 
+  int current = progress->current;
   progress->previous = current;
 }
 
