@@ -97,16 +97,24 @@ MoveTrait_Apply(
   }
 }
 
+static void
+MoveTrait_Action(void *self) {
+  MoveTrait *trait = self;
+  MoveTrait_Jump(trait, 1400);
+}
+
 Trait*
 MoveTrait_BindTo(
     MoveTrait *move,
-    Cube *cube)
+    Cube *cube,
+    bool enabled)
 {
   Trait *trait = &move->base;
   trait->self = move;
-  trait->enabled = false;
+  trait->enabled = enabled;
   trait->type = TRAIT_TYPE_MOVE;
   trait->Apply = MoveTrait_Apply;
+  trait->Action = MoveTrait_Action;
 
   move->cube = cube;
   move->launch = 0;

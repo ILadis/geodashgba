@@ -8,8 +8,10 @@ HitTrait_ResolveHit(HitTrait *trait, int dy) {
   center->y += dy;
 
   Cube *cube = trait->cube;
-  Cube_Launch(cube, -1);
   Cube_SetPosition(cube, center);
+
+  MoveTrait *move = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  move->body.velocity.y = 0;
 }
 
 static inline Raycast
@@ -140,11 +142,12 @@ HitTrait_Apply(
 Trait*
 HitTrait_BindTo(
     HitTrait *hit,
-    Cube *cube)
+    Cube *cube,
+    bool enabled)
 {
   Trait *trait = &hit->base;
   trait->self = hit;
-  trait->enabled = false;
+  trait->enabled = enabled;
   trait->type = TRAIT_TYPE_HIT;
   trait->Apply = HitTrait_Apply;
 

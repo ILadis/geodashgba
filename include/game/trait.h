@@ -16,24 +16,38 @@ typedef struct Trait {
   enum {
     TRAIT_TYPE_SPAWN,
     TRAIT_TYPE_MOVE,
+    TRAIT_TYPE_FLY,
     TRAIT_TYPE_ROTATE,
     TRAIT_TYPE_HIT,
     TRAIT_COUNT,
   } type;
+  void (*Enabled)(void *self, bool enabled);
   void (*Apply)(void *self, Course *course);
+  void (*Action)(void *self);
 } Trait;
 
 static inline void
-Trait_Apply(Trait *trait, Course *course) {
-  return trait->Apply(trait->self, course);
+Trait_SetEnabled(Trait *trait, bool enabled) {
+  bool changed = trait->enabled != enabled;
+  if (changed) {
+    trait->enabled = enabled;
+    if (trait->Enabled != NULL) {
+      trait->Enabled(trait->self, enabled);
+    }
+  }
 }
 
 static inline void
-Trait_ApplyAll(Trait **traits, Course *course) {
-  for (int index = 0; index < TRAIT_COUNT; index++) {
-    if (traits[index] != NULL) {
-      Trait_Apply(traits[index], course);
-    }
+Trait_Apply(Trait *trait, Course *course) {
+  if (trait->enabled) {
+    trait->Apply(trait->self, course);
+  }
+}
+
+static inline void
+Trait_Action(Trait *trait) {
+  if (trait->enabled && trait->Action != NULL) {
+    trait->Action(trait->self);
   }
 }
 
@@ -48,7 +62,8 @@ typedef struct HitTrait {
 Trait*
 HitTrait_BindTo(
     HitTrait *trait,
-    Cube *cube);
+    Cube *cube,
+    bool enabled);
 
 typedef struct MoveTrait {
   Trait base;
@@ -60,15 +75,13 @@ typedef struct MoveTrait {
 Trait*
 MoveTrait_BindTo(
     MoveTrait *trait,
-    Cube *cube);
+    Cube *cube,
+    bool enabled);
 
 void
 MoveTrait_Jump(
     MoveTrait *trait,
     int speed);
-
-void
-MoveTrait_HaltMovement(MoveTrait *trait);
 
 void
 MoveTrait_Launch(
@@ -81,6 +94,9 @@ MoveTrait_Accelerate(
     Direction direction,
     int speed);
 
+void
+MoveTrait_HaltMovement(MoveTrait *trait);
+
 typedef struct RotateTrait {
   Trait base;
   Cube *cube;
@@ -91,7 +107,8 @@ typedef struct RotateTrait {
 Trait*
 RotateTrait_BindTo(
     RotateTrait *trait,
-    Cube *cube);
+    Cube *cube,
+    bool enabled);
 
 typedef struct SpawnTrait {
   Trait base;
@@ -102,6 +119,24 @@ typedef struct SpawnTrait {
 Trait*
 SpawnTrait_BindTo(
     SpawnTrait *trait,
-    Cube *cube);
+    Cube *cube,
+    bool enabled);
+
+typedef struct FlyTrait {
+  Trait base;
+  Cube *cube;
+  Body *body;
+  struct {
+    const Dynamics *previous;
+    const Dynamics *current;
+  } dynamics;
+  int acceleration;
+} FlyTrait;
+
+Trait*
+FlyTrait_BindTo(
+    FlyTrait *trait,
+    Cube *cube,
+    bool enabled);
 
 #endif

@@ -44,6 +44,11 @@ Cube_AddTrait(Cube *cube, Trait *trait) {
   cube->traits[trait->type] = trait;
 }
 
+static inline void
+Cube_SetTraitEnabled(Cube *cube, int index, bool enabled) {
+  Trait_SetEnabled(cube->traits[index], enabled);
+}
+
 static inline int
 Cube_GetRotation(Cube *cube) {
   RotateTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_ROTATE);
@@ -133,10 +138,13 @@ Cube_ChangeDynamics(Cube *cube, const Dynamics *dynamics) {
   Body_SetDynamics(&trait->body, dynamics);
 }
 
-static inline void
-Cube_Update(Cube *cube, Course *course) {
-  Trait_ApplyAll(cube->traits, course);
-}
+void
+Cube_Update(
+    Cube *cube,
+    Course *course);
+
+void
+Cube_Action(Cube *cube);
 
 void
 Cube_Draw(

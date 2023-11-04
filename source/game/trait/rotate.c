@@ -13,10 +13,10 @@ RotateTrait_CalculateRotationVelocity(
   };
 
   MoveTrait move;
-  MoveTrait_BindTo(&move, &shadow);
+  MoveTrait_BindTo(&move, &shadow, true);
 
   HitTrait hit = {0};
-  HitTrait_BindTo(&hit, &shadow);
+  HitTrait_BindTo(&hit, &shadow, true);
 
   const Body *body = Cube_GetBody(cube);
   move.body = *body;
@@ -82,11 +82,12 @@ RotateTrait_Apply(
 Trait*
 RotateTrait_BindTo(
     RotateTrait *rotation,
-    Cube *cube)
+    Cube *cube,
+    bool enabled)
 {
   Trait *trait = &rotation->base;
   trait->self = rotation;
-  trait->enabled = false;
+  trait->enabled = enabled;
   trait->type = TRAIT_TYPE_ROTATE;
   trait->Apply = RotateTrait_Apply;
 

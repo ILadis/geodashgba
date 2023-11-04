@@ -7,14 +7,16 @@ Cube_GetInstance() {
 
   static SpawnTrait spawn = {0};
   static MoveTrait move = {0};
+  static FlyTrait fly = {0};
   static RotateTrait rotate = {0};
   static HitTrait hit = {0};
 
   if (cube.traits[0] == NULL) {
-    SpawnTrait_BindTo(&spawn, &cube);
-    MoveTrait_BindTo(&move, &cube);
-    RotateTrait_BindTo(&rotate, &cube);
-    HitTrait_BindTo(&hit, &cube);
+    SpawnTrait_BindTo(&spawn, &cube, true);
+    MoveTrait_BindTo(&move, &cube, true);
+    FlyTrait_BindTo(&fly, &cube, false);
+    RotateTrait_BindTo(&rotate, &cube, true);
+    HitTrait_BindTo(&hit, &cube, true);
   }
 
   return &cube;
@@ -30,8 +32,28 @@ Cube_Reset(Cube *cube) {
   cube->state.current = STATE_UNKNOWN;
   cube->state.previous = STATE_UNKNOWN;
 
+  Cube_SetTraitEnabled(cube, TRAIT_TYPE_SPAWN, true);
+  Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
+  Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
+  Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
+  Cube_SetTraitEnabled(cube, TRAIT_TYPE_HIT, true);
+
   cube->success = false;
   cube->sprite = NULL;
+}
+
+void
+Cube_Update(Cube *cube, Course *course) {
+  for (unsigned int i = 0; i < length(cube->traits); i++) {
+    Trait_Apply(cube->traits[i], course);
+  }
+}
+
+void
+Cube_Action(Cube *cube) {
+  for (unsigned int i = 0; i < length(cube->traits); i++) {
+    Trait_Action(cube->traits[i]);
+  }
 }
 
 static inline GBA_Sprite*

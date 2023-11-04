@@ -50,11 +50,40 @@ Object_HitPad(
   return true;
 }
 
-static const GBA_TileMapRef pad = {
-  .width = 2, .height = 1,
-  .tiles = (GBA_Tile[]) {
-    { .tileId = 3, .vFlip = 0, .hFlip = 0 },
-    { .tileId = 3, .vFlip = 0, .hFlip = 1 },
+static const GBA_TileMapRef pad[] = {
+  // pad
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 112, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 114, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 120, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 122, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  // pad frames
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 113, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 115, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 121, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 123, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 114, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 112, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 122, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 120, .vFlip = 0, .hFlip = 1 },
+    }
+  },
+  { .width = 2, .height = 2,
+    .tiles = (GBA_Tile[]) {
+      { .tileId = 115, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 113, .vFlip = 0, .hFlip = 1 },
+      { .tileId = 123, .vFlip = 0, .hFlip = 0 },
+      { .tileId = 121, .vFlip = 0, .hFlip = 1 },
+    }
   }
 };
 
@@ -68,5 +97,24 @@ Object_DrawPad(
   int tx = position.x / 8;
   int ty = position.y / 8;
 
-  GBA_TileMapRef_Blit(target, tx, ty, &pad);
+  GBA_TileMapRef_Blit(target, tx, ty, &pad[0]);
+}
+
+bool
+Object_AnimatePad(
+    Object *object,
+    GBA_TileMapRef *target,
+    int frame)
+{
+  int index = Math_mod2(frame >> 3, 2);
+
+  Vector position = Bounds_Lower(&object->viewbox);
+
+  int tx = position.x / 8;
+  int ty = position.y / 8;
+
+  const GBA_TileMapRef *tiles = &pad[index];
+  GBA_TileMapRef_Blit(target, tx, ty, tiles);
+
+  return true;
 }

@@ -91,10 +91,12 @@ Object_Animate(
     int frame)
 {
   extern bool Object_AnimateBoxWithPole(Object *object, GBA_TileMapRef *target, int frame);
+  extern bool Object_AnimatePad(Object *object, GBA_TileMapRef *target, int frame);
   extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target, int frame);
 
   bool (*const animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
     [TYPE_BOX_WITH_POLE] = Object_AnimateBoxWithPole,
+    [TYPE_PAD] = Object_AnimatePad,
     [TYPE_COIN] = Object_AnimateCoin,
   };
 

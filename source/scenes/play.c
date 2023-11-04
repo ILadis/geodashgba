@@ -54,7 +54,19 @@ Scene_DoPlay() {
   Progress *progress = Progress_GetInstance();
 
   if (GBA_Input_IsPressed(GBA_KEY_A)) {
-    Cube_Jump(cube, 1400);
+    Cube_Action(cube);
+  }
+
+  if (GBA_Input_IsPressed(GBA_KEY_UP)) {
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
+  }
+
+  if (GBA_Input_IsPressed(GBA_KEY_DOWN)) {
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, true);
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, false);
+    Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, false);
   }
 
   if (GBA_Input_IsHit(GBA_KEY_R)) {

@@ -63,6 +63,9 @@ SpawnTrait_Apply(
       else {
         Cube_SetPosition(cube, spawn);
         Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+        Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
+        Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
+        Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
         Course_ResetTo(course, spawn);
       }
     }
@@ -72,11 +75,12 @@ SpawnTrait_Apply(
 Trait*
 SpawnTrait_BindTo(
     SpawnTrait *spawn,
-    Cube *cube)
+    Cube *cube,
+    bool enabled)
 {
   Trait *trait = &spawn->base;
   trait->self = spawn;
-  trait->enabled = false;
+  trait->enabled = enabled;
   trait->type = TRAIT_TYPE_SPAWN;
   trait->Apply = SpawnTrait_Apply;
 

@@ -530,6 +530,11 @@ GBA_Sprite_SetRotation(
     int alpha);
 
 void
+GBA_Sprite_SetTileId(
+    GBA_Sprite *sprite,
+    int tileId);
+
+void
 GBA_Sprite_SetVFlip(
     GBA_Sprite *sprite,
     bool flip);
