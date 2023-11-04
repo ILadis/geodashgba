@@ -4,9 +4,9 @@
 #include <game/particle.h>
 #include <game/checkpoint.h>
 
-void
-Cube_ApplySpawn(
-    Cube *cube,
+static void
+SpawnTrait_Apply(
+    void *self,
     Course *course)
 {
   static const Dynamics dynamics = {
@@ -14,6 +14,9 @@ Cube_ApplySpawn(
     .gravity  = { 0, 0 },
     .limits   = { 5000, 5000 },
   };
+
+  SpawnTrait *trait = self;
+  Cube *cube = trait->cube;
 
   const Vector *spawn = Course_GetSpawn(course);
 
@@ -29,7 +32,7 @@ Cube_ApplySpawn(
   }
 
   if (Cube_EnteredState(cube, STATE_DESTROYED)) {
-    cube->timer = 90;
+    trait->timer = 90;
     if (!cube->success) {
       Course_IncreaseAttempts(course);
 
@@ -50,7 +53,7 @@ Cube_ApplySpawn(
     }
   }
   else if (Cube_InState(cube, STATE_DESTROYED)) {
-    int timer = --cube->timer;
+    int timer = --trait->timer;
     if (timer == 0) {
       if (cube->success) {
         extern const Scene *entry;
@@ -64,4 +67,23 @@ Cube_ApplySpawn(
       }
     }
   }
+}
+
+Trait*
+SpawnTrait_BindTo(
+    SpawnTrait *spawn,
+    Cube *cube)
+{
+  Trait *trait = &spawn->base;
+  trait->self = spawn;
+  trait->enabled = false;
+  trait->type = TRAIT_TYPE_SPAWN;
+  trait->Apply = SpawnTrait_Apply;
+
+  spawn->cube = cube;
+  spawn->timer = 0;
+
+  Cube_AddTrait(cube, trait);
+
+  return trait;
 }

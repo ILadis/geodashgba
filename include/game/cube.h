@@ -4,11 +4,11 @@
 #include <gba.h>
 #include <math.h>
 #include <vector.h>
-#include <hit.h>
 
 #include <game/camera.h>
 #include <game/body.h>
 #include <game/course.h>
+#include <game/trait.h>
 
 typedef enum State {
   STATE_UNKNOWN,
@@ -19,14 +19,12 @@ typedef enum State {
 } State;
 
 typedef struct Cube {
-  Body body;
-  Bounds hitbox;
-  struct { State current, previous; } state;
-  struct { int angle, velocity; } rotation;
-  int launch, timer;
   bool success;
-  Vector vertices[4];
-  Shape shape;
+  struct {
+    State current;
+    State previous;
+  } state;
+  Trait *traits[TRAIT_COUNT];
   GBA_Sprite *sprite;
 } Cube;
 
@@ -36,15 +34,39 @@ Cube_GetInstance();
 void
 Cube_Reset(Cube *cube);
 
-static inline const Vector*
-Cube_GetPosition(Cube *cube) {
-  return &cube->hitbox.center;
+static inline void*
+Cube_GetTrait(Cube *cube, int index) {
+  return cube->traits[index]->self;
 }
 
-void
-Cube_SetPosition(
-    Cube *cube,
-    const Vector *position);
+static inline void
+Cube_AddTrait(Cube *cube, Trait *trait) {
+  cube->traits[trait->type] = trait;
+}
+
+static inline int
+Cube_GetRotation(Cube *cube) {
+  RotateTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_ROTATE);
+  return trait->angle;
+}
+
+static inline const Body*
+Cube_GetBody(Cube *cube) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  return &trait->body;
+}
+
+static inline const Vector*
+Cube_GetPosition(Cube *cube) {
+  HitTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_HIT);
+  return &trait->hitbox.center;
+}
+
+static inline void
+Cube_SetPosition(Cube *cube, const Vector *position) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  Body_SetPosition(&trait->body, position->x << 8, position->y << 8);
+}
 
 static inline bool
 Cube_EnteredState(Cube *cube, State state) {
@@ -56,32 +78,65 @@ Cube_InState(Cube *cube, State state) {
   return cube->state.current == state;
 }
 
-static inline bool
-Cube_IsMoving(Cube *cube) {
-  return cube->body.velocity.x != 0
-      || cube->body.velocity.y != 0;
+static inline void
+Cube_SetState(Cube *cube, State state) {
+  cube->state.current = state;
+  cube->success |= state == STATE_VICTORY;
 }
 
-void
-Cube_Jump(
-    Cube *cube,
-    int speed);
+static inline void
+Cube_ShiftState(Cube *cube) {
+  cube->state.previous = cube->state.current;
+}
 
-void
-Cube_Launch(
-    Cube *cube,
-    int speed);
+static inline bool
+Cube_IsMoving(Cube *cube) {
+  const Body *body = Cube_GetBody(cube);
+  return body->velocity.x != 0
+      || body->velocity.y != 0;
+}
 
-void
-Cube_Accelerate(
-    Cube *cube,
-    Direction direction,
-    int speed);
+static inline bool
+Cube_IsShadowShape(Shape *shape) {
+  Cube *cube = Cube_GetInstance();
+  HitTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_HIT);
+  return &trait->shape != shape;
+}
 
-void
-Cube_Update(
-    Cube *cube,
-    Course *course);
+static inline void
+Cube_Jump(Cube *cube, int speed) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  MoveTrait_Jump(trait, speed);
+}
+
+static inline void
+Cube_Launch(Cube *cube, int speed) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  MoveTrait_Launch(trait, speed);
+}
+
+static inline void
+Cube_Accelerate(Cube *cube, Direction direction, int speed) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  MoveTrait_Accelerate(trait, direction, speed);
+}
+
+static inline void
+Cube_HaltMovement(Cube *cube) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  MoveTrait_HaltMovement(trait);
+}
+
+static inline void
+Cube_ChangeDynamics(Cube *cube, const Dynamics *dynamics) {
+  MoveTrait *trait = Cube_GetTrait(cube, TRAIT_TYPE_MOVE);
+  Body_SetDynamics(&trait->body, dynamics);
+}
+
+static inline void
+Cube_Update(Cube *cube, Course *course) {
+  Trait_ApplyAll(cube->traits, course);
+}
 
 void
 Cube_Draw(

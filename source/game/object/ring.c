@@ -37,14 +37,15 @@ Object_HitRing(
     return true;
   }
 
-  Cube *cube = Cube_GetInstance();
   // TODO workaround to prevent shadow from triggering rings
-  if (&cube->shape != shape) {
+  if (Cube_IsShadowShape(shape)) {
     return true;
   }
 
   if (GBA_Input_IsHit(GBA_KEY_A)) {
     props->triggered = true;
+
+    Cube *cube = Cube_GetInstance();
     Cube_Launch(cube, 1400);
   }
 

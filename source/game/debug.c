@@ -62,10 +62,11 @@ Debug_DrawHitboxes() {
   Camera *camera = Camera_GetInstance();
 
   Cube *cube = Cube_GetInstance();
-  Bounds *hitbox = &cube->hitbox;
+  HitTrait *hit = Cube_GetTrait(cube, TRAIT_TYPE_HIT);
+  Bounds *hitbox = &hit->hitbox;
   Debug_DrawHitbox(camera, hitbox, blue);
 
-  Shape shape = Shape_Of(cube->vertices);
+  Shape shape = Shape_Of(hit->vertices);
   Debug_DrawShape(camera, &shape, red);
 
   Course *course = Course_GetInstance();

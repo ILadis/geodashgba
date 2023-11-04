@@ -9,7 +9,7 @@ typedef struct Properties {
 bool
 Object_CreatePortal(Object *object) {
   Bounds hitbox  = Bounds_Of(12, 24, 12, 24);
-  Bounds viewbox  = Bounds_Of(12, 24, 12, 24);
+  Bounds viewbox = Bounds_Of(12, 24, 12, 24);
 
   object->hitbox  = hitbox;
   object->viewbox = viewbox;
@@ -37,18 +37,18 @@ Object_HitPortal(
     return true;
   }
 
-  Cube *cube = Cube_GetInstance();
   // TODO workaround to prevent shadow from triggering portals
-  if (&cube->shape != shape) {
+  if (Cube_IsShadowShape(shape)) {
     return true;
   }
 
   props->triggered = true;
 
-  Body *body = &cube->body;
+  Cube *cube = Cube_GetInstance();
+  const Body *body = Cube_GetBody(cube);
   dynamics = Dynamics_OfInverseGravity(body->dynamics);
 
-  Body_SetDynamics(body, &dynamics);
+  Cube_ChangeDynamics(cube, &dynamics);
 
   return true;
 }

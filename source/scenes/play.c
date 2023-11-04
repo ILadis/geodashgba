@@ -24,6 +24,7 @@ Scene_DoEnter() {
 
   Camera *camera = Camera_GetInstance();
   Cube *cube = Cube_GetInstance();
+  Cube_Reset(cube);
 
   const Vector *position = Cube_GetPosition(cube);
   Camera_FollowTarget(camera, position);

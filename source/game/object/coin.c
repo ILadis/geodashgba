@@ -37,9 +37,8 @@ Object_HitCoin(
 {
   Properties *props = Object_GetProperties(object);
 
-  Cube *cube = Cube_GetInstance();
   // TODO workaround to prevent shadow from collecting coins
-  if (&cube->shape != shape) {
+  if (Cube_IsShadowShape(shape)) {
     return true;
   }
 

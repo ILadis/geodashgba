@@ -10,7 +10,7 @@ typedef struct Properties {
 bool
 Object_CreatePad(Object *object) {
   Bounds hitbox  = Bounds_Of(8, 4, 4, 4);
-  Bounds viewbox = Bounds_Of(8, 4, 8, 4);
+  Bounds viewbox = Bounds_Of(8, 0, 8, 8);
 
   object->hitbox  = hitbox;
   object->viewbox = viewbox;
@@ -37,13 +37,14 @@ Object_HitPad(
     return true;
   }
 
-  Cube *cube = Cube_GetInstance();
   // TODO workaround to prevent shadow from triggering pads
-  if (&cube->shape != shape) {
+  if (Cube_IsShadowShape(shape)) {
     return true;
   }
 
   props->triggered = true;
+
+  Cube *cube = Cube_GetInstance();
   Cube_Launch(cube, 1800);
 
   return true;

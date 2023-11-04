@@ -4,57 +4,34 @@
 Cube*
 Cube_GetInstance() {
   static Cube cube = {0};
+
+  static SpawnTrait spawn = {0};
+  static MoveTrait move = {0};
+  static RotateTrait rotate = {0};
+  static HitTrait hit = {0};
+
+  if (cube.traits[0] == NULL) {
+    SpawnTrait_BindTo(&spawn, &cube);
+    MoveTrait_BindTo(&move, &cube);
+    RotateTrait_BindTo(&rotate, &cube);
+    HitTrait_BindTo(&hit, &cube);
+  }
+
   return &cube;
 }
 
 void
 Cube_Reset(Cube *cube) {
-  const Cube empty = {0};
-
   GBA_Sprite *sprite = cube->sprite;
   if (sprite != NULL) {
     GBA_Sprite_Release(sprite);
   }
 
-  *cube = empty;
-}
-
-void
-Cube_SetPosition(
-    Cube *cube,
-    const Vector *position)
-{
-  Body *body = &cube->body;
-
-  static const Dynamics dynamics = {
-    .friction = { 60, 0 },
-    .gravity  = { 0, 90 },
-    .limits   = { 600, 3000 },
-  };
-
-  // body is using 8w fixed-point integer
-  Body_SetDynamics(body, &dynamics);
-  Body_SetPosition(body, position->x << 8, position->y << 8);
-
-  cube->shape = Shape_Of(cube->vertices);
-  cube->hitbox = Bounds_Of(position->x, position->y, 8, 8);
   cube->state.current = STATE_UNKNOWN;
-}
+  cube->state.previous = STATE_UNKNOWN;
 
-void
-Cube_Update(
-    Cube *cube,
-    Course *course)
-{
-  extern void Cube_ApplyMovement(Cube *cube);
-  extern void Cube_ApplySpawn(Cube *cube, Course *course);
-  extern void Cube_ApplyRotation(Cube *cube, Course *course);
-  extern void Cube_ApplyHit(Cube *cube, Course *course);
-
-  Cube_ApplySpawn(cube, course);
-  Cube_ApplyMovement(cube);
-  Cube_ApplyRotation(cube, course);
-  Cube_ApplyHit(cube, course);
+  cube->success = false;
+  cube->sprite = NULL;
 }
 
 static inline GBA_Sprite*
@@ -96,12 +73,15 @@ Cube_Draw(
     GBA_Sprite_SetObjMode(sprite, GBA_SPRITE_MODE_HIDE);
   }
   else {
-    int rotation = cube->rotation.angle;
-    int gravity = Math_signum(cube->body.dynamics->gravity.y);
+    const Body *body = Cube_GetBody(cube);
+    int rotation = Cube_GetRotation(cube);
+    int gravity = Math_signum(body->dynamics->gravity.y);
+
+    const Vector *center = Cube_GetPosition(cube);
 
     Vector position = {
-      .x = cube->hitbox.center.x - 16,
-      .y = cube->hitbox.center.y - (16 + gravity), // draw 1px higher because of contact with ground
+      .x = center->x - 16,
+      .y = center->y - (16 + gravity), // draw 1px higher because of contact with ground
     };
 
     Camera_RelativeTo(camera, &position);
