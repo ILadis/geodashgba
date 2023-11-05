@@ -29,7 +29,7 @@ Object_CreatePit(
 
   object->solid = true;
   object->deadly = true;
-  object->type = TYPE_PIT;
+  object->type = OBJECT_TYPE_PIT;
 
   Properties *props = Object_GetProperties(object);
   props->width = width;

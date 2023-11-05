@@ -17,7 +17,7 @@ Object_CreatePad(Object *object) {
 
   object->solid = false;
   object->deadly = false;
-  object->type = TYPE_PAD;
+  object->type = OBJECT_TYPE_PAD;
 
   Properties *props = Object_GetProperties(object);
   props->triggered = false;

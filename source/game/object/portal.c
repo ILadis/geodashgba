@@ -4,10 +4,17 @@
 
 typedef struct Properties {
   bool triggered;
+  enum packed {
+    PORTAL_VARIANT_FLIP_GRAVITY = 1,
+    PORTAL_VARIANT_TOGGLE_FLY = 2,
+  } variant;
 } align4 Properties;
 
-bool
-Object_CreatePortal(Object *object) {
+static inline bool
+Object_CreatePortal(
+    Object *object,
+    int variant)
+{
   Bounds hitbox  = Bounds_Of(12, 24, 12, 24);
   Bounds viewbox = Bounds_Of(12, 24, 12, 24);
 
@@ -16,12 +23,23 @@ Object_CreatePortal(Object *object) {
 
   object->solid = false;
   object->deadly = false;
-  object->type = TYPE_PORTAL;
+  object->type = OBJECT_TYPE_PORTAL;
 
   Properties *props = Object_GetProperties(object);
   props->triggered = false;
+  props->variant = variant;
 
   return true;
+}
+
+bool
+Object_CreateGravityPortal(Object *object) {
+  return Object_CreatePortal(object, PORTAL_VARIANT_FLIP_GRAVITY);
+}
+
+bool
+Object_CreateFlyPortal(Object *object) {
+  return Object_CreatePortal(object, PORTAL_VARIANT_TOGGLE_FLY);
 }
 
 bool
@@ -45,10 +63,25 @@ Object_HitPortal(
   props->triggered = true;
 
   Cube *cube = Cube_GetInstance();
-  const Body *body = Cube_GetBody(cube);
-  dynamics = Dynamics_OfInverseGravity(body->dynamics);
 
-  Cube_ChangeDynamics(cube, &dynamics);
+  switch (props->variant) {
+  case PORTAL_VARIANT_FLIP_GRAVITY:
+    const Body *body = Cube_GetBody(cube);
+    dynamics = Dynamics_OfInverseGravity(body->dynamics);
+    Cube_ChangeDynamics(cube, &dynamics);
+    break;
+  case PORTAL_VARIANT_TOGGLE_FLY:
+    if (Cube_IsTraitEnabled(cube, TRAIT_TYPE_FLY)) {
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
+    } else {
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, true);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, false);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, false);
+    }
+    break;
+  }
 
   return true;
 }

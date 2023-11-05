@@ -84,7 +84,7 @@ Debug_DrawHitboxes() {
     Bounds *hitbox = &object->hitbox;
     Debug_DrawHitbox(camera, hitbox, green);
 
-    if (object->type == TYPE_SPIKE) {
+    if (object->type == OBJECT_TYPE_SPIKE) {
       Vector *vertices = (Vector *) &object->properties[4];
       Shape shape = { .length = 3, .vertices = vertices };
       Debug_DrawShape(camera, &shape, red);
@@ -101,7 +101,7 @@ Debug_DrawHitboxes() {
     Bounds *hitbox = &object->hitbox;
     Debug_DrawHitbox(camera, hitbox, green);
 
-    if (object->type == TYPE_SPIKE) {
+    if (object->type == OBJECT_TYPE_SPIKE) {
       Vector *vertices = (Vector *) &object->properties[4];
       Shape shape = { .length = 3, .vertices = vertices };
       Debug_DrawShape(camera, &shape, red);

@@ -53,7 +53,7 @@ Object_CreateSpike(
 
   object->solid = true;
   object->deadly = true;
-  object->type = TYPE_SPIKE;
+  object->type = OBJECT_TYPE_SPIKE;
 
   Properties *props = Object_GetProperties(object);
   props->direction = direction;
@@ -78,7 +78,7 @@ Object_CreateTinySpike(Object *object) {
 
   object->solid = true;
   object->deadly = true;
-  object->type = TYPE_SPIKE;
+  object->type = OBJECT_TYPE_SPIKE;
 
   Properties *props = Object_GetProperties(object);
   props->direction = 0;

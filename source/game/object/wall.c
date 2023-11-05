@@ -24,7 +24,7 @@ Object_CreateGoalWall(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_GOAL_WALL;
+  object->type = OBJECT_TYPE_GOAL_WALL;
 
   Properties *props = Object_GetProperties(object);
   props->height = height;

@@ -414,6 +414,26 @@ AsciiLevel_AddCoin(AsciiLevel *level) {
 }
 
 static void
+AsciiLevel_AddPortal(AsciiLevel *level) {
+  Vector cursor = level->cursor;
+
+  char symbol;
+  if (AsciiLevel_NextSymbol(level, DIRECTION_UP, &symbol)) {
+    level->cursor = cursor;
+    switch (symbol) {
+    case 'g':
+      AsciiLevel_AddObject(level, Vector_Of(0, -4), Object_CreateGravityPortal);
+      break;
+    case 'f':
+      AsciiLevel_AddObject(level, Vector_Of(0, -4), Object_CreateFlyPortal);
+      break;
+    }
+  }
+
+  level->cursor = cursor;
+}
+
+static void
 AsciiLevel_AddGoalWall(AsciiLevel *level) {
   Object object = {0};
   Vector offset = Vector_Of(+1, 0);
@@ -594,7 +614,7 @@ AsciiLevel_GetChunk(
         AsciiLevel_AddCoin(level);
         break;
       case 'C':
-        AsciiLevel_AddObject(level, Vector_Of(0, -4), Object_CreatePortal);
+        AsciiLevel_AddPortal(level);
         break;
       case '^':
         AsciiLevel_AddSpike(level, DIRECTION_UP);

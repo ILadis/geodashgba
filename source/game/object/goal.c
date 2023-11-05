@@ -11,7 +11,7 @@ Object_CreateGoal(Object *object) {
 
   object->solid = false;
   object->deadly = false;
-  object->type = TYPE_GOAL;
+  object->type = OBJECT_TYPE_GOAL;
 
   return true;
 }

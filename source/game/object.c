@@ -12,12 +12,12 @@ Object_IsHit(
   extern bool Object_HitCoin(Object *object, Shape *shape);
   extern bool Object_HitPortal(Object *object, Shape *shape);
 
-  bool (*const hit[TYPE_COUNT])(Object *object, Shape *shape) = {
-    [TYPE_SPIKE] = Object_HitSpike,
-    [TYPE_PAD] = Object_HitPad,
-    [TYPE_RING] = Object_HitRing,
-    [TYPE_COIN] = Object_HitCoin,
-    [TYPE_PORTAL] = Object_HitPortal,
+  bool (*const hit[OBJECT_TYPE_COUNT])(Object *object, Shape *shape) = {
+    [OBJECT_TYPE_SPIKE] = Object_HitSpike,
+    [OBJECT_TYPE_PAD] = Object_HitPad,
+    [OBJECT_TYPE_RING] = Object_HitRing,
+    [OBJECT_TYPE_COIN] = Object_HitCoin,
+    [OBJECT_TYPE_PORTAL] = Object_HitPortal,
   };
 
   if (hit[object->type] != NULL) {
@@ -34,8 +34,8 @@ Object_Move(
 {
   extern void Object_MoveSpike(Object *object, Vector *position);
 
-  void (*const move[TYPE_COUNT])(Object *object, Vector *position) = {
-    [TYPE_SPIKE] = Object_MoveSpike,
+  void (*const move[OBJECT_TYPE_COUNT])(Object *object, Vector *position) = {
+    [OBJECT_TYPE_SPIKE] = Object_MoveSpike,
   };
 
   object->hitbox.center.x  += position->x * 8;
@@ -65,18 +65,18 @@ Object_Draw(
   extern void Object_DrawPortal(Object *object, GBA_TileMapRef *target);
   extern void Object_DrawGoalWall(Object *object, GBA_TileMapRef *target);
 
-  void (*const draw[TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
-    [TYPE_DISK] = Object_DrawDisk,
-    [TYPE_BOX] = Object_DrawBox,
-    [TYPE_BOX_WITH_POLE] = Object_DrawBoxWithPole,
-    [TYPE_BOX_WITH_CHAINS] = Object_DrawBoxWithChains,
-    [TYPE_PIT] = Object_DrawPit,
-    [TYPE_SPIKE] = Object_DrawSpike,
-    [TYPE_PAD] = Object_DrawPad,
-    [TYPE_RING] = Object_DrawRing,
-    [TYPE_COIN] = Object_DrawCoin,
-    [TYPE_PORTAL] = Object_DrawPortal,
-    [TYPE_GOAL_WALL] = Object_DrawGoalWall,
+  void (*const draw[OBJECT_TYPE_COUNT])(Object *object, GBA_TileMapRef *target) = {
+    [OBJECT_TYPE_DISK] = Object_DrawDisk,
+    [OBJECT_TYPE_BOX] = Object_DrawBox,
+    [OBJECT_TYPE_BOX_WITH_POLE] = Object_DrawBoxWithPole,
+    [OBJECT_TYPE_BOX_WITH_CHAINS] = Object_DrawBoxWithChains,
+    [OBJECT_TYPE_PIT] = Object_DrawPit,
+    [OBJECT_TYPE_SPIKE] = Object_DrawSpike,
+    [OBJECT_TYPE_PAD] = Object_DrawPad,
+    [OBJECT_TYPE_RING] = Object_DrawRing,
+    [OBJECT_TYPE_COIN] = Object_DrawCoin,
+    [OBJECT_TYPE_PORTAL] = Object_DrawPortal,
+    [OBJECT_TYPE_GOAL_WALL] = Object_DrawGoalWall,
   };
 
   if (draw[object->type] != NULL) {
@@ -94,10 +94,10 @@ Object_Animate(
   extern bool Object_AnimatePad(Object *object, GBA_TileMapRef *target, int frame);
   extern bool Object_AnimateCoin(Object *object, GBA_TileMapRef *target, int frame);
 
-  bool (*const animate[TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
-    [TYPE_BOX_WITH_POLE] = Object_AnimateBoxWithPole,
-    [TYPE_PAD] = Object_AnimatePad,
-    [TYPE_COIN] = Object_AnimateCoin,
+  bool (*const animate[OBJECT_TYPE_COUNT])(Object *object, GBA_TileMapRef *target, int frame) = {
+    [OBJECT_TYPE_BOX_WITH_POLE] = Object_AnimateBoxWithPole,
+    [OBJECT_TYPE_PAD] = Object_AnimatePad,
+    [OBJECT_TYPE_COIN] = Object_AnimateCoin,
   };
 
   if (animate[object->type] != NULL) {

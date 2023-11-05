@@ -68,7 +68,7 @@ HitTrait_Callback(
   Shape *shape = &trait->shape;
   if (!Object_IsHit(object, shape)) return;
 
-  if (object->type == TYPE_GOAL) {
+  if (object->type == OBJECT_TYPE_GOAL) {
     Cube_SetState(cube, STATE_VICTORY);
   }
 

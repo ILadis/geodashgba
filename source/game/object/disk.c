@@ -25,7 +25,7 @@ Object_CreateDisk(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_DISK;
+  object->type = OBJECT_TYPE_DISK;
 
   Properties *props = Object_GetProperties(object);
   props->offset = false;
@@ -59,7 +59,7 @@ Object_CreateOffsetDisk(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_DISK;
+  object->type = OBJECT_TYPE_DISK;
 
   Properties *props = Object_GetProperties(object);
   props->offset = true;

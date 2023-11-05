@@ -126,11 +126,11 @@ typedef struct FlyTrait {
   Trait base;
   Cube *cube;
   Body *body;
-  struct {
-    const Dynamics *previous;
-    const Dynamics *current;
-  } dynamics;
   int acceleration;
+  struct {
+    const Dynamics *dynamics;
+    Vector limits;
+  } restore;
 } FlyTrait;
 
 Trait*

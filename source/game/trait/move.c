@@ -43,6 +43,7 @@ MoveTrait_Accelerate(
   int ay = speed * vector->y;
 
   Body *body = &trait->body;
+  Body_SetVelocity(body, 0, 0);
   Body_SetAcceleration(body, ax, ay);
   Body_SetDynamics(body, &dynamics);
 }

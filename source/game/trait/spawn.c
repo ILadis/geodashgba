@@ -66,7 +66,12 @@ SpawnTrait_Apply(
         Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
         Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
         Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
-        Course_ResetTo(course, spawn);
+
+        Camera *camera = Camera_GetInstance();
+        Camera_Update(camera);
+
+        const Vector *position = Camera_GetPosition(camera);
+        Course_ResetTo(course, position);
       }
     }
   }

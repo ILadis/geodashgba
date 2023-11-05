@@ -17,7 +17,7 @@ Object_CreateRing(Object *object) {
 
   object->solid = false;
   object->deadly = false;
-  object->type = TYPE_RING;
+  object->type = OBJECT_TYPE_RING;
 
   Properties *props = Object_GetProperties(object);
   props->triggered = false;

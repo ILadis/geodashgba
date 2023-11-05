@@ -46,6 +46,11 @@ Camera_SetUpperLimit(
     Camera *camera,
     const Vector *limit)
 {
+  /* Adjust limit to the top-left edge. This is necessary because the
+   * camera position is also stored as the top-left edge. The limit
+   * provided here represents the bottom-right position that should
+   * not be exceeded.
+   */
   camera->limit.upper.x = limit->x - camera->viewport.size.x * 2;
   camera->limit.upper.y = limit->y - camera->viewport.size.y * 2;
 }

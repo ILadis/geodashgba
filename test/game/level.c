@@ -176,7 +176,7 @@ test(GetChunk_ShouldCreatePitsAtExpectedPositions) {
 
   // assert
   assert(chunk.count == 1);
-  assert(chunk.objects[0].type = TYPE_PIT);
+  assert(chunk.objects[0].type = OBJECT_TYPE_PIT);
   assert(chunk.objects[0].hitbox.center.x == 56);
   assert(chunk.objects[0].hitbox.center.y == 46 + offset);
 }
@@ -200,16 +200,16 @@ test(GetChunk_ShouldCreateRingsAndSpikesAtExpectedPositions) {
 
   // assert
   assert(chunk.count == 4);
-  assert(chunk.objects[0].type = TYPE_SPIKE);
+  assert(chunk.objects[0].type = OBJECT_TYPE_SPIKE);
   assert(chunk.objects[0].hitbox.center.x == 200);
   assert(chunk.objects[0].hitbox.center.y == 44 + offset);
-  assert(chunk.objects[1].type = TYPE_SPIKE);
+  assert(chunk.objects[1].type = OBJECT_TYPE_SPIKE);
   assert(chunk.objects[1].hitbox.center.x == 216);
   assert(chunk.objects[1].hitbox.center.y == 44 + offset);
-  assert(chunk.objects[2].type = TYPE_RING);
+  assert(chunk.objects[2].type = OBJECT_TYPE_RING);
   assert(chunk.objects[2].hitbox.center.x == 232);
   assert(chunk.objects[2].hitbox.center.y == 24 + offset);
-  assert(chunk.objects[3].type = TYPE_SPIKE);
+  assert(chunk.objects[3].type = OBJECT_TYPE_SPIKE);
   assert(chunk.objects[3].hitbox.center.x == 232);
   assert(chunk.objects[3].hitbox.center.y == 44 + offset);
 }
@@ -233,7 +233,7 @@ test(GetChunk_ShouldCreateBoxWithPoleAtExpectedPosition) {
 
   // assert
   assert(chunk.count == 1);
-  assert(chunk.objects[0].type = TYPE_BOX_WITH_POLE);
+  assert(chunk.objects[0].type = OBJECT_TYPE_BOX_WITH_POLE);
   assert(chunk.objects[0].hitbox.center.x == 56);
   assert(chunk.objects[0].hitbox.center.y == 32 + offset);
 }
@@ -257,19 +257,19 @@ test(GetChunk_ShouldCreateBoxesAtExpectedPositions) {
 
   // assert
   assert(chunk.count == 5);
-  assert(chunk.objects[0].type = TYPE_BOX);
+  assert(chunk.objects[0].type = OBJECT_TYPE_BOX);
   assert(chunk.objects[0].hitbox.center.x ==   8);
   assert(chunk.objects[0].hitbox.center.y ==   8 + offset);
-  assert(chunk.objects[1].type = TYPE_BOX);
+  assert(chunk.objects[1].type = OBJECT_TYPE_BOX);
   assert(chunk.objects[1].hitbox.center.x ==   8);
   assert(chunk.objects[1].hitbox.center.y ==  40 + offset);
-  assert(chunk.objects[2].type = TYPE_BOX);
+  assert(chunk.objects[2].type = OBJECT_TYPE_BOX);
   assert(chunk.objects[2].hitbox.center.x ==  56);
   assert(chunk.objects[2].hitbox.center.y ==  24 + offset);
-  assert(chunk.objects[3].type = TYPE_BOX);
+  assert(chunk.objects[3].type = OBJECT_TYPE_BOX);
   assert(chunk.objects[3].hitbox.center.x == 104);
   assert(chunk.objects[3].hitbox.center.y ==   8 + offset);
-  assert(chunk.objects[4].type = TYPE_BOX);
+  assert(chunk.objects[4].type = OBJECT_TYPE_BOX);
   assert(chunk.objects[4].hitbox.center.x == 104);
   assert(chunk.objects[4].hitbox.center.y ==  40 + offset);
 }

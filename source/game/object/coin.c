@@ -21,7 +21,7 @@ Object_CreateCoin(
 
   object->solid = false;
   object->deadly = false;
-  object->type = TYPE_COIN;
+  object->type = OBJECT_TYPE_COIN;
 
   Properties *props = Object_GetProperties(object);
   props->index = index;

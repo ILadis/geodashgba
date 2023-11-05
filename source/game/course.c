@@ -34,7 +34,7 @@ Course_CalculateBounds(Course *course) {
   const Bounds *last = Chunk_GetBounds(&chunk);
 
   int dx = 0, dy = 16;
-  Object *wall = Chunk_FindObjectByType(&chunk, TYPE_GOAL_WALL);
+  Object *wall = Chunk_FindObjectByType(&chunk, OBJECT_TYPE_GOAL_WALL);
   if (wall != NULL) {
     Vector upper1 = Bounds_Upper(last);
     Vector upper2 = Bounds_Upper(&wall->hitbox);

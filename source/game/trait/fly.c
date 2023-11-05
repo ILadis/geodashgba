@@ -17,28 +17,52 @@ FlyTrait_Enabled(
   };
 
   Cube *cube = trait->cube;
+  Camera *camera = Camera_GetInstance();
 
   if (enabled) {
     trait->acceleration = body->acceleration.x;
-    trait->dynamics.previous = body->dynamics;
-    trait->dynamics.current = &dynamics;
+    trait->restore.dynamics = body->dynamics;
+    trait->restore.limits = camera->limit.upper;
 
     Body_SetDynamics(body, &dynamics);
     GBA_Sprite_SetTileId(cube->sprite, 18);
   } else {
-    Body_SetDynamics(body, trait->dynamics.previous);
+    camera->limit.lower = Vector_Of(0, 0);
+    camera->limit.upper = trait->restore.limits;
+
+    Body_SetDynamics(body, trait->restore.dynamics);
     GBA_Sprite_SetTileId(cube->sprite, 0);
   }
+}
+
+static inline void
+FlyTrait_MoveCameraIntoFrame(
+    unused FlyTrait *trait,
+    Course *course)
+{
+  const Bounds *bounds = Course_GetBounds(course);
+  Vector upper = Bounds_Upper(bounds);
+
+  Camera *camera = Camera_GetInstance();
+
+  int current = camera->position.y;
+  int target = upper.y - camera->viewport.size.y*2 - 15;
+
+  int dy = Math_clamp(target - current, -3, +3);
+
+  camera->limit.lower.y = current + dy;
+  camera->limit.upper.y = current + dy;
 }
 
 static void
 FlyTrait_Apply(
     void *self,
-    unused Course *course)
+    Course *course)
 {
   FlyTrait *trait = self;
-  Body *body = trait->body;
+  FlyTrait_MoveCameraIntoFrame(trait, course);
 
+  Body *body = trait->body;
   Cube *cube = trait->cube;
   if (!Cube_InState(cube, STATE_DESTROYED)) {
     Body_Update(body);
@@ -62,7 +86,7 @@ FlyTrait_Action(void *self) {
   FlyTrait *trait = self;
   Body *body = trait->body;
 
-  const Dynamics *dynamics = trait->dynamics.current;
+  const Dynamics *dynamics = body->dynamics;
 
   int gravity = dynamics->gravity.y;
   int sy = -1 * Math_signum(dynamics->gravity.y);
@@ -94,9 +118,9 @@ FlyTrait_BindTo(
 
   fly->cube = cube;
   fly->body = &move->body;
-  fly->dynamics.previous = NULL;
-  fly->dynamics.current = NULL;
   fly->acceleration = 0;
+  fly->restore.dynamics = NULL;
+  fly->restore.limits = Vector_Of(0, 0);
 
   Cube_AddTrait(cube, trait);
 

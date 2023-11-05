@@ -10,20 +10,20 @@ typedef enum Type Type;
 
 typedef struct Object {
   enum Type {
-    TYPE_FLOOR,
-    TYPE_DISK,
-    TYPE_BOX,
-    TYPE_BOX_WITH_POLE,
-    TYPE_BOX_WITH_CHAINS,
-    TYPE_PIT,
-    TYPE_SPIKE,
-    TYPE_PAD,
-    TYPE_RING,
-    TYPE_COIN,
-    TYPE_PORTAL,
-    TYPE_GOAL,
-    TYPE_GOAL_WALL,
-    TYPE_COUNT,
+    OBJECT_TYPE_FLOOR,
+    OBJECT_TYPE_DISK,
+    OBJECT_TYPE_BOX,
+    OBJECT_TYPE_BOX_WITH_POLE,
+    OBJECT_TYPE_BOX_WITH_CHAINS,
+    OBJECT_TYPE_PIT,
+    OBJECT_TYPE_SPIKE,
+    OBJECT_TYPE_PAD,
+    OBJECT_TYPE_RING,
+    OBJECT_TYPE_COIN,
+    OBJECT_TYPE_PORTAL,
+    OBJECT_TYPE_GOAL,
+    OBJECT_TYPE_GOAL_WALL,
+    OBJECT_TYPE_COUNT,
   } type;
   Bounds hitbox, viewbox;
   bool solid, deadly;
@@ -53,7 +53,10 @@ bool
 Object_CreateRing(Object *object);
 
 bool
-Object_CreatePortal(Object *object);
+Object_CreateGravityPortal(Object *object);
+
+bool
+Object_CreateFlyPortal(Object *object);
 
 bool
 Object_CreateCoin(

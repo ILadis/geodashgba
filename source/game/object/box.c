@@ -4,9 +4,9 @@
 typedef struct Properties {
   int width;
   int height;
-  enum Variant {
-    BOX_VARIANT_REGULAR,
-    BOX_VARIANT_GRID,
+  enum packed {
+    BOX_VARIANT_REGULAR = 1,
+    BOX_VARIANT_GRID = 2,
   } variant;
 } align4 Properties;
 
@@ -14,7 +14,7 @@ static inline bool
 Object_CreateBox(
     Object *object,
     int width, int height,
-    enum Variant variant)
+    int variant)
 {
   if (width < 1 || height < 1) {
     return false;
@@ -31,7 +31,7 @@ Object_CreateBox(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_BOX;
+  object->type = OBJECT_TYPE_BOX;
 
   Properties *props = Object_GetProperties(object);
   props->width = width;
@@ -76,7 +76,7 @@ Object_CreateBoxWithPole(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_BOX_WITH_POLE;
+  object->type = OBJECT_TYPE_BOX_WITH_POLE;
 
   Properties *props = Object_GetProperties(object);
   props->height = height;
@@ -103,7 +103,7 @@ Object_CreateBoxWithChains(
 
   object->solid = true;
   object->deadly = false;
-  object->type = TYPE_BOX_WITH_CHAINS;
+  object->type = OBJECT_TYPE_BOX_WITH_CHAINS;
 
   Properties *props = Object_GetProperties(object);
   props->height = height;
@@ -375,7 +375,7 @@ Object_DrawBox(
   int width = props->width;
   int height = props->height;
 
-  enum Variant variant = props->variant;
+  int variant = props->variant;
   if (variant == BOX_VARIANT_REGULAR) {
     return Object_DrawRegularBoxes(object, target);
   }
