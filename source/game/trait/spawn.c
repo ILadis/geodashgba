@@ -49,13 +49,13 @@ SpawnTrait_Apply(
     trait->timer = 90;
     if (!cube->success) {
       Course_IncreaseAttempts(course);
+      SpawnTrait_ResetCourseToSpawn(course, spawn);
 
       Camera *camera = Camera_GetInstance();
       Camera_Shake(camera);
     }
 
     const Vector *position = Cube_GetPosition(cube);
-    SpawnTrait_ResetCourseToSpawn(course, spawn);
 
     const int delays[] = { 0, 5, 8 };
     for (unsigned int i = 0; i < length(delays); i++) {
