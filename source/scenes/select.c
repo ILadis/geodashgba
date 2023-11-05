@@ -57,6 +57,7 @@ Scene_DoEnter() {
 
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, &level->base);
+  while (!Course_AwaitReadyness(course));
 
   Progress *progress = Progress_GetInstance();
   Progress_SetMode(progress, MODE_SELECT);
@@ -138,6 +139,7 @@ Scene_DoExit() {
 
   Course *course = Course_GetInstance();
   Course_ResetAndLoad(course, level);
+  while (!Course_AwaitReadyness(course));
 }
 
 const Scene *entry = &(Scene) {

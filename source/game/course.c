@@ -66,6 +66,7 @@ Course_ResetState(
   course->frame = 0;
   course->redraw = true;
   course->index = index;
+  course->state = COURSE_READY_STATE_PREPARE;
 }
 
 void
@@ -151,6 +152,27 @@ Course_CheckHits(
 
   Chunk *next = Course_GetNextChunk(course);
   Chunk_CheckHits(next, unit, callback);
+}
+
+static inline void
+Course_AnimateObjects(Course *course) {
+  GBA_TileMapRef target;
+  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
+
+  Chunk *chunks[] = {
+    Course_GetCurrentChunk(course),
+    Course_GetNextChunk(course),
+  };
+
+  for (unsigned int i = 0; i < length(chunks); i++) {
+    Chunk *chunk = chunks[i];
+
+    unsigned int count = chunk->count;
+    for (unsigned int j = 0; j < count; j++) {
+      Object *object = &chunk->objects[j];
+      Object_Animate(object, &target, course->frame);
+    }
+  }
 }
 
 static inline void
@@ -312,37 +334,50 @@ Course_DrawChunk(
   GBA_Memcpy32(target.tiles, source, sizeof(GBA_Tile) * target.width * target.height);
 }
 
-static inline void
-Course_AnimateObjects(Course *course) {
-  GBA_TileMapRef target;
-  GBA_TileMapRef_FromBackgroundLayer(&target, 1);
-
-  Chunk *chunks[] = {
-    Course_GetCurrentChunk(course),
-    Course_GetNextChunk(course),
-  };
-
-  for (unsigned int i = 0; i < length(chunks); i++) {
-    Chunk *chunk = chunks[i];
-
-    unsigned int count = chunk->count;
-    for (unsigned int j = 0; j < count; j++) {
-      Object *object = &chunk->objects[j];
-      Object_Animate(object, &target, course->frame);
+static inline bool
+Course_PrepareChunks(Course *course) {
+  switch (course->state) {
+  case COURSE_READY_STATE_PREPARE:
+    Chunk *current = Course_GetCurrentChunk(course);
+    if (Course_PrepareChunk(course, current)) {
+      course->prepare = NULL;
+      course->state++;
     }
+    return false;
+  case COURSE_READY_STATE_PREPARE_NEXT:
+    Chunk *next = Course_GetNextChunk(course);
+    if (Course_PrepareChunk(course, next)) {
+      course->state++;
+    }
+    return false;
+  case COURSE_READY_STATE_WATING:
+    return false;
+  case COURSE_READY_STATE_FINALIZE:
+    Chunk *chunk = Course_GetNextChunk(course);
+    Course_DrawChunk(course, chunk);
+
+    course->state++;
+    return false;
   }
+
+  return true;
 }
 
-static inline void
-Course_DrawChunks(Course *course) {
-  if (course->redraw) {
-    Chunk *current = Course_GetCurrentChunk(course);
-    Course_DrawChunk(course, current);
-
-    Chunk *next = Course_GetNextChunk(course);
-    Course_DrawChunk(course, next);
+bool
+Course_AwaitReadyness(Course *course) {
+  switch (course->state) {
+  case COURSE_READY_STATE_PREPARE:
+  case COURSE_READY_STATE_PREPARE_NEXT:
+    Course_PrepareChunks(course);
+    return false;
+  case COURSE_READY_STATE_WATING:
+    course->state++;
+    return true;
+  case COURSE_READY_STATE_FINALIZE:
+    return true;
   }
-  else Course_AnimateObjects(course);
+
+  return false;
 }
 
 void
@@ -352,22 +387,26 @@ Course_Draw(
 {
   unsigned int index = course->index;
 
-  Chunk *current = Course_GetChunkAt(course, index);
-  if (!Chunk_InViewport(current, camera)) {
-    Chunk *pending = Course_GetChunkAt(course, index + 2);
-    Course_DrawChunk(course, pending);
+  if (Course_PrepareChunks(course)) {
+    Chunk *current = Course_GetChunkAt(course, index);
+    if (!Chunk_InViewport(current, camera)) {
+      Chunk *pending = Course_GetChunkAt(course, index + 2);
+      Course_DrawChunk(course, pending);
 
-    course->index = ++index;
-  }
+      course->index = ++index;
+    }
 
-  Chunk *next = Course_GetChunkAt(course, index + 1);
-  if (Chunk_InViewport(next, camera)) {
-    Chunk *pending = Course_LoadChunk(course, index + 2);
-    Course_PrepareChunk(course, pending);
+    Chunk *next = Course_GetChunkAt(course, index + 1);
+    if (Chunk_InViewport(next, camera)) {
+      Chunk *pending = Course_LoadChunk(course, index + 2);
+      Course_PrepareChunk(course, pending);
+    }
+
+    // FIXME animations are stopped while preparing next chunks
+    Course_AnimateObjects(course);
   }
 
   Course_DrawBackground(course, camera);
-  Course_DrawChunks(course);
 
   course->frame++;
   course->redraw = false;

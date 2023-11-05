@@ -21,6 +21,12 @@ typedef struct Course {
   Chunk chunks[4];
   Text text;
   char attempts[4];
+  enum {
+    COURSE_READY_STATE_PREPARE = 1,
+    COURSE_READY_STATE_PREPARE_NEXT = 2,
+    COURSE_READY_STATE_WATING = 3,
+    COURSE_READY_STATE_FINALIZE = 4,
+  } state;
   bool (*prepare)(struct Course *course, Chunk *chunk, GBA_TileMapRef *target);
   int frame;
   bool redraw;
@@ -76,6 +82,9 @@ Course_CheckHits(
     Course *course,
     Unit *unit,
     HitCallback callback);
+
+bool
+Course_AwaitReadyness(Course *course);
 
 void
 Course_Draw(

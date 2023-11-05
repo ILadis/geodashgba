@@ -4,6 +4,20 @@
 #include <game/particle.h>
 #include <game/checkpoint.h>
 
+static inline void
+SpawnTrait_ResetCourseToSpawn(
+    Course *course,
+    const Vector *spawn)
+{
+  Camera *camera = Camera_GetInstance();
+
+  const int offset = Math_abs(camera->position.x - camera->frame.center.x) - camera->frame.threshold[DIRECTION_LEFT];
+  const int x = Math_max(0, spawn->x - offset);
+
+  const Vector position = Vector_Of(x, 0);
+  Course_ResetTo(course, &position);
+}
+
 static void
 SpawnTrait_Apply(
     void *self,
@@ -41,6 +55,7 @@ SpawnTrait_Apply(
     }
 
     const Vector *position = Cube_GetPosition(cube);
+    SpawnTrait_ResetCourseToSpawn(course, spawn);
 
     const int delays[] = { 0, 5, 8 };
     for (unsigned int i = 0; i < length(delays); i++) {
@@ -54,25 +69,17 @@ SpawnTrait_Apply(
   }
   else if (Cube_InState(cube, STATE_DESTROYED)) {
     int timer = --trait->timer;
-    if (timer == 0) {
-      if (cube->success) {
+    if (timer == 0 && cube->success) {
         extern const Scene *entry;
         Scene *current = Scene_GetCurrent();
         Scene_FadeReplaceWith(current, entry);
-      }
-      else {
-        Cube_SetPosition(cube, spawn);
-        Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
-        Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
-        Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
-        Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
-
-        Camera *camera = Camera_GetInstance();
-        Camera_Update(camera);
-
-        const Vector *position = Camera_GetPosition(camera);
-        Course_ResetTo(course, position);
-      }
+    }
+    else if (timer <= 0 && Course_AwaitReadyness(course)) {
+      Cube_SetPosition(cube, spawn);
+      Cube_Accelerate(cube, DIRECTION_RIGHT, 160);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_MOVE, true);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_FLY, false);
+      Cube_SetTraitEnabled(cube, TRAIT_TYPE_ROTATE, true);
     }
   }
 }
