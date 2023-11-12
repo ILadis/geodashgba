@@ -4,11 +4,13 @@
 GBA_System*
 GBA_GetSystem() {
 #ifdef NOGBA
+  static char MEM_IRAM[0x07FFF] = {0};
   static char   MEM_IO[0x003FF] = {0};
   static char MEM_VRAM[0x17FFF] = {0};
   static char  MEM_OAM[0x003FF] = {0};
   static char  MEM_PAL[0x003FF] = {0};
 #else
+  const int MEM_IRAM = GBA_MEM_IRAM;
   const int MEM_IO   = GBA_MEM_IO;
   const int MEM_VRAM = GBA_MEM_VRAM;
   const int MEM_OAM  = GBA_MEM_OAM;
@@ -18,6 +20,12 @@ GBA_GetSystem() {
   static GBA_System system = {
     .input = {{.value = 0x03FF}, {.value = 0x03FF}},
     .keypad = GBA_KEYPAD(MEM_IO + 0x0130),
+
+    .interruptControl = GBA_INTERRUPT_CONTROL(MEM_IO + 0x0200),
+    .interruptAcks[0] = GBA_INTERRUPT_CONTROL(MEM_IO + 0x0202),
+    .interruptAcks[1] = GBA_INTERRUPT_CONTROL(MEM_IRAM + 0x7FF8),
+    .interruptStatus = GBA_INTERRUPT_STATUS(MEM_IO + 0x0208),
+    .interruptHandler = GBA_INTERRUPT_HANDLER(MEM_IRAM + 0x7FFC),
 
     .timerData[0] = GBA_TIMER_DATA(MEM_IO + 0x0100),
     .timerData[1] = GBA_TIMER_DATA(MEM_IO + 0x0104),
@@ -39,7 +47,7 @@ GBA_GetSystem() {
     .directMemcpy[2] = GBA_MEMCPY(MEM_IO + 0x00C8),
     .directMemcpy[3] = GBA_MEMCPY(MEM_IO + 0x00D4),
 
-    .vcount = GBA_DISPLAY_VCOUNT(GBA_MEM_IO + 0x0006),
+    .vcount = GBA_DISPLAY_VCOUNT(MEM_IO + 0x0006),
     .displayControl = GBA_DISPLAY_CONTROL(MEM_IO + 0x0000),
 
     .backgroundControls[0] = GBA_BACKGROUND_CONTROL(MEM_IO + 0x0008),
@@ -69,6 +77,63 @@ GBA_GetSystem() {
   };
 
   return &system;
+}
+
+iwram static void
+GBA_InterruptHandler() {
+  GBA_InterruptStatus *status = GBA_INTERRUPT_STATUS(GBA_MEM_IO + 0x0208);
+  status->value = 0;
+
+  GBA_InterruptControl *control = GBA_INTERRUPT_CONTROL(GBA_MEM_IO + 0x0200);
+
+  GBA_InterruptControl *irqack  = GBA_INTERRUPT_CONTROL(GBA_MEM_IO + 0x0202);
+  GBA_InterruptControl *biosack = GBA_INTERRUPT_CONTROL(GBA_MEM_IRAM + 0x7FF8);
+
+  u32 ack = control->value & irqack->value;
+  irqack->value = ack;
+  biosack->value = ack;
+
+  // TODO implement dispatching to interrupt service routines
+
+  status->value = 1;
+}
+
+void
+GBA_EnableInterrupt(GBA_Interrupt interrupt) {
+  static const struct {
+    u16 offset;
+    u16 flag;
+  } senders[] = {
+    { 0x0004, 0x0008 },
+    { 0x0004, 0x0010 },
+    { 0x0004, 0x0020 },
+    { 0x0102, 0x0040 },
+    { 0x0106, 0x0040 },
+    { 0x010A, 0x0040 },
+    { 0x010E, 0x0040 },
+    { 0x0128, 0x4000 },
+    { 0x00BA, 0x4000 },
+    { 0x00C6, 0x4000 },
+    { 0x00D2, 0x4000 },
+    { 0x00DE, 0x4000 },
+    { 0x0132, 0x4000 },
+  };
+
+  GBA_System *system = GBA_GetSystem();
+  *(system->interruptHandler) = GBA_InterruptHandler;
+
+  GBA_InterruptStatus *status = system->interruptStatus;
+  status->value = 0;
+
+  GBA_InterruptControl *control = system->interruptControl;
+  control->value = (1 << interrupt);
+
+  volatile void *base = system->displayControl;
+  volatile u16 *sender = (u16 *) (base + senders[interrupt].offset);
+
+  *sender |= senders[interrupt].flag;
+
+  status->value = 1;
 }
 
 void
@@ -300,10 +365,13 @@ GBA_TileMapRef_SetPixel(
 void
 GBA_VSync() {
 #ifndef NOGBA
+/*
   GBA_System *system = GBA_GetSystem();
 
   while(system->vcount->value >= 160); // wait till VDraw
   while(system->vcount->value < 160);  // wait till VBlank
+*/
+  asm volatile("swi 0x05");
 #endif
 }
 

@@ -46,6 +46,8 @@ Scene_DoEnter() {
     SoundPlayer_AddChannel(player, NoteSoundChannel_Create(&channel2, notes2, 13));
     SoundPlayer_AddChannel(player, NoteSoundChannel_Create(&channel3, notes3, 13));
 
+    GBA_EnableInterrupt(GBA_IRQ_VBLANK);
+
     once = false;
   }
 

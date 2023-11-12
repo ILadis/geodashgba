@@ -17,6 +17,51 @@
 #define GBA_MEM_OAM  0x07000000 // -"-
 #define GBA_MEM_ROM  0x08000000
 
+typedef enum GBA_Interrupt {
+  GBA_IRQ_VBLANK,
+  GBA_IRQ_HBLANK,
+  GBA_IRQ_VCOUNT,
+  GBA_IRQ_TIMER1,
+  GBA_IRQ_TIMER2,
+  GBA_IRQ_TIMER3,
+  GBA_IRQ_TIMER4,
+  GBA_IRQ_SERIAL,
+  GBA_IRQ_DMA1,
+  GBA_IRQ_DMA2,
+  GBA_IRQ_DMA3,
+  GBA_IRQ_DMA4,
+  GBA_IRQ_INPUT,
+} GBA_Interrupt;
+
+typedef union GBA_InterruptControl {
+  u16 value;
+  struct {
+    u16 vblank: 1;
+    u16 hblank: 1;
+    u16 vcount: 1;
+    u16 timer1: 1;
+    u16 timer2: 1;
+    u16 timer3: 1;
+    u16 timer4: 1;
+    u16 serial: 1;
+    u16 dma1: 1;
+    u16 dma2: 1;
+    u16 dma3: 1;
+    u16 dma4: 1;
+    u16 input: 1;
+  };
+} GBA_InterruptControl;
+
+typedef struct GBA_InterruptStatus {
+  u16 value;
+} GBA_InterruptStatus;
+
+typedef void (*GBA_InterruptHandlerFn)(void);
+
+#define GBA_INTERRUPT_CONTROL(ADDR) ((GBA_InterruptControl *)   (ADDR))
+#define GBA_INTERRUPT_STATUS(ADDR)  ((GBA_InterruptStatus *)    (ADDR))
+#define GBA_INTERRUPT_HANDLER(ADDR) ((GBA_InterruptHandlerFn *) (ADDR))
+
 typedef struct GBA_DisplayVCount {
   u16 value;
 } GBA_DisplayVCount;
@@ -224,7 +269,7 @@ typedef struct GBA_SoundData {
 
 #define GBA_SOUND_CONTROL(ADDR) ((GBA_SoundControl *) (ADDR))
 #define GBA_SOUND_STATUS(ADDR)  ((GBA_SoundStatus *)  (ADDR))
-#define GBA_SOUND_DATA(ADDR)    ((GBA_SoundData *)  (ADDR))
+#define GBA_SOUND_DATA(ADDR)    ((GBA_SoundData *)    (ADDR))
 
 typedef union GBA_Color {
   u16 value;
@@ -378,6 +423,11 @@ typedef struct GBA_System {
   GBA_Input input;
   GBA_Keypad *const volatile keypad;
 
+  GBA_InterruptControl *const volatile interruptControl;
+  GBA_InterruptControl *const volatile interruptAcks[2];
+  GBA_InterruptStatus *const volatile interruptStatus;
+  GBA_InterruptHandlerFn *const volatile interruptHandler;
+
   GBA_TimerData *const volatile timerData[4];
   GBA_TimerControl *const volatile timerControl[4];
 
@@ -421,6 +471,9 @@ typedef struct GBA_System {
 
 GBA_System*
 GBA_GetSystem();
+
+void
+GBA_EnableInterrupt(GBA_Interrupt interrupt);
 
 void
 GBA_EnableMode(int mode);
