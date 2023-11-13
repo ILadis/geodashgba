@@ -61,7 +61,7 @@ Records_SetBestForLevel(
     entry = Records_AddNewEntryForLevel(records, id);
   }
 
-  if (entry != NULL) {
+  if (entry != NULL && best > entry->best) {
     entry->best = best;
   }
 }
