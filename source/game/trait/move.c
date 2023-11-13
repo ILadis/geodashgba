@@ -43,7 +43,6 @@ MoveTrait_Accelerate(
   int ay = speed * vector->y;
 
   Body *body = &trait->body;
-  Body_SetVelocity(body, 0, 0);
   Body_SetAcceleration(body, ax, ay);
   Body_SetDynamics(body, &dynamics);
 }
@@ -72,9 +71,11 @@ MoveTrait_Apply(
     trait->launch = 0;
   }
 
-  Body_Update(body);
-
   Cube *cube = trait->cube;
+  if (!Cube_InState(trait->cube, STATE_DESTROYED)) {
+    Body_Update(body);
+  }
+
   if (Cube_EnteredState(cube, STATE_VICTORY)) {
     static const Dynamics dynamics = {
       .friction = { 100, 100 },

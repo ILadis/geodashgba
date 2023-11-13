@@ -78,6 +78,7 @@ Cube_SetPosition(Cube *cube, const Vector *position) {
   Body_SetPosition(&move->body, position->x << 8, position->y << 8);
   HitTrait *hit = Cube_GetTrait(cube, TRAIT_TYPE_HIT);
   hit->hitbox.center = *position;
+  cube->state.current = STATE_UNKNOWN;
 }
 
 static inline bool

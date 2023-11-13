@@ -99,6 +99,7 @@ HitTrait_Callback(
         Cube_SetState(cube, STATE_GROUNDED);
       } else {
         HitTrait_ResolveHit(trait, hit->delta.y);
+        Cube_SetState(cube, STATE_AIRBORNE);
       }
     }
   }
