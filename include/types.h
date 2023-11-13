@@ -25,6 +25,9 @@ typedef unsigned int   u32;
 // can be applied on code
 #define iwram __attribute__((section(".iwram")))
 
+#define arm   __attribute__((target("arm")))
+#define thumb __attribute__((target("thumb")))
+
 #define length(array) (sizeof(array) / sizeof(array[0]))
 #define strlen(string) (length(string) - 1)
 #define round(value)  (value + 0.5 - (value < 0))

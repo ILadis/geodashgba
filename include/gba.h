@@ -538,6 +538,9 @@ void
 GBA_VSync();
 
 void
+GBA_VSyncWait();
+
+void
 GBA_Memcpy32(void *dst, const void *src, int size);
 
 void

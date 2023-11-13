@@ -79,19 +79,21 @@ GBA_GetSystem() {
   return &system;
 }
 
-iwram static void
+static arm iwram void
 GBA_InterruptHandler() {
-  GBA_InterruptStatus *status = GBA_INTERRUPT_STATUS(GBA_MEM_IO + 0x0208);
+  GBA_System *system = GBA_GetSystem();
+
+  GBA_InterruptStatus *status = system->interruptStatus;
   status->value = 0;
 
-  GBA_InterruptControl *control = GBA_INTERRUPT_CONTROL(GBA_MEM_IO + 0x0200);
+  GBA_InterruptControl *control = system->interruptControl;
 
-  GBA_InterruptControl *irqack  = GBA_INTERRUPT_CONTROL(GBA_MEM_IO + 0x0202);
-  GBA_InterruptControl *biosack = GBA_INTERRUPT_CONTROL(GBA_MEM_IRAM + 0x7FF8);
+  GBA_InterruptControl *irqack  = system->interruptAcks[0];
+  GBA_InterruptControl *irqbios = system->interruptAcks[1];
 
   u32 ack = control->value & irqack->value;
   irqack->value = ack;
-  biosack->value = ack;
+  irqbios->value |= ack;
 
   // TODO implement dispatching to interrupt service routines
 
@@ -126,7 +128,7 @@ GBA_EnableInterrupt(GBA_Interrupt interrupt) {
   status->value = 0;
 
   GBA_InterruptControl *control = system->interruptControl;
-  control->value = (1 << interrupt);
+  control->value |= (1 << interrupt);
 
   volatile void *base = system->displayControl;
   volatile u16 *sender = (u16 *) (base + senders[interrupt].offset);
@@ -365,12 +367,16 @@ GBA_TileMapRef_SetPixel(
 void
 GBA_VSync() {
 #ifndef NOGBA
-/*
   GBA_System *system = GBA_GetSystem();
 
   while(system->vcount->value >= 160); // wait till VDraw
   while(system->vcount->value < 160);  // wait till VBlank
-*/
+#endif
+}
+
+void
+GBA_VSyncWait() {
+#ifndef NOGBA
   asm volatile("swi 0x05");
 #endif
 }

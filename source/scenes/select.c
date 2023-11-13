@@ -20,6 +20,7 @@ Scene_DoEnter() {
   if (once) {
     GBA_System *system = GBA_GetSystem();
 
+    GBA_EnableInterrupt(GBA_IRQ_VBLANK);
     GBA_Sprite_ResetAll();
     GBA_EnableSprites();
 
@@ -45,8 +46,6 @@ Scene_DoEnter() {
     SoundPlayer_AddChannel(player, NoteSoundChannel_Create(&channel1, notes1, 13));
     SoundPlayer_AddChannel(player, NoteSoundChannel_Create(&channel2, notes2, 13));
     SoundPlayer_AddChannel(player, NoteSoundChannel_Create(&channel3, notes3, 13));
-
-    GBA_EnableInterrupt(GBA_IRQ_VBLANK);
 
     once = false;
   }
@@ -115,7 +114,7 @@ Scene_DoPlay() {
   }
 
 //SoundPlayer_MixChannels(player);
-  GBA_VSync();
+  GBA_VSyncWait();
 //SoundPlayer_VSync(player);
 
   Course_Draw(course, camera);

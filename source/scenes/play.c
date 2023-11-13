@@ -83,7 +83,7 @@ Scene_DoPlay() {
   Particle_UpdateAll();
 
 //SoundPlayer_MixChannels(player);
-  GBA_VSync();
+  GBA_VSyncWait();
 //SoundPlayer_VSync(player);
 
   if (GBA_Input_IsHit(GBA_KEY_START)) {
