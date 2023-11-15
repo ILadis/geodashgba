@@ -32,6 +32,32 @@ typedef struct Object {
 
 typedef struct Properties Properties;
 
+typedef struct Faces {
+  unsigned char repeat: 4;
+  unsigned char flags:  4;
+} Faces;
+
+#define FACES_MAX_REPEAT 15
+
+static inline void
+Faces_SetFaceBorder(Faces *faces, Direction direction) {
+  faces->flags |= 1 << direction;
+}
+
+static inline bool
+Faces_IncrementRepeat(Faces *faces, Faces other) {
+  if (faces->repeat >= FACES_MAX_REPEAT) {
+    return false;
+  }
+
+  if (faces->flags == other.flags) {
+    faces->repeat++;
+    return true;
+  }
+
+  return false;
+}
+
 bool
 Object_CreateFloor(Object *object);
 
@@ -71,6 +97,7 @@ Object_CreateRegularBox(
 bool
 Object_CreateGridBox(
     Object *object,
+    Faces *faces,
     int width, int height);
 
 bool

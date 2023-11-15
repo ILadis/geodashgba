@@ -285,6 +285,67 @@ AsciiLevel_AddObject(
   }
 }
 
+static inline Faces
+AsciiLevel_GetBoxFacesAtCurrentPosition(AsciiLevel *level) {
+  Vector cursor = level->cursor;
+
+  int limit = level->limit;
+  const Direction directions[] = {
+    [DIRECTION_LEFT]  = DIRECTION_LEFT,
+    [DIRECTION_RIGHT] = DIRECTION_RIGHT,
+    [DIRECTION_UP]    = DIRECTION_UP,
+    [DIRECTION_DOWN]  = DIRECTION_DOWN,
+  };
+
+  Faces faces = {0};
+  for (unsigned int index = 0; index < length(directions); index++) {
+    Direction direction = directions[index];
+    const Vector *delta = Vector_FromDirection(direction);
+
+    int x = cursor.x + delta->x;
+    int y = cursor.y + delta->y;
+
+    char symbol; level->limit = 0;
+    if (!AsciiLevel_GetSymbolAt(level, x, y, &symbol)|| symbol != 'x') {
+      Faces_SetFaceBorder(&faces, direction);
+    }
+  }
+
+  level->limit = limit;
+  level->cursor = cursor;
+
+  return faces;
+}
+
+static inline void
+AsciiLevel_GetBoxFaces(
+    AsciiLevel *level,
+    Faces *faces,
+    int width,
+    int height)
+{
+  Vector cursor = level->cursor;
+  Faces current = AsciiLevel_GetBoxFacesAtCurrentPosition(level);
+
+  int index = 0;
+
+  for (int y = 0; y < height; y++) {
+    for (int x = y == 0; x < width; x++) {
+      level->cursor.x = cursor.x + x;
+      level->cursor.y = cursor.y + y;
+
+      Faces next = AsciiLevel_GetBoxFacesAtCurrentPosition(level);
+      if (!Faces_IncrementRepeat(&current, next)) {
+        faces[index++] = current;
+        current = next;
+      }
+    }
+  }
+
+  faces[index] = current;
+  level->cursor = cursor;
+}
+
 static void
 AsciiLevel_AddBoxWithPole(AsciiLevel *level) {
   Object object = {0};
@@ -328,8 +389,11 @@ AsciiLevel_AddGridBox(AsciiLevel *level) {
   int width = 1, height = 1;
   AsciiLevel_CountWidthAndHeightOfSymbols(level, &width, &height, '\0');
 
+  Faces faces[16] = {0};
+  AsciiLevel_GetBoxFaces(level, faces, width, height);
+
   Object object = {0};
-  if (Object_CreateGridBox(&object, width, height)) {
+  if (Object_CreateGridBox(&object, faces, width, height)) {
     AsciiLevel_AddObjectToChunk(level, &object);
   }
 }

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="2" height="2" tilewidth="8" tileheight="8" infinite="0" nextlayerid="19" nextobjectid="1">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <layer id="1" name="boxBordersNone" width="2" height="2">
+  <data encoding="csv">
+2147483677,29,
+3221225501,1073741853
+</data>
+ </layer>
+ <layer id="4" name="boxBordersLeft" width="2" height="2" locked="1">
+  <data encoding="csv">
+28,29,
+1073741852,1073741853
+</data>
+ </layer>
+ <layer id="2" name="boxBordersRight" width="2" height="2">
+  <data encoding="csv">
+2147483677,2147483676,
+3221225501,3221225500
+</data>
+ </layer>
+ <layer id="5" name="boxBordersVertical" width="2" height="2">
+  <data encoding="csv">
+28,2147483676,
+1073741852,3221225500
+</data>
+ </layer>
+ <layer id="6" name="boxBordersTop" width="2" height="2">
+  <data encoding="csv">
+3221225509,1073741861,
+3221225501,1073741853
+</data>
+ </layer>
+ <layer id="7" name="boxBordersTopLeft" width="2" height="2">
+  <data encoding="csv">
+1073741860,1073741861,
+1073741852,1073741853
+</data>
+ </layer>
+ <layer id="18" name="boxBordersTopRight" width="2" height="2">
+  <data encoding="csv">
+3221225509,3221225508,
+3221225501,3221225500
+</data>
+ </layer>
+ <layer id="8" name="boxBordersTopVertical" width="2" height="2">
+  <data encoding="csv">
+1073741860,3221225508,
+1073741852,3221225500
+</data>
+ </layer>
+ <layer id="9" name="boxBordersBottom" width="2" height="2">
+  <data encoding="csv">
+2147483677,29,
+2147483685,37
+</data>
+ </layer>
+ <layer id="10" name="boxBordersBottomLeft" width="2" height="2">
+  <data encoding="csv">
+28,29,
+36,37
+</data>
+ </layer>
+ <layer id="12" name="boxBordersBottomRight" width="2" height="2">
+  <data encoding="csv">
+2147483677,2147483676,
+2147483685,2147483684
+</data>
+ </layer>
+ <layer id="13" name="boxBordersBottomVertical" width="2" height="2">
+  <data encoding="csv">
+28,2147483676,
+36,2147483684
+</data>
+ </layer>
+ <layer id="14" name="boxBordersHorizontal" width="2" height="2">
+  <data encoding="csv">
+3221225509,1073741861,
+2147483685,37
+</data>
+ </layer>
+ <layer id="15" name="boxBordersLeftHorizontal" width="2" height="2">
+  <data encoding="csv">
+1073741860,1073741861,
+36,37
+</data>
+ </layer>
+ <layer id="16" name="boxBordersRightHorizontal" width="2" height="2">
+  <data encoding="csv">
+3221225509,3221225508,
+2147483685,2147483684
+</data>
+ </layer>
+ <layer id="17" name="boxBordersFull" width="2" height="2">
+  <data encoding="csv">
+1073741860,3221225508,
+36,2147483684
+</data>
+ </layer>
+</map>

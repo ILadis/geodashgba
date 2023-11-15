@@ -20,13 +20,20 @@ typedef unsigned int   u32;
 #define packed __attribute__((__packed__))
 #define unused __attribute__((__unused__))
 
+#ifndef NOGBA
+#define arm   __attribute__((target("arm")))
+#define thumb __attribute__((target("thumb")))
 // can be applied on code and data
 #define ewram __attribute__((section(".ewram")))
 // can be applied on code
 #define iwram __attribute__((section(".iwram")))
 
-#define arm   __attribute__((target("arm")))
-#define thumb __attribute__((target("thumb")))
+#else
+#define arm
+#define thumb
+#define ewram
+#define iwram
+#endif
 
 #define length(array) (sizeof(array) / sizeof(array[0]))
 #define strlen(string) (length(string) - 1)
