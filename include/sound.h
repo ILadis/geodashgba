@@ -35,13 +35,13 @@ typedef struct NoteSample {
   Note note;
   unsigned int octave;
   unsigned int length; // total values in this sample
-  unsigned int rate;
+  unsigned int rate;   // sample rate as power of two (for example 13 = 8kHz)
 } NoteSample;
 
 typedef struct SoundChannel {
   void *self;
-  void (*Pitch)(void *self, unsigned int frequency);
-  unsigned int (*Fill)(void *self, int *buffer, unsigned int size);
+  void (*Pitch)(void *self, unsigned int rate);
+  unsigned int (*Fill)(void *self, int *buffer, unsigned int frequency);
 } SoundChannel;
 
 static inline void
@@ -64,23 +64,27 @@ typedef struct NoteSoundChannel {
     NoteSample note;
   } samples;
   Sample *sample;
+  unsigned int tempo;     // base used for calculating length of samples
   unsigned int rate;      // sample rate as power of two (for example 13 = 8kHz)
-  unsigned int tempo;
   unsigned int position;  // position in current sample (20.12 fixed point integer)
-  unsigned int increment; // increment (20.12 fixed point integer)
+  unsigned int increment; // position increment per loop (20.12 fixed point integer)
 } NoteSoundChannel;
+
+// 20.12 fixed point integer (for both increment and position)
+#define SOUND_CHANNEL_PRECISION 12
 
 SoundChannel*
 NoteSoundChannel_Create(
     NoteSoundChannel *channel,
     const char *notes,
+    unsigned int tempo,
     int rate);
 
 typedef struct SoundPlayer {
-  char *buffers[2];
-  char *active;
-  unsigned int size;
-  unsigned int frequency;
+  char *buffers[2];       // buffers for mixing
+  char *active;           // currently active buffer
+  unsigned int size;      // buffer size
+  unsigned int frequency; // playback frequency
   struct SoundChannel *channels[4];
 } SoundPlayer;
 

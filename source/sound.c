@@ -32,8 +32,8 @@ NoteSample_Get(
   const int pi = 256;
   const int octave = sample->octave;
 
-  /* Note: multiplying frequency (24.8 fixed point) with index (for example a 19.13 fixed
-   * point for when using 8kHz as the sample rate) results in a 11.21 fixed point number.
+  /* Note: multiplying frequency (24.8 fixed point) with an index (for example a 19.13 fixed
+   * point when using 8kHz as the sample rate) results in a 11.21 fixed point number.
    * This is why we have to shift by 21 to get the alpha/integer part that is used to get
    * the sin-value.
    */
@@ -53,6 +53,24 @@ NoteSample_FromSamples(union Samples *samples) {
   sample->super.self = sample;
   sample->super.Get = NoteSample_Get;
   return sample;
+}
+
+static inline void
+NoteSoundChannel_SetNextSamplePosition(NoteSoundChannel *channel) {
+  NoteSample *note = &channel->samples.note;
+
+  const unsigned int position = channel->position;
+  const unsigned int length = note->length << SOUND_CHANNEL_PRECISION;
+
+  /* Note: check if more data was sampled than actually wanted. If this occured do not
+   * sample next note from start but from an offset.
+   */
+  if (position > length) {
+    channel->position = position - length;
+  } else {
+    // Sampled less than the required length, should never happen.
+    channel->position = 0;
+  }
 }
 
 static inline bool
@@ -93,8 +111,7 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
     break;
   }
 
-  // FIXME improve this
-  channel->position -= channel->samples.note.length << 12;
+  NoteSoundChannel_SetNextSamplePosition(channel);
 
   NoteSample *sample = NoteSample_FromSamples(&channel->samples);
   sample->note = note;
@@ -112,6 +129,7 @@ SoundChannel*
 NoteSoundChannel_Create(
     NoteSoundChannel *channel,
     const char *notes,
+    unsigned int tempo,
     int rate)
 {
   void NoteSoundChannel_Pitch(void *channel, unsigned int frequency);
@@ -123,10 +141,10 @@ NoteSoundChannel_Create(
 
   channel->track.notes = notes;
   channel->track.index = 0;
+  channel->tempo = tempo;
   channel->rate = rate;
-  channel->tempo = 2500;
   channel->position = 0;
-  channel->increment = 1 << 12;
+  channel->increment = 1 << SOUND_CHANNEL_PRECISION;
 
   NoteSoundChannel_NextSample(channel);
 
@@ -140,7 +158,9 @@ NoteSoundChannel_Pitch(
 {
   NoteSoundChannel *channel = self;
 
-  unsigned int increment = Math_div(1 << (channel->rate + 12), frequency);
+  unsigned int precision = SOUND_CHANNEL_PRECISION;
+  unsigned int increment = Math_div(1 << (channel->rate + precision), frequency);
+
   channel->increment = increment;
 }
 
@@ -153,7 +173,7 @@ NoteSoundChannel_Fill(
   NoteSoundChannel *channel = self;
   NoteSample *sample = &channel->samples.note;
 
-  unsigned int position = channel->position >> 12;
+  unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
   if (position >= sample->length) {
     if (!NoteSoundChannel_NextSample(channel)) {
       return 0; // end of track
@@ -162,7 +182,7 @@ NoteSoundChannel_Fill(
 
   unsigned int index = 0;
   while (index < size) {
-    unsigned int position = channel->position >> 12;
+    unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
     int value = Sample_Get(channel->sample, position);
 
     channel->position += channel->increment;
@@ -183,24 +203,26 @@ NoteSoundChannel_Fill(
 
 SoundPlayer*
 SoundPlayer_GetInstance() {
-  static SoundPlayer player = {0};
+  /* Note: at ~ 60 fps every frame consumes 192 bytes (11468 samples/s divided by 60 fps).
+   * The buffer size also needs to be a multiple of 16 because the sound is read in chunks
+   * of 16 bytes.
+   */
+  static char buffer1[192];
+  static char buffer2[192];
+
+  static SoundPlayer player = {
+    .active = buffer1,
+    .buffers[0] = buffer1,
+    .buffers[1] = buffer2,
+    .size = length(buffer1),
+    .frequency = 11468,
+  };
+
   return &player;
 }
 
 void
 SoundPlayer_Enable(SoundPlayer *player) {
-  const unsigned int frequency = 11468;
-  const unsigned int size = 192;
-
-  static char buffer1[192];
-  static char buffer2[192];
-
-  player->buffers[0] = buffer1;
-  player->buffers[1] = buffer2;
-  player->frequency = frequency;
-  player->active = buffer1;
-  player->size = size;
-
   GBA_EnableSound();
 
   GBA_SoundControl enable = {
@@ -210,7 +232,10 @@ SoundPlayer_Enable(SoundPlayer *player) {
     .soundAReset = 1,
   };
 
-  GBA_TimerData data = { 0xFFFF - Math_div(16777216, frequency) };
+  const int cycles = 16777216;
+  const int frequency = player->frequency;
+
+  GBA_TimerData data = { 0xFFFF - Math_div(cycles, frequency) };
   GBA_TimerControl timer = {
     .frequency = 0,
     .enable = 1,
@@ -280,9 +305,9 @@ SoundPlayer_VSync(SoundPlayer *player) {
   GBA_DirectMemcpy *dma1 = system->directMemcpy[1];
 
   GBA_DirectMemcpy copy = {0};
-  copy.chunkSize = 1; // copy words
-  copy.dstAdjust = 2; // fixed destination address
-  copy.repeat = 1; // copy at VBlank
+  copy.chunkSize = 1;  // copy words
+  copy.dstAdjust = 2;  // fixed destination address
+  copy.repeat = 1;     // copy at VBlank
   copy.timingMode = 3; // fifo mode
   copy.enable = 1;
 
