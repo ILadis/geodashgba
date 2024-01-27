@@ -20,65 +20,74 @@ typedef enum Note {
   NOTE_B = 2,
 } Note;
 
-typedef struct Sample {
-  void *self;
-  int (*Get)(void *self, unsigned int index);
-} Sample;
-
-static inline int
-Sample_Get(Sample *sample, unsigned int index) {
-  return sample->Get(sample->self, index);
-}
-
-typedef struct NoteSample {
-  Sample super;
+typedef struct Tone {
   Note note;
   unsigned int octave;
-  unsigned int length; // total values in this sample
-  unsigned int rate;   // sample rate as power of two (for example 13 = 8kHz)
-} NoteSample;
+  unsigned int length;
+} Tone;
+
+// TODO convert to AsciiSoundTrack to support multiple track formats
+typedef struct SoundTrack {
+  const char *notes;
+  unsigned int index; // index of next char to consume in notes pointer
+  unsigned int tempo; // base used for calculating length of tones (total values that can be sampled)
+  struct Tone tone;   // current parsed note from sound track
+} SoundTrack;
+
+void
+SoundTrack_AssignNotes(
+    SoundTrack *track,
+    const char *notes,
+    unsigned int tempo);
+
+const Tone*
+SoundTrack_NextTone(SoundTrack *track);
+
+typedef struct SoundSampler {
+  void *self;
+  int (*Get)(void *self, const Tone *tone, unsigned int index, unsigned int rate);
+} SoundSampler;
+
+static inline int
+SoundSampler_Get(const SoundSampler *sample, const Tone *tone, unsigned int index, unsigned int rate) {
+  return sample->Get(sample->self, tone, index, rate);
+}
+
+const SoundSampler*
+SineSoundSampler_GetInstance();
 
 typedef struct SoundChannel {
-  void *self;
-  void (*Pitch)(void *self, unsigned int rate);
-  unsigned int (*Fill)(void *self, int *buffer, unsigned int frequency);
-} SoundChannel;
+  SoundTrack *track;
+  const Tone *tone;
 
-static inline void
-SoundChannel_Pitch(SoundChannel *channel, unsigned int frequency) {
-  return channel->Pitch(channel->self, frequency);
-}
+  // TODO add different samplers: SineSampler, WaveSampler
+  const SoundSampler *sampler;
 
-static inline unsigned int
-SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
-  return channel->Fill(channel->self, buffer, size);
-}
-
-typedef struct NoteSoundChannel {
-  struct SoundChannel super;
-  struct {
-    const char *notes;
-    unsigned int index;
-  } track;
-  union Samples {
-    NoteSample note;
-  } samples;
-  Sample *sample;
-  unsigned int tempo;     // base used for calculating length of samples
   unsigned int rate;      // sample rate as power of two (for example 13 = 8kHz)
   unsigned int position;  // position in current sample (20.12 fixed point integer)
   unsigned int increment; // position increment per loop (20.12 fixed point integer)
-} NoteSoundChannel;
+} SoundChannel;
 
 // 20.12 fixed point integer (for both increment and position)
 #define SOUND_CHANNEL_PRECISION 12
 
-SoundChannel*
-NoteSoundChannel_Create(
-    NoteSoundChannel *channel,
-    const char *notes,
-    unsigned int tempo,
+void
+SoundChannel_SetTrackAndSampler(
+    SoundChannel *channel,
+    SoundTrack *track,
+    const SoundSampler *sampler,
     int rate);
+
+void
+SoundChannel_Pitch(
+    SoundChannel *channel,
+    unsigned int frequency);
+
+unsigned int
+SoundChannel_Fill(
+    SoundChannel *channel,
+    int *buffer,
+    unsigned int size);
 
 typedef struct SoundPlayer {
   char *buffers[2];       // buffers for mixing

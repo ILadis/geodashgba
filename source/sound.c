@@ -17,77 +17,32 @@ static const int Octave[] = {
   [NOTE_B]      = 30.8677 * (1 << 8),
 };
 
-static int
-NoteSample_Get(
-    void *self,
-    unsigned int index)
+void
+SoundTrack_AssignNotes(
+    SoundTrack *track,
+    const char *notes,
+    unsigned int tempo)
 {
-  NoteSample *sample = self;
-  Note note = sample->note;
-
-  if (index > sample->length || note > length(Octave)) {
-    return 0;
-  }
-
-  const int pi = 256;
-  const int octave = sample->octave;
-
-  /* Note: multiplying frequency (24.8 fixed point) with an index (for example a 19.13 fixed
-   * point when using 8kHz as the sample rate) results in a 11.21 fixed point number.
-   * This is why we have to shift by 21 to get the alpha/integer part that is used to get
-   * the sin-value.
-   */
-  int frequency = Octave[note] * (1 << octave);
-  int alpha = (pi * frequency * index) >> (8 + sample->rate);
-
-  // returns a 24.8 fixed point integer
-  int value = Math_sin(alpha);
-
-  // convert to sample size of 8 bits (range -127..+127)
-  return (value * 127) >> 8;
+  track->notes = notes;
+  track->index = 0;
+  track->tempo = tempo;
 }
 
-static inline NoteSample*
-NoteSample_FromSamples(union Samples *samples) {
-  NoteSample *sample = &samples->note;
-  sample->super.self = sample;
-  sample->super.Get = NoteSample_Get;
-  return sample;
-}
-
-static inline void
-NoteSoundChannel_SetNextSamplePosition(NoteSoundChannel *channel) {
-  NoteSample *note = &channel->samples.note;
-
-  const unsigned int position = channel->position;
-  const unsigned int length = note->length << SOUND_CHANNEL_PRECISION;
-
-  /* Note: check if more data was sampled than actually wanted. If this occured do not
-   * sample next note from start but from an offset.
-   */
-  if (position > length) {
-    channel->position = position - length;
-  } else {
-    // Sampled less than the required length, should never happen.
-    channel->position = 0;
-  }
-}
-
-static inline bool
-NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
-  unsigned int index = channel->track.index;
-  const char *notes = channel->track.notes;
+const Tone*
+SoundTrack_NextTone(SoundTrack *track) {
+  unsigned int index = track->index;
+  const char *notes = track->notes;
 
   char symbol = notes[index];
   if (symbol == '\0' || symbol < 'A' || symbol > 'Z') {
-    return false;
+    return NULL;
   }
 
   enum Note note = (symbol - 'A') * 2;
 
   unsigned int octave = 4;
   unsigned int dotted = 0;
-  unsigned int length = channel->tempo;
+  unsigned int length = track->tempo;
   bool shorten = false;
 
   while (true) {
@@ -111,89 +66,133 @@ NoteSoundChannel_NextSample(NoteSoundChannel *channel) {
     break;
   }
 
-  NoteSoundChannel_SetNextSamplePosition(channel);
+  Tone *tone = &track->tone;
+  tone->note = note;
+  tone->octave = octave;
+  tone->length = length;
+  track->index = index;
 
-  NoteSample *sample = NoteSample_FromSamples(&channel->samples);
-  sample->note = note;
-  sample->octave = octave;
-  sample->length = length;
-  sample->rate = channel->rate;
-
-  channel->track.index = index;
-  channel->sample = &sample->super;
-
-  return true;
+  return tone;
 }
 
-SoundChannel*
-NoteSoundChannel_Create(
-    NoteSoundChannel *channel,
-    const char *notes,
-    unsigned int tempo,
-    int rate)
+static int
+SineSoundSampler_Get(
+    unused void *self,
+    const Tone *tone,
+    unsigned int index,
+    unsigned int rate)
 {
-  void NoteSoundChannel_Pitch(void *channel, unsigned int frequency);
-  unsigned int NoteSoundChannel_Fill(void *channel, int *buffer, unsigned int size);
+  Note note = tone->note;
 
-  channel->super.self = channel;
-  channel->super.Pitch = NoteSoundChannel_Pitch;
-  channel->super.Fill = NoteSoundChannel_Fill;
+  if (index > tone->length || note > length(Octave)) {
+    return 0;
+  }
 
-  channel->track.notes = notes;
-  channel->track.index = 0;
-  channel->tempo = tempo;
-  channel->rate = rate;
-  channel->position = 0;
-  channel->increment = 1 << SOUND_CHANNEL_PRECISION;
+  const int pi = 256;
+  const int octave = tone->octave;
 
-  NoteSoundChannel_NextSample(channel);
+  /* Note: multiplying frequency (24.8 fixed point) with an index (for example a 19.13 fixed
+   * point when using 8kHz as the sample rate) results in a 11.21 fixed point number.
+   * This is why we have to shift by 21 to get the alpha/integer part that is used to get
+   * the sin-value.
+   */
+  int frequency = Octave[note] * (1 << octave);
+  int alpha = (pi * frequency * index) >> (8 + rate);
 
-  return &channel->super;
+  // returns a 24.8 fixed point integer
+  int value = Math_sin(alpha);
+
+  // convert to sample size of 8 bits (range -127..+127)
+  return (value * 127) >> 8;
+}
+
+const SoundSampler*
+SineSoundSampler_GetInstance() {
+  static SoundSampler sampler = {
+    .self = NULL,
+    .Get = SineSoundSampler_Get,
+  };
+
+  return &sampler;
 }
 
 void
-NoteSoundChannel_Pitch(
-    void *self,
+SoundChannel_SetTrackAndSampler(
+    SoundChannel *channel,
+    SoundTrack *track,
+    const SoundSampler *sampler,
+    int rate)
+{
+  channel->track = track;
+  channel->tone = NULL;
+  channel->sampler = sampler;
+  channel->rate = rate;
+  channel->position = 0;
+  channel->increment = 1 << SOUND_CHANNEL_PRECISION;
+}
+
+void
+SoundChannel_Pitch(
+    SoundChannel *channel,
     unsigned int frequency)
 {
-  NoteSoundChannel *channel = self;
-
   unsigned int precision = SOUND_CHANNEL_PRECISION;
   unsigned int increment = Math_div(1 << (channel->rate + precision), frequency);
 
   channel->increment = increment;
 }
 
+static inline bool
+SoundChannel_NextToneIfRequired(SoundChannel *channel) {
+  const Tone *tone = channel->tone;
+
+  const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
+  const unsigned int length = tone == NULL ? 0 : tone->length;
+
+  if (position >= length) {
+    tone = SoundTrack_NextTone(channel->track);
+    if (tone == NULL) return false; // end of track
+
+    channel->tone = tone;
+    channel->position = 0;
+
+    /* Note: check if more data was sampled than actually wanted. If this occured do not
+     * sample next note from start but from an offset.
+     */
+    if (position > length) {
+      channel->position = position - length;
+    }
+  }
+
+  return true;
+}
+
 unsigned int
-NoteSoundChannel_Fill(
-    void *self,
+SoundChannel_Fill(
+    SoundChannel *channel,
     int *buffer,
     unsigned int size)
 {
-  NoteSoundChannel *channel = self;
-  NoteSample *sample = &channel->samples.note;
-
-  unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
-  if (position >= sample->length) {
-    if (!NoteSoundChannel_NextSample(channel)) {
-      return 0; // end of track
-    }
+  if (!SoundChannel_NextToneIfRequired(channel)) {
+    return 0; // end of track
   }
 
   unsigned int index = 0;
   while (index < size) {
     unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
-    int value = Sample_Get(channel->sample, position);
+    const Tone *tone = channel->tone;
+
+    int value = SoundSampler_Get(channel->sampler, tone, position, channel->rate);
 
     channel->position += channel->increment;
     buffer[index++] += value;
 
-    if (position < sample->length) {
+    if (position < tone->length) {
       continue;
     }
 
     // advance to next note/sample
-    if (!NoteSoundChannel_NextSample(channel)) {
+    if (!SoundChannel_NextToneIfRequired(channel)) {
       break;
     }
   }
@@ -203,9 +202,9 @@ NoteSoundChannel_Fill(
 
 SoundPlayer*
 SoundPlayer_GetInstance() {
-  /* Note: at ~ 60 fps every frame consumes 192 bytes (11468 samples/s divided by 60 fps).
-   * The buffer size also needs to be a multiple of 16 because the sound is read in chunks
-   * of 16 bytes.
+  /* Note: at around 60 fps every frame consumes 192 samples each of 1 byte in size. This is
+   * determined by the target frequency (11468 samples/s divided by 60 fps). The buffer/sample
+   * size also needs to be a multiple of 16 because the sound is read in chunks of 16 bytes.
    */
   static char buffer1[192];
   static char buffer2[192];
