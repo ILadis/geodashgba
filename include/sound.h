@@ -4,6 +4,7 @@
 #include <types.h>
 #include <math.h>
 #include <gba.h>
+#include <io.h>
 
 typedef enum Note {
   NOTE_C = 4,
@@ -25,6 +26,19 @@ typedef struct Tone {
   unsigned int octave;
   unsigned int length;
 } Tone;
+
+unsigned int
+Tone_GetFrequency(const Tone *tone);
+
+static inline int
+Tone_GetBaseFrequency() {
+  const Tone base = {
+    .note = NOTE_C,
+    .octave = 4,
+  };
+
+  return Tone_GetFrequency(&base);
+}
 
 // TODO convert to AsciiSoundTrack to support multiple track formats
 typedef struct SoundTrack {
@@ -55,6 +69,21 @@ SoundSampler_Get(const SoundSampler *sample, const Tone *tone, unsigned int inde
 
 const SoundSampler*
 SineSoundSampler_GetInstance();
+
+typedef struct WaveSoundSampler {
+  SoundSampler base;
+  Reader *reader;
+  unsigned int offset;
+  struct {
+    unsigned int rate;   // sample rate in Hz
+    unsigned short size; // sample size in bytes
+  } sample;
+} WaveSoundSampler;
+
+SoundSampler*
+WaveSoundSampler_FromReader(
+    WaveSoundSampler *wave,
+    Reader *reader);
 
 typedef struct SoundChannel {
   SoundTrack *track;

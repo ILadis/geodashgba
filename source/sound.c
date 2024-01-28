@@ -17,6 +17,11 @@ static const int Octave[] = {
   [NOTE_B]      = 30.8677 * (1 << 8),
 };
 
+unsigned int
+Tone_GetFrequency(const Tone *tone) {
+  return (tone->note > length(Octave)) ? 0 : Octave[tone->note] * (1 << tone->octave);
+}
+
 void
 SoundTrack_AssignNotes(
     SoundTrack *track,
@@ -82,22 +87,15 @@ SineSoundSampler_Get(
     unsigned int index,
     unsigned int rate)
 {
-  Note note = tone->note;
-
-  if (index > tone->length || note > length(Octave)) {
+  // frequency is stored as a 24.8 fixed point integer
+  int frequency = Tone_GetFrequency(tone);
+  if (index > tone->length || frequency == 0) {
     return 0;
   }
 
-  const int pi = 256;
-  const int octave = tone->octave;
-
-  /* Note: multiplying frequency (24.8 fixed point) with an index (for example a 19.13 fixed
-   * point when using 8kHz as the sample rate) results in a 11.21 fixed point number.
-   * This is why we have to shift by 21 to get the alpha/integer part that is used to get
-   * the sin-value.
-   */
-  int frequency = Octave[note] * (1 << octave);
-  int alpha = (pi * frequency * index) >> (8 + rate);
+  // calculate sin(2pi * frequency * index/sample rate) to get sine sample
+  const int pi2 = 256;
+  int alpha = (pi2 * frequency * index) >> (8 + rate);
 
   // returns a 24.8 fixed point integer
   int value = Math_sin(alpha);

@@ -21,3 +21,8 @@ fat:
 - https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 - https://en.wikipedia.org/wiki/Master_boot_record
 - https://en.wikipedia.org/wiki/Partition_type
+
+audio:
+- https://deku.gbadev.org/program/sound3.html
+- https://www.cs.nmsu.edu/~rth/cs/computermusic/Simple%20sound%20generation.html
+- https://modarchive.org

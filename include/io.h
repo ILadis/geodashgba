@@ -15,6 +15,52 @@ Reader_Read(const Reader *reader) {
   return reader->Read(reader->self);
 }
 
+static inline bool
+Reader_ReadValue(const Reader *reader, void *value, unsigned int length) {
+  unsigned char *values = value;
+
+  for (unsigned int i = 0; i < length; i++) {
+    int byte = Reader_Read(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    values[i] = byte;
+  }
+
+  return true;
+}
+
+static inline bool
+Reader_ReadInt32(const Reader *reader, int *value) {
+  return Reader_ReadValue(reader, value, 4);
+}
+
+static inline bool
+Reader_ReadUInt32(const Reader *reader, unsigned int *value) {
+  return Reader_ReadValue(reader, value, 4);
+}
+
+static inline bool
+Reader_ReadInt16(const Reader *reader, short *value) {
+  return Reader_ReadValue(reader, value, 2);
+}
+
+static inline bool
+Reader_ReadUInt16(const Reader *reader, unsigned short *value) {
+  return Reader_ReadValue(reader, value, 2);
+}
+
+static inline bool
+Reader_ReadInt8(const Reader *reader, char *value) {
+  return Reader_ReadValue(reader, value, 1);
+}
+
+static inline bool
+Reader_ReadUInt8(const Reader *reader, unsigned char *value) {
+  return Reader_ReadValue(reader, value, 1);
+}
+
 static inline unsigned int
 Reader_GetLength(const Reader *reader) {
   return reader->GetLength(reader->self);
