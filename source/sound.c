@@ -177,7 +177,7 @@ SoundChannel_Fill(
 
   unsigned int index = 0;
   while (index < size) {
-    unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
+    const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
     const Tone *tone = channel->tone;
 
     int value = SoundSampler_Get(channel->sampler, tone, position, channel->rate);
@@ -185,7 +185,8 @@ SoundChannel_Fill(
     channel->position += channel->increment;
     buffer[index++] += value;
 
-    if (position < tone->length) {
+    const unsigned int next = channel->position >> SOUND_CHANNEL_PRECISION;
+    if (next < tone->length) {
       continue;
     }
 
@@ -286,7 +287,7 @@ SoundPlayer_MixChannels(SoundPlayer *player) {
     }
   }
 
-  for (unsigned int i = 0; i < size && !done; i++) {
+  for (unsigned int i = 0; i < size; i++) {
     player->active[i] = (char) (buffer[i] >> 2); // divide by 4 channels
   }
 
