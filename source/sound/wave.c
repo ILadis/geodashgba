@@ -59,6 +59,7 @@ WaveSoundSampler_ReadDataSection(
     unused unsigned int position,
     unused unsigned int length)
 {
+  // just save position of data section as offset
   sampler->offset = position;
   return true;
 }

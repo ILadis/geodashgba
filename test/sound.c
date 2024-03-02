@@ -5,12 +5,10 @@
 test(NextTone_ShouldReturnToneWithExpectedNoteAndLength) {
   // arrange
   const char notes[] = "D`^2.";
-
-  SoundTrack track;
-  SoundTrack_AssignNotes(&track, notes, 2800);
+  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 2800);
 
   // act
-  const Tone *tone = SoundTrack_NextTone(&track);
+  const Tone *tone = SoundTrack_NextTone(track);
 
   // assert
   assert(tone->note == NOTE_DSHARP);
@@ -24,12 +22,10 @@ test(Fill_ShouldReturnExpectedAmountOfSamples) {
   int buffer[8192] = {0};
 
   const SoundSampler *sampler = SineSoundSampler_GetInstance();
-
-  SoundTrack track;
-  SoundTrack_AssignNotes(&track, notes, 8192);
+  SoundTrack *track= AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 8192);
 
   SoundChannel channel;
-  SoundChannel_SetTrackAndSampler(&channel, &track, sampler, 13); // 2^13 = 8192 sample rate
+  SoundChannel_SetTrackAndSampler(&channel, track, sampler, 13); // 2^13 = 8192 sample rate
 
   // act
   int length1 = SoundChannel_Fill(&channel, buffer, length(buffer));
@@ -46,13 +42,12 @@ test(Fill_ShouldReturnExpectedAmountOfSamples) {
 test(MixChannels_ShouldReturnFalseWhenTrackIsDonePlayingAndResetActiveBuffer) {
   // arrange
   const char notes[] = "C D/2";
-  const SoundSampler *sampler = SineSoundSampler_GetInstance();
 
-  SoundTrack track;
-  SoundTrack_AssignNotes(&track, notes, 8192);
+  const SoundSampler *sampler = SineSoundSampler_GetInstance();
+  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 8192);
 
   SoundChannel channel;
-  SoundChannel_SetTrackAndSampler(&channel, &track, sampler, 13); // 2^13 = 8192 sample rate
+  SoundChannel_SetTrackAndSampler(&channel, track, sampler, 13); // 2^13 = 8192 sample rate
 
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_AddChannel(player, &channel);

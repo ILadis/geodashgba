@@ -40,17 +40,17 @@ Scene_DoEnter() {
     static const char notes1[] = "E` | E` B/2  C`/2 D`/2 E`/4 D`/4 C`/2 B/2  | A A/2 C`/2 E`  D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A Z            | Z/2 D`/2 F`/2 A` G`/2 F`/2 | E`. C`/2 E` D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A Z | E` B/2  C`/2 D` C`/2 B/2 | A A/2 C`/2 E` D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A Z            | Z/2 D`/2 F`/2 A` G`/2 F`/2 | E`. C`/2 E` D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A Z | E2 C2  | D2  B,2  | C2  A,2 | G^,2 B,2  | E2 C2  | D2  B,2  | C  E A A | G^4 | E` B/2  C`/2 D` C`/2 B/2 | A A/2 C`/2 E` D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A Z            | Z/2 D`/2 F`/2 A` G`/2 F`/2 | E`. C`/2 E` D`/2 C`/2 | B  B/2  C`/2 D` E` | C` A A2 |";
     static const char notes2[] = "B  | Z  G^/2 Z/2  Z              A/2  G^/2 | E Z        Z2            | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | C2 A,2 | B,2 G^,2 | A,2 D,2 | D,2  G^,2 | C2 A,2 | B,2 G^,2 | A, C E E | E4  | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4      |";
 
-    static SoundTrack track1 = {0};
-    SoundTrack_AssignNotes(&track1, notes1, 2800);
+    static AsciiSoundTrack sound1 = {0};
+    SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1, 2800);
 
-    static SoundTrack track2 = {0};
-    SoundTrack_AssignNotes(&track2, notes2, 2800);
+    static AsciiSoundTrack sound2 = {0};
+    SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 2800);
 
     static SoundChannel channel1 = {0};
-    SoundChannel_SetTrackAndSampler(&channel1, &track1, sampler, 13);
+    SoundChannel_SetTrackAndSampler(&channel1, track1, sampler, 13);
 
     static SoundChannel channel2 = {0};
-    SoundChannel_SetTrackAndSampler(&channel2, &track2, sampler, 13);
+    SoundChannel_SetTrackAndSampler(&channel2, track2, sampler, 13);
 
     SoundPlayer_AddChannel(player, &channel1);
     SoundPlayer_AddChannel(player, &channel2);

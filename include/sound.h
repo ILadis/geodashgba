@@ -40,22 +40,29 @@ Tone_GetBaseFrequency() {
   return Tone_GetFrequency(&base);
 }
 
-// TODO convert to AsciiSoundTrack to support multiple track formats
 typedef struct SoundTrack {
+  void *self;
+  const Tone* (*Next)(void *self);
+} SoundTrack;
+
+static inline const Tone*
+SoundTrack_NextTone(SoundTrack *track) {
+  return track->Next(track->self);
+}
+
+typedef struct AsciiSoundTrack {
+  SoundTrack base;
   const char *notes;
   unsigned int index; // index of next char to consume in notes pointer
   unsigned int tempo; // base used for calculating length of tones (total values that can be sampled)
-  struct Tone tone;   // current parsed note from sound track
-} SoundTrack;
+  Tone tone;          // current parsed note from sound track
+} AsciiSoundTrack;
 
-void
-SoundTrack_AssignNotes(
-    SoundTrack *track,
+SoundTrack*
+AsciiSoundTrack_FromNotes(
+    AsciiSoundTrack *track,
     const char *notes,
     unsigned int tempo);
-
-const Tone*
-SoundTrack_NextTone(SoundTrack *track);
 
 typedef struct SoundSampler {
   void *self;
@@ -88,10 +95,7 @@ WaveSoundSampler_FromReader(
 typedef struct SoundChannel {
   SoundTrack *track;
   const Tone *tone;
-
-  // TODO add different samplers: SineSampler, WaveSampler
   const SoundSampler *sampler;
-
   unsigned int rate;      // sample rate as power of two (for example 13 = 8kHz)
   unsigned int position;  // position in current sample (20.12 fixed point integer)
   unsigned int increment; // position increment per loop (20.12 fixed point integer)

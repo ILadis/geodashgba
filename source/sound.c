@@ -22,19 +22,10 @@ Tone_GetFrequency(const Tone *tone) {
   return (tone->note > length(Octave)) ? 0 : Octave[tone->note] * (1 << tone->octave);
 }
 
-void
-SoundTrack_AssignNotes(
-    SoundTrack *track,
-    const char *notes,
-    unsigned int tempo)
-{
-  track->notes = notes;
-  track->index = 0;
-  track->tempo = tempo;
-}
+static const Tone*
+AsciiSoundTrack_NextTone(void *self) {
+  AsciiSoundTrack *track = self;
 
-const Tone*
-SoundTrack_NextTone(SoundTrack *track) {
   unsigned int index = track->index;
   const char *notes = track->notes;
 
@@ -78,6 +69,22 @@ SoundTrack_NextTone(SoundTrack *track) {
   track->index = index;
 
   return tone;
+}
+
+SoundTrack*
+AsciiSoundTrack_FromNotes(
+    AsciiSoundTrack *track,
+    const char *notes,
+    unsigned int tempo)
+{
+  track->notes = notes;
+  track->index = 0;
+  track->tempo = tempo;
+
+  track->base.self = track;
+  track->base.Next = AsciiSoundTrack_NextTone;
+
+  return &track->base;
 }
 
 static int
