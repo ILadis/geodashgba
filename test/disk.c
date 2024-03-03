@@ -173,7 +173,7 @@ test(ReadDirectory_ShouldReturnExpectedEntries) {
   };
 
   // act
-  for (int i = 0; i < length(entries); i++) {
+  for (unsigned int i = 0; i < length(entries); i++) {
     DiskEntry entry = {0};
     Disk_ReadDirectory(&disk, &entry);
 
@@ -316,7 +316,7 @@ test(OpenFile_ShouldReturnReaderAndReadFileBytewise) {
   // assert
   assert(reader != NULL);
 
-  for (int i = 0; i < entry.fileSize; i++) {
+  for (unsigned int i = 0; i < entry.fileSize; i++) {
     int byte = Reader_Read(reader);
     assert(byte == registeryDat[i]);
   }
@@ -354,7 +354,7 @@ test(SeekTo_ShouldAdjustPositionAndReturnExpectedBytes) {
     { bytesPerCluster * 1, levelBinSectors[1] },
   };
 
-  for (int i = 0; i < length(seeks); i++) {
+  for (unsigned int i = 0; i < length(seeks); i++) {
     // arrange
     for (int j = 0; j < 512; j++) {
       seeks[i].values[j] = (unsigned char) Math_rand();
@@ -467,7 +467,7 @@ test(NormalizePath_ShouldReturnFalseWhenPathnameContainsInvalidCharacters) {
     "/GBASYS/./romcfg",
   };
 
-  for (int i = 0; i < length(pathnames); i++) {
+  for (unsigned int i = 0; i < length(pathnames); i++) {
     char *path[] = {
       segments[0],
       segments[1],

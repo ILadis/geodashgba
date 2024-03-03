@@ -22,6 +22,41 @@ Tone_GetFrequency(const Tone *tone) {
   return (tone->note > length(Octave)) ? 0 : Octave[tone->note] * (1 << tone->octave);
 }
 
+static const enum Note notes[] = {
+  [ 4] = NOTE_C,
+         NOTE_CSHARP,
+  [ 6] = NOTE_D,
+         NOTE_DSHARP,
+  [ 8] = NOTE_E,
+  [10] = NOTE_F,
+         NOTE_FSHARP,
+  [12] = NOTE_G,
+         NOTE_GSHARP,
+  [ 0] = NOTE_A,
+         NOTE_ASHARP,
+  [ 2] = NOTE_B,
+};
+
+static inline bool
+Note_FromSymbol(
+    Note *note,
+    char symbol)
+{
+  // pause symbol
+  if (symbol == 'Z') {
+    *note = NOTE_PAUSE;
+    return true;
+  }
+
+  unsigned int index = (symbol - 'A') * 2;
+  if (index > length(notes)) {
+    return false;
+  }
+
+  *note = notes[index];
+  return true;
+}
+
 static const Tone*
 AsciiSoundTrack_NextTone(void *self) {
   AsciiSoundTrack *track = self;
@@ -29,12 +64,11 @@ AsciiSoundTrack_NextTone(void *self) {
   unsigned int index = track->index;
   const char *notes = track->notes;
 
+  enum Note note;
   char symbol = notes[index];
-  if (symbol == '\0' || symbol < 'A' || symbol > 'Z') {
-    return NULL;
+  if (!Note_FromSymbol(&note, symbol)) {
+    return false;
   }
-
-  enum Note note = (symbol - 'A') * 2;
 
   unsigned int octave = 4;
   unsigned int dotted = 0;
@@ -88,7 +122,7 @@ AsciiSoundTrack_FromNotes(
 }
 
 static int
-SineSoundSampler_Get(
+SineSoundSampler_GetSample(
     unused void *self,
     const Tone *tone,
     unsigned int index,
@@ -96,9 +130,6 @@ SineSoundSampler_Get(
 {
   // frequency is stored as a 24.8 fixed point integer
   int frequency = Tone_GetFrequency(tone);
-  if (index > tone->length || frequency == 0) {
-    return 0;
-  }
 
   // calculate sin(2pi * frequency * index/sample rate) to get sine sample
   const int pi2 = 256;
@@ -115,7 +146,7 @@ const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
-    .Get = SineSoundSampler_Get,
+    .Get = SineSoundSampler_GetSample,
   };
 
   return &sampler;
@@ -151,7 +182,7 @@ static inline bool
 SoundChannel_NextToneIfRequired(SoundChannel *channel) {
   const Tone *tone = channel->tone;
 
-  const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
+  const unsigned int position = channel->tonePosition;
   const unsigned int length = tone == NULL ? 0 : tone->length;
 
   if (position >= length) {
@@ -160,13 +191,7 @@ SoundChannel_NextToneIfRequired(SoundChannel *channel) {
 
     channel->tone = tone;
     channel->position = 0;
-
-    /* Note: check if more data was sampled than actually wanted. If this occured do not
-     * sample next note from start but from an offset.
-     */
-    if (position > length) {
-      channel->position = position - length;
-    }
+    channel->tonePosition = 0;
   }
 
   return true;
@@ -187,12 +212,16 @@ SoundChannel_Fill(
     const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
     const Tone *tone = channel->tone;
 
-    int value = SoundSampler_Get(channel->sampler, tone, position, channel->rate);
+    int value = 0;
+    if (tone->note != NOTE_PAUSE) {
+      value = SoundSampler_GetSample(channel->sampler, tone, position, channel->rate);
+    }
 
     channel->position += channel->increment;
     buffer[index++] += value;
 
-    const unsigned int next = channel->position >> SOUND_CHANNEL_PRECISION;
+  //const unsigned int next = channel->position >> SOUND_CHANNEL_PRECISION;
+    unsigned int next = channel->tonePosition += 3;
     if (next < tone->length) {
       continue;
     }
@@ -263,6 +292,8 @@ SoundPlayer_AddChannel(
     SoundPlayer *player,
     SoundChannel *channel)
 {
+//unsigned int reciproc = Math_div(1 << 28, player->frequency);
+//channel->reciproc = reciproc;
   SoundChannel_Pitch(channel, player->frequency);
 
   for (unsigned int i = 0; i < length(player->channels); i++) {

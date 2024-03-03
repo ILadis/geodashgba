@@ -112,7 +112,7 @@ WaveSoundSampler_ReadMetaData(WaveSoundSampler *sampler) {
 }
 
 static int
-WaveSoundSampler_Get(
+WaveSoundSampler_GetSample(
     void *self,
     const Tone *tone,
     unsigned int index,
@@ -167,9 +167,11 @@ WaveSoundSampler_FromReader(
 {
   wave->reader = reader;
   wave->base.self = wave;
-  wave->base.Get = WaveSoundSampler_Get;
+  wave->base.Get = WaveSoundSampler_GetSample;
 
-  WaveSoundSampler_ReadMetaData(wave);
+  if (!WaveSoundSampler_ReadMetaData(wave)) {
+    return NULL;
+  }
 
   return &wave->base;
 }

@@ -26,7 +26,7 @@ CFLAGS   := $(ARCH) -O2 -Wall -Wextra -fno-strict-aliasing -nostdinc -mcpu=arm7t
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases
-TESTS    := $(basename $(wildcard test/*.c) $(wildcard test/game/*.c))
+TESTS    := $(basename $(wildcard test/*.c) $(wildcard test/game/*.c)) $(wildcard test/sound/*.c))
 RUNNER   := exec
 
 # debug settings
@@ -37,7 +37,7 @@ ifdef DEBUG
   EMU     := mgba-qt -l 8 -3 --gdb
 endif
 
-.PHONY : tools utils assets build run clean purge
+.PHONY : tests tools utils assets build run clean purge
 
 build: main.gba main.elf
 
@@ -67,6 +67,7 @@ utils:
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/mksnd.c $(CFILES) -o tools/mksnd -lm -Iinclude -DNOGBA -Wall -Wextra
+	@gcc tools/mod2snd.c $(CFILES) -o tools/mod2snd -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/lsdsk.c $(CFILES) -o tools/lsdsk -lm -Iinclude -DNOGBA -Wall -Wextra
 
 assets:
