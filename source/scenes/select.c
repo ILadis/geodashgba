@@ -47,10 +47,10 @@ Scene_DoEnter() {
     SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 2800);
 
     static SoundChannel channel1 = {0};
-    SoundChannel_SetTrackAndSampler(&channel1, track1, sampler, 13);
+    SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
 
     static SoundChannel channel2 = {0};
-    SoundChannel_SetTrackAndSampler(&channel2, track2, sampler, 13);
+    SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
 
     SoundPlayer_AddChannel(player, &channel1);
     SoundPlayer_AddChannel(player, &channel2);

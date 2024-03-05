@@ -2,7 +2,7 @@
 #include <sound.h>
 
 // frequences of octave zero as 24.8 fixed point integers
-static const int Octave[] = {
+static const unsigned int Octave[] = {
   [NOTE_C]      = 16.3516 * (1 << 8),
   [NOTE_CSHARP] = 17.3239 * (1 << 8),
   [NOTE_D]      = 18.3540 * (1 << 8),
@@ -121,22 +121,26 @@ AsciiSoundTrack_FromNotes(
   return &track->base;
 }
 
+static void
+SineSoundSampler_Prepare(
+    unused void *self,
+    SoundChannel *channel,
+    const Tone *tone)
+{
+  const int pi2 = 256;
+
+  unsigned int frequency = Tone_GetFrequency(tone); // returns a 24.8 fixed point integer
+  unsigned int alpha = (pi2 * frequency) >> 8;
+
+  SoundChannel_Pitch(channel, alpha);
+}
+
 static int
 SineSoundSampler_GetSample(
     unused void *self,
-    const Tone *tone,
-    unsigned int index,
-    unsigned int rate)
+    unsigned int index)
 {
-  // frequency is stored as a 24.8 fixed point integer
-  int frequency = Tone_GetFrequency(tone);
-
-  // calculate sin(2pi * frequency * index/sample rate) to get sine sample
-  const int pi2 = 256;
-  int alpha = (pi2 * frequency * index) >> (8 + rate);
-
-  // returns a 24.8 fixed point integer
-  int value = Math_sin(alpha);
+  int value = Math_sin(index);
 
   // convert to sample size of 8 bits (range -127..+127)
   return (value * 127) >> 8;
@@ -146,6 +150,7 @@ const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
+    .Prepare = SineSoundSampler_Prepare,
     .Get = SineSoundSampler_GetSample,
   };
 
@@ -156,13 +161,10 @@ void
 SoundChannel_SetTrackAndSampler(
     SoundChannel *channel,
     SoundTrack *track,
-    const SoundSampler *sampler,
-    int rate)
+    const SoundSampler *sampler)
 {
   channel->track = track;
-  channel->tone = NULL;
   channel->sampler = sampler;
-  channel->rate = rate;
   channel->position = 0;
   channel->increment = 1 << SOUND_CHANNEL_PRECISION;
 }
@@ -172,9 +174,8 @@ SoundChannel_Pitch(
     SoundChannel *channel,
     unsigned int frequency)
 {
-  unsigned int precision = SOUND_CHANNEL_PRECISION;
-  unsigned int increment = Math_div(1 << (channel->rate + precision), frequency);
-
+  unsigned int reciproc = *channel->reciproc;
+  unsigned int increment = (frequency * reciproc) >> (SOUND_RECIPROC_PRECISION - SOUND_CHANNEL_PRECISION);
   channel->increment = increment;
 }
 
@@ -187,11 +188,18 @@ SoundChannel_NextToneIfRequired(SoundChannel *channel) {
 
   if (position >= length) {
     tone = SoundTrack_NextTone(channel->track);
-    if (tone == NULL) return false; // end of track
+
+    if (tone == NULL) {
+      return false; // end of track
+    }
 
     channel->tone = tone;
     channel->position = 0;
     channel->tonePosition = 0;
+
+    if (tone->note != NOTE_PAUSE) {
+      SoundSampler_Prepare(channel->sampler, channel, tone);
+    }
   }
 
   return true;
@@ -214,14 +222,14 @@ SoundChannel_Fill(
 
     int value = 0;
     if (tone->note != NOTE_PAUSE) {
-      value = SoundSampler_GetSample(channel->sampler, tone, position, channel->rate);
+      value = SoundSampler_GetSample(channel->sampler, position);
     }
 
     channel->position += channel->increment;
     buffer[index++] += value;
 
   //const unsigned int next = channel->position >> SOUND_CHANNEL_PRECISION;
-    unsigned int next = channel->tonePosition += 3;
+    unsigned int next = channel->tonePosition += 1;
     if (next < tone->length) {
       continue;
     }
@@ -249,14 +257,14 @@ SoundPlayer_GetInstance() {
     .buffers[0] = buffer1,
     .buffers[1] = buffer2,
     .size = length(buffer1),
-    .frequency = 11468,
+    .reciproc = (1 << SOUND_RECIPROC_PRECISION) / 11468,
   };
 
   return &player;
 }
 
 void
-SoundPlayer_Enable(SoundPlayer *player) {
+SoundPlayer_Enable(unused SoundPlayer *player) {
   GBA_EnableSound();
 
   GBA_SoundControl enable = {
@@ -267,7 +275,7 @@ SoundPlayer_Enable(SoundPlayer *player) {
   };
 
   const int cycles = 16777216;
-  const int frequency = player->frequency;
+  const int frequency = 11468;
 
   GBA_TimerData data = { 0xFFFF - Math_div(cycles, frequency) };
   GBA_TimerControl timer = {
@@ -292,13 +300,10 @@ SoundPlayer_AddChannel(
     SoundPlayer *player,
     SoundChannel *channel)
 {
-//unsigned int reciproc = Math_div(1 << 28, player->frequency);
-//channel->reciproc = reciproc;
-  SoundChannel_Pitch(channel, player->frequency);
-
   for (unsigned int i = 0; i < length(player->channels); i++) {
     if (player->channels[i] == NULL) {
       player->channels[i] = channel;
+      channel->reciproc = &player->reciproc;
       return true;
     }
   }

@@ -6,7 +6,7 @@ static unsigned char theme[3292];
 
 test(FromReader_ShouldParseMetaDataOfModuleFile) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer){0}, theme, length(theme));
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
   ModuleTrack module = {0};
@@ -39,7 +39,7 @@ test(FromReader_ShouldParseMetaDataOfModuleFile) {
 
 test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer){0}, theme, length(theme));
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
   ModuleTrack module = {0};
@@ -79,7 +79,7 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
 
 test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer){0}, theme, length(theme));
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
   ModuleTrack module = {0};
@@ -117,15 +117,71 @@ test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
   }
 }
 
-test(GetSample_ShouldReturnExpectedSampleDataForEachChannel) {
+test(GetSample_ShouldReturnExpectedDataForFirstSample) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer){0}, theme, length(theme));
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
   ModuleTrack module = {0};
   ModuleTrack_FromReader(&module, reader);
 
   SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
+  module.channels[0].sample = 1;
+
+  char samples[] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x9d, 0xa3, 0xa9, 0xaf, 0xb5, 0xbb, 0xc1, 0xc7,
+    0xcd, 0xd2, 0xd8, 0xde, 0xe4, 0xea, 0xf0, 0xf6,
+  };
+
+  // act
+  for (unsigned int i = 0; i < length(samples); i++) {
+    int sample = SoundSampler_GetSample(sampler, i);
+
+    // assert
+    assert(sample == samples[i]);
+  }
+}
+
+test(GetSample_ShouldReturnExpectedDataForSecondSample) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
+  Reader *reader = DataSource_AsReader(source);
+
+  ModuleTrack module = {0};
+  ModuleTrack_FromReader(&module, reader);
+
+  SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
+  module.channels[0].sample = 2;
+
+  char samples[] = {
+    0x00, 0x00, 0x01, 0x40, 0x53, 0x42, 0x29, 0x39, 0x36, 0x36, 0x36, 0x36,
+    0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36,
+    0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x34, 0xec, 0xd6, 0xb3, 0xc1, 0xc0,
+    0xd0, 0xc8, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9,
+    0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9,
+    0xc9, 0xc9, 0xc9, 0xc9,
+  };
+
+  // act
+  for (unsigned int i = 0; i < length(samples); i++) {
+    int sample = SoundSampler_GetSample(sampler, i);
+
+    // assert
+    assert(sample == samples[i]);
+  }
+}
+
+test(GetSample_ShouldReturnExpectedDataForThirdSample) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
+  Reader *reader = DataSource_AsReader(source);
+
+  ModuleTrack module = {0};
+  ModuleTrack_FromReader(&module, reader);
+
+  SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
+  module.channels[0].sample = 3;
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x06, 0x11, 0x1f, 0x27, 0x2c, 0x32, 0x37, 0x3d,
@@ -133,12 +189,9 @@ test(GetSample_ShouldReturnExpectedSampleDataForEachChannel) {
     0xf8, 0xe1, 0xc6, 0xad, 0x9a, 0x9d, 0xc7, 0x19,
   };
 
-  const Tone tone = { .note = NOTE_C, .octave = 8 };
-  const unsigned int rate = 12;
-
   // act
   for (unsigned int i = 0; i < length(samples); i++) {
-    int sample = SoundSampler_GetSample(sampler, &tone, i, rate);
+    int sample = SoundSampler_GetSample(sampler, i);
 
     // assert
     assert(sample == samples[i]);
@@ -149,7 +202,9 @@ suite(
   FromReader_ShouldParseMetaDataOfModuleFile,
   NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave,
   NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave,
-  GetSample_ShouldReturnExpectedSampleDataForEachChannel);
+  GetSample_ShouldReturnExpectedDataForFirstSample,
+  GetSample_ShouldReturnExpectedDataForSecondSample,
+  GetSample_ShouldReturnExpectedDataForThirdSample)
 
 static unsigned char theme[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,

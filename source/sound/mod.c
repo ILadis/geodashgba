@@ -11,9 +11,9 @@
     + ((value >> 0) & 0xFF) * 0x100 \
     + ((value >> 8) & 0xFF)))
 
-#define SIGNATURE_POSITION 1080
 #define SAMPLES_POSITION   20
 #define ORDERS_POSITION    950
+#define SIGNATURE_POSITION 1080
 #define PATTERN_POSITION   1084
 
 // amiga periods for first octave
@@ -32,9 +32,15 @@ static const unsigned int Period1[] = {
   [NOTE_B]      = 453,
 };
 
-static unsigned int
+static inline unsigned int
 Tone_GetPeriod(const Tone *tone) {
   return (tone->note > length(Period1)) ? 0 : (Period1[tone->note] * 2) >> tone->octave;
+}
+
+static inline unsigned int
+Tone_GetModFrequency(const Tone *tone) {
+  // TODO use finetune lookup table
+  return 3579545 / Tone_GetPeriod(tone);
 }
 
 static inline void
@@ -51,17 +57,17 @@ Tone_FromPeriod(
 
   else for (unsigned int octave = 0; octave < 5; octave++) {
     for (enum Note note = 0; note < length(Period1); note++) {
-      Tone current = {
+      const Tone current = {
         .note = note,
         .octave = octave,
       };
 
-      unsigned int frequency = Tone_GetPeriod(&current);
-      unsigned int distance = Math_abs(frequency - period);
+      unsigned int notePeriod = Tone_GetPeriod(&current);
+      unsigned int distance = Math_abs(notePeriod - period);
 
       if (distance < closest) {
-        tone->note = current.note;
-        tone->octave = octave + 3;
+        tone->note = note;
+        tone->octave = octave;
 
         closest = distance;
       }
@@ -106,6 +112,7 @@ ModuleChannel_NextTone(void *self) {
     return NULL;
   }
 
+  // TODO add ModulePattern struct to store all fields
   unsigned int period = ((pattern[0] & 0b00001111) << 8) + pattern[1];
   unsigned int sample = (pattern[0] & 0b11110000) + (pattern[2] >> 4);
 
@@ -119,12 +126,20 @@ ModuleChannel_NextTone(void *self) {
   return tone;
 }
 
+static void
+ModuleChannel_Prepare(
+    unused void *self,
+    SoundChannel *channel,
+    const Tone *tone)
+{
+  unsigned int frequency = Tone_GetModFrequency(tone);
+  SoundChannel_Pitch(channel, frequency);
+}
+
 static int
 ModuleChannel_GetSample(
     void *self,
-    const Tone *tone,
-    unsigned int index,
-    unsigned int rate)
+    unsigned int index)
 {
   ModuleChannel *channel = self;
 
@@ -136,19 +151,7 @@ ModuleChannel_GetSample(
   ModuleTrack *module = channel->module;
   ModuleSample *sample = &module->samples[number - 1];
 
-  struct {
-    float sample;
-    float note;
-  } pitch;
-
-  unsigned int frequency = Tone_GetFrequency(tone);
-  unsigned int base = Tone_GetBaseFrequency();
-
-  pitch.note = (float) frequency / base;
-  pitch.sample = (float) 8000 / (1 << rate);
-
-  unsigned int offset = ((unsigned int) (index * pitch.sample * pitch.note)) % sample->loop.length;
-  unsigned int position = offset + (unsigned int) sample->data;
+  unsigned int position = sample->data + (index % sample->length);
 
   Reader *reader = module->reader;
   Reader_SeekTo(reader, position);
@@ -210,7 +213,7 @@ ModuleTrack_ReadMetaData(ModuleTrack *module) {
     sample->loop.start = ModuleTrack_ValueOf(sample->loop.start);
     sample->loop.length = ModuleTrack_ValueOf(sample->loop.length);
 
-    sample->data = (void *) data;
+    sample->data = data;
     data += sample->length;
   }
 
@@ -233,6 +236,7 @@ ModuleTrack_FromReader(
     channel->track.self = channel;
     channel->track.Next = ModuleChannel_NextTone;
     channel->sampler.self = channel;
+    channel->sampler.Prepare = ModuleChannel_Prepare;
     channel->sampler.Get = ModuleChannel_GetSample;
     channel->number = i;
     channel->position = 0;

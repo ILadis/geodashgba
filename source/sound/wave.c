@@ -111,35 +111,35 @@ WaveSoundSampler_ReadMetaData(WaveSoundSampler *sampler) {
   return true;
 }
 
-static int
-WaveSoundSampler_GetSample(
+static void
+WaveSoundSampler_Prepare(
     void *self,
-    const Tone *tone,
-    unsigned int index,
-    unsigned int rate)
+    SoundChannel *channel,
+    const Tone *tone)
 {
   WaveSoundSampler *wave = self;
 
   unsigned int frequency = Tone_GetFrequency(tone);
-  if (index > tone->length || frequency == 0) {
-    return 0;
-  }
+  unsigned int base = Tone_GetBaseFrequency() >> 8;
 
-  struct {
-    float sample;
-    float note;
-  } pitch;
+  unsigned int ratio = Math_div(frequency, base);
+  unsigned int pitch = (ratio * wave->sample.rate) >> 8;
 
-  unsigned int base = Tone_GetBaseFrequency();
+  SoundChannel_Pitch(channel, pitch);
+}
 
-  pitch.note = (float) frequency / base;
-  pitch.sample = (float) wave->sample.rate / (1 << rate);
+static int
+WaveSoundSampler_GetSample(
+    void *self,
+    unsigned int index)
+{
+  WaveSoundSampler *wave = self;
 
-  unsigned int position = index * pitch.sample * pitch.note;
   unsigned int size = wave->sample.size;
+  unsigned int position = index * size;
 
   const Reader *reader = wave->reader;
-  Reader_SeekTo(reader, wave->offset + position * size);
+  Reader_SeekTo(reader, wave->offset + position);
 
   int value = 0;
 
@@ -167,6 +167,7 @@ WaveSoundSampler_FromReader(
 {
   wave->reader = reader;
   wave->base.self = wave;
+  wave->base.Prepare = WaveSoundSampler_Prepare;
   wave->base.Get = WaveSoundSampler_GetSample;
 
   if (!WaveSoundSampler_ReadMetaData(wave)) {

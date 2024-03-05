@@ -15,10 +15,10 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 3000);
 
   static SoundChannel channel1 = {0};
-  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler, 13);
+  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
 
   static SoundChannel channel2 = {0};
-  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler, 13);
+  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
@@ -35,10 +35,10 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 2800);
 
   static SoundChannel channel1 = {0};
-  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler, 13);
+  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
 
   static SoundChannel channel2 = {0};
-  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler, 13);
+  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
@@ -49,16 +49,19 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
  *   ffplay -f s8 -ar 8192 -ac 1 tools/play.snd
  */
 int main() {
-//DataSource *input = File_From(&(File) {0}, stdin);
-//Reader *reader = DataSource_AsReader(input);
+  DataSource *input = File_From(&(File) {0}, stdin);
+  Reader *reader = DataSource_AsReader(input);
 
-  const SoundSampler *sine = SineSoundSampler_GetInstance();
-//unused SoundSampler *wave = WaveSoundSampler_FromReader(&(WaveSoundSampler) {0}, reader);
+  const SoundSampler *sampler = Reader_GetLength(reader) > 0
+    // use wave sound sampler if WAV file is provided on stdin
+    ? WaveSoundSampler_FromReader(&(WaveSoundSampler) {0}, reader)
+    // use sine sound sampler as fallback if no WAV file is provided
+    : SineSoundSampler_GetInstance();
 
   SoundPlayer *player = SoundPlayer_GetInstance();
-  player->frequency = 1<<13;
+  SoundPlayer_SetFrequency(player, 8192);
 
-  song1(player, sine);
+  song1(player, sampler);
 
   DataSource *output = File_From(&(File) {0}, stdout);
   Writer *writer = DataSource_AsWriter(output);

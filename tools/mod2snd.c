@@ -5,8 +5,8 @@
 #include <sound.h>
 
 /* Produce and play sound files with:
- *   tools/mksnd > tools/play.snd
- *   ffplay -f s8 -ar 8192 -ac 1 tools/play.snd
+ *   tools/mod2snd < song.mod > tools/play.snd
+ *   ffplay -f s8 -ar 16384 -ac 1 tools/play.snd
  */
 int main() {
   DataSource *input = File_From(&(File) {0}, stdin);
@@ -16,7 +16,7 @@ int main() {
   ModuleTrack_FromReader(&module, reader);
 
   SoundPlayer *player = SoundPlayer_GetInstance();
-  player->frequency = 1<<13;
+  SoundPlayer_SetFrequency(player, 16384);
 
   static SoundChannel channels[4] = {{0}};
 
@@ -24,7 +24,7 @@ int main() {
     SoundTrack *track = ModuleTrack_GetSoundTrack(&module, i);
     SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, i);
 
-    SoundChannel_SetTrackAndSampler(&channels[i], track, sampler, 13);
+    SoundChannel_SetTrackAndSampler(&channels[i], track, sampler);
     SoundPlayer_AddChannel(player, &channels[i]);
   }
 
