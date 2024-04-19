@@ -26,9 +26,12 @@ typedef enum Note {
 typedef struct Tone {
   Note note;
   unsigned int octave;
-  unsigned int length;
+  unsigned int ticks; // number of ticks this tone should last (.6 fixed point integer, 64 == one full note)
+
   // TODO consider adding effects here
 } Tone;
+
+#define NOTE_TICKS_PRECISION 6
 
 unsigned int
 Tone_GetFrequency(const Tone *tone);
@@ -57,27 +60,26 @@ typedef struct AsciiSoundTrack {
   SoundTrack base;
   const char *notes;
   unsigned int index; // index of next char to consume in notes pointer
-  unsigned int tempo; // base used for calculating length of tones (total values that can be sampled)
   Tone tone;          // current parsed note from sound track
 } AsciiSoundTrack;
 
 SoundTrack*
 AsciiSoundTrack_FromNotes(
     AsciiSoundTrack *track,
-    const char *notes,
-    unsigned int tempo);
+    const char *notes);
 
 typedef struct SoundChannel SoundChannel;
 
 typedef struct SoundSampler {
   void *self;
-  void (*Prepare)(void *self, SoundChannel *channel, const Tone *tone);
+  void (*Tick)(void *self, SoundChannel *channel, const Tone *tone);
   int (*Get)(void *self, unsigned int index);
 } SoundSampler;
 
 static inline void
-SoundSampler_Prepare(const SoundSampler *sampler, SoundChannel *channel, const Tone *tone) {
-  sampler->Prepare(sampler->self, channel, tone);
+SoundSampler_TickTone(const SoundSampler *sampler, SoundChannel *channel, const Tone *tone) {
+  // TODO probably add current tick value
+  sampler->Tick(sampler->self, channel, tone);
 }
 
 static inline int
@@ -107,8 +109,9 @@ typedef struct ModuleTrack {
   Reader *reader;
   unsigned char numChannels; // number of channels in this track
   unsigned char numPatterns; // number of patterns in this track
-  unsigned char length;      // length of this track (number of orders in this track)
+
   unsigned char orders[128];
+  unsigned char length;      // length of this track (number of orders in this track)
 
   struct ModuleChannel {
     struct ModuleTrack *module;
@@ -151,14 +154,18 @@ ModuleTrack_GetSoundSampler(
     unsigned int channel);
 
 typedef struct SoundChannel {
-  SoundTrack *track;
   const SoundSampler *sampler;
-  const Tone *tone;
-  const unsigned int *reciproc; // points to inverse of player frequency (4.28 fixed point integer)
-  unsigned int position;        // position in current sample (20.12 fixed point integer)
-  unsigned int increment;       // position increment per loop (20.12 fixed point integer)
+  const unsigned int *frequency; // points to sound player frequency
+  const unsigned int *reciproc;  // points to inverse of sound player frequency (4.28 fixed point integer)
+  unsigned int position;         // position in current sample (20.12 fixed point integer)
+  unsigned int increment;        // position increment per loop (20.12 fixed point integer)
 
-  unsigned int tonePosition;
+  SoundTrack *track;
+  const Tone *tone;
+  unsigned int ticks;            // amount of times tone was already ticked
+
+  unsigned int samplesPerTick;
+  unsigned int samplesUntilTick;
 } SoundChannel;
 
 // 20.12 fixed point integer (for both increment and position)
@@ -176,6 +183,11 @@ SoundChannel_Pitch(
     SoundChannel *channel,
     unsigned int frequency);
 
+void
+SoundChannel_SetTempo(
+    SoundChannel *channel,
+    unsigned int frequency);
+
 unsigned int
 SoundChannel_Fill(
     SoundChannel *channel,
@@ -186,7 +198,8 @@ typedef struct SoundPlayer {
   char *buffers[2];       // buffers for mixing
   char *active;           // currently active buffer
   unsigned int size;      // buffer size
-  unsigned int reciproc;  // holds inverse of player frequency (4.28 fixed point integer)
+  unsigned int frequency; // current playback frequency
+  unsigned int reciproc;  // holds inverse of current playback frequency (4.28 fixed point integer)
   struct SoundChannel *channels[4];
 } SoundPlayer;
 
@@ -198,6 +211,7 @@ SoundPlayer_Enable(SoundPlayer *player);
 
 static inline void
 SoundPlayer_SetFrequency(SoundPlayer *player, unsigned int frequency) {
+  player->frequency = frequency;
   player->reciproc = Math_div(1 << SOUND_RECIPROC_PRECISION, frequency);
 }
 

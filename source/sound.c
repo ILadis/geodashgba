@@ -72,7 +72,7 @@ AsciiSoundTrack_NextTone(void *self) {
 
   unsigned int octave = 4;
   unsigned int dotted = 0;
-  unsigned int length = track->tempo;
+  unsigned int ticks = (1 << NOTE_TICKS_PRECISION);
   bool shorten = false;
 
   while (true) {
@@ -87,10 +87,10 @@ AsciiSoundTrack_NextTone(void *self) {
       case '`': octave += 1; continue;
       case ',': octave -= 1; continue;
       case '/': shorten = true; continue;
-      case '2': length = shorten ? length >> 1 : length << 1; continue;
-      case '4': length = shorten ? length >> 2 : length << 2; continue;
-      case '8': length = shorten ? length >> 3 : length << 3; continue;
-      case '.': length += length >> ++dotted; continue;
+      case '2': ticks = shorten ? ticks >> 1 : ticks << 1; continue;
+      case '4': ticks = shorten ? ticks >> 2 : ticks << 2; continue;
+      case '8': ticks = shorten ? ticks >> 3 : ticks << 3; continue;
+      case '.': ticks += ticks >> ++dotted; continue;
     }
 
     break;
@@ -99,7 +99,7 @@ AsciiSoundTrack_NextTone(void *self) {
   Tone *tone = &track->tone;
   tone->note = note;
   tone->octave = octave;
-  tone->length = length;
+  tone->ticks = ticks;
   track->index = index;
 
   return tone;
@@ -108,12 +108,10 @@ AsciiSoundTrack_NextTone(void *self) {
 SoundTrack*
 AsciiSoundTrack_FromNotes(
     AsciiSoundTrack *track,
-    const char *notes,
-    unsigned int tempo)
+    const char *notes)
 {
   track->notes = notes;
   track->index = 0;
-  track->tempo = tempo;
 
   track->base.self = track;
   track->base.Next = AsciiSoundTrack_NextTone;
@@ -122,7 +120,7 @@ AsciiSoundTrack_FromNotes(
 }
 
 static void
-SineSoundSampler_Prepare(
+SineSoundSampler_TickTone(
     unused void *self,
     SoundChannel *channel,
     const Tone *tone)
@@ -150,7 +148,7 @@ const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
-    .Prepare = SineSoundSampler_Prepare,
+    .Tick = SineSoundSampler_TickTone,
     .Get = SineSoundSampler_GetSample,
   };
 
@@ -179,14 +177,26 @@ SoundChannel_Pitch(
   channel->increment = increment;
 }
 
+void
+SoundChannel_SetTempo(
+    SoundChannel *channel,
+    unsigned int frequency)
+{
+  unsigned int reciproc = *channel->reciproc;
+
+  unsigned int samplesPerTick = *(channel->frequency) >> (NOTE_TICKS_PRECISION); // now holds samples to advance for one full second
+  samplesPerTick = (samplesPerTick * frequency * reciproc) >> (SOUND_RECIPROC_PRECISION);
+
+  channel->samplesPerTick = samplesPerTick;
+  channel->samplesUntilTick = samplesPerTick;
+}
+
 static inline bool
 SoundChannel_NextToneIfRequired(SoundChannel *channel) {
   const Tone *tone = channel->tone;
+  unsigned int ticks = channel->ticks;
 
-  const unsigned int position = channel->tonePosition;
-  const unsigned int length = tone == NULL ? 0 : tone->length;
-
-  if (position >= length) {
+  if (tone == NULL || ticks >= tone->ticks) {
     tone = SoundTrack_NextTone(channel->track);
 
     if (tone == NULL) {
@@ -195,10 +205,10 @@ SoundChannel_NextToneIfRequired(SoundChannel *channel) {
 
     channel->tone = tone;
     channel->position = 0;
-    channel->tonePosition = 0;
+    channel->ticks = 0;
 
     if (tone->note != NOTE_PAUSE) {
-      SoundSampler_Prepare(channel->sampler, channel, tone);
+      SoundSampler_TickTone(channel->sampler, channel, tone);
     }
   }
 
@@ -228,16 +238,19 @@ SoundChannel_Fill(
     channel->position += channel->increment;
     buffer[index++] += value;
 
-  //const unsigned int next = channel->position >> SOUND_CHANNEL_PRECISION;
-    unsigned int next = channel->tonePosition += 1;
-    if (next < tone->length) {
+    channel->samplesUntilTick--;
+    if (channel->samplesUntilTick > 0) {
       continue;
     }
 
-    // advance to next note/sample
+    channel->ticks++;
+    channel->samplesUntilTick = channel->samplesPerTick;
+
     if (!SoundChannel_NextToneIfRequired(channel)) {
       break;
     }
+
+    SoundSampler_TickTone(channel->sampler, channel, tone);
   }
 
   return index;
@@ -257,6 +270,7 @@ SoundPlayer_GetInstance() {
     .buffers[0] = buffer1,
     .buffers[1] = buffer2,
     .size = length(buffer1),
+    .frequency = 11468,
     .reciproc = (1 << SOUND_RECIPROC_PRECISION) / 11468,
   };
 
@@ -275,7 +289,7 @@ SoundPlayer_Enable(unused SoundPlayer *player) {
   };
 
   const int cycles = 16777216;
-  const int frequency = 11468;
+  const int frequency = player->frequency; // default is 11468
 
   GBA_TimerData data = { 0xFFFF - Math_div(cycles, frequency) };
   GBA_TimerControl timer = {
@@ -303,6 +317,7 @@ SoundPlayer_AddChannel(
   for (unsigned int i = 0; i < length(player->channels); i++) {
     if (player->channels[i] == NULL) {
       player->channels[i] = channel;
+      channel->frequency = &player->frequency;
       channel->reciproc = &player->reciproc;
       return true;
     }

@@ -112,7 +112,7 @@ WaveSoundSampler_ReadMetaData(WaveSoundSampler *sampler) {
 }
 
 static void
-WaveSoundSampler_Prepare(
+WaveSoundSampler_TickTone(
     void *self,
     SoundChannel *channel,
     const Tone *tone)
@@ -167,7 +167,7 @@ WaveSoundSampler_FromReader(
 {
   wave->reader = reader;
   wave->base.self = wave;
-  wave->base.Prepare = WaveSoundSampler_Prepare;
+  wave->base.Tick = WaveSoundSampler_TickTone;
   wave->base.Get = WaveSoundSampler_GetSample;
 
   if (!WaveSoundSampler_ReadMetaData(wave)) {

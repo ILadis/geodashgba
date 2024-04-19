@@ -5,7 +5,7 @@
 test(NextTone_ShouldReturnToneWithExpectedNoteAndLength) {
   // arrange
   const char notes[] = "D`^2.";
-  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 2800);
+  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes);
 
   // act
   const Tone *tone = SoundTrack_NextTone(track);
@@ -13,7 +13,7 @@ test(NextTone_ShouldReturnToneWithExpectedNoteAndLength) {
   // assert
   assert(tone->note == NOTE_DSHARP);
   assert(tone->octave == 5);
-  assert(tone->length == 8400);
+  assert(tone->ticks == 3 * (1 << NOTE_TICKS_PRECISION));
 }
 
 test(Fill_ShouldReturnExpectedAmountOfSamples) {
@@ -22,10 +22,16 @@ test(Fill_ShouldReturnExpectedAmountOfSamples) {
   int buffer[8192] = {0};
 
   const SoundSampler *sampler = SineSoundSampler_GetInstance();
-  SoundTrack *track= AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 8192);
+  SoundTrack *track= AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes);
 
-  SoundChannel channel;
-  SoundChannel_SetTrackAndSampler(&channel, track, sampler, 13); // 2^13 = 8192 sample rate
+  SoundChannel channel = {0};
+  SoundChannel_SetTrackAndSampler(&channel, track, sampler);
+
+  SoundPlayer player = {0};
+  SoundPlayer_SetFrequency(&player, 8192);
+  SoundPlayer_AddChannel(&player, &channel);
+
+  SoundChannel_SetTempo(&channel, 8192);
 
   // act
   int length1 = SoundChannel_Fill(&channel, buffer, length(buffer));
@@ -44,13 +50,16 @@ test(MixChannels_ShouldReturnFalseWhenTrackIsDonePlayingAndResetActiveBuffer) {
   const char notes[] = "C D/2";
 
   const SoundSampler *sampler = SineSoundSampler_GetInstance();
-  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes, 8192);
+  SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes);
 
-  SoundChannel channel;
-  SoundChannel_SetTrackAndSampler(&channel, track, sampler, 13); // 2^13 = 8192 sample rate
+  SoundChannel channel = {0};
+  SoundChannel_SetTrackAndSampler(&channel, track, sampler);
 
   SoundPlayer *player = SoundPlayer_GetInstance();
+  SoundPlayer_SetFrequency(player, 8192);
   SoundPlayer_AddChannel(player, &channel);
+
+  SoundChannel_SetTempo(&channel, 8192);
 
   // act
   int mixes = 0;
@@ -59,7 +68,7 @@ test(MixChannels_ShouldReturnFalseWhenTrackIsDonePlayingAndResetActiveBuffer) {
 
   // assert
   assert(result == false);
-  assert(mixes == 90);
+  assert(mixes == (8192 + 4096) / player->size);
   for (unsigned int i = 0; i < player->size; i++) {
     assert(player->active[i] == 0x00);
   }

@@ -73,7 +73,7 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
 
     // assert
     assert(tone->note == tones[i].note);
-    assert(tone->octave == tones[i].octave);
+    assert(tone->octave == tones[i].octave );
   }
 }
 

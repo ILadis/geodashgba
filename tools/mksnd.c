@@ -9,10 +9,10 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
   static const char notes2[] = "Z2 Z                           | Z2. | Z2 Z                          | Z2. | Z2                       C`^/2 E`/2 | D` Z/2 D`/2 D`/2 Z/2 | D` E` D` | D` C`2 | Z2 Z                 | C`. B_/2 B_ | B_ Z2                 | B.  A/2  A  | A2  Z       | Z2 Z        | Z2 Z   | Z2. | Z2 Z                           | Z2. | Z2 Z                          | Z2. | Z2                       C`^/2 E`/2 | D` Z/2 D`/2 D`/2 Z/2 | D` E` D` | D` C`2 | Z2 Z                 | C`. B_/2 B_ | B_ Z2                 | B.  A/2  A  | A2  Z       | Z2 Z        | Z2 Z    | Z2. | Z2 Z                               | C`^. Z/2 Z       | Z A   C`^ | E` D`. C`^/2 | D`2. | B.  Z/2 Z       | Z G B  | D` C` C`/2  Z/2  | C`2. | F. G/2 A/2  Z/2 | E. Z/2 A/2  D`/2 | D` C` A | A`. B/2  C` | Z2 Z             | E2     E  | D`.  Z/2  Z         | E F^ G^ | C^. C^/2 C^/2 Z/2 | Z2 Z                 | Z2.  | A.  Z/2  Z         | F`2. | Z2 Z                    | Z2 Z               | Z2.  | B.  Z         Z/2 | D` Z  Z  | A.  Z/2 A_ | G  E` E`  | F`. Z/2 F`/2 Z/2 | E`.  Z/2   Z         | Z E`2 | Z F`^2 | Z E`2 | B2.  |";
 
   static AsciiSoundTrack sound1 = {0};
-  SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1, 3000);
+  SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1);
 
   static AsciiSoundTrack sound2 = {0};
-  SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 3000);
+  SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
   static SoundChannel channel1 = {0};
   SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
@@ -22,6 +22,9 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
+
+  SoundChannel_SetTempo(&channel1, player->frequency / 2); // .5 seconds per full note
+  SoundChannel_SetTempo(&channel2, player->frequency / 2);
 }
 
 unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
@@ -29,10 +32,10 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
   static const char notes2[] = "B  | Z  G^/2 Z/2  Z              A/2  G^/2 | E Z        Z2            | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | C2 A,2 | B,2 G^,2 | A,2 D,2 | D,2  G^,2 | C2 A,2 | B,2 G^,2 | A, C E E | E4  | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4      |";
 
   static AsciiSoundTrack sound1 = {0};
-  SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1, 2800);
+  SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1);
 
   static AsciiSoundTrack sound2 = {0};
-  SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 2800);
+  SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
   static SoundChannel channel1 = {0};
   SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);

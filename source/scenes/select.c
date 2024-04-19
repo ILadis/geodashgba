@@ -33,7 +33,7 @@ Scene_DoEnter() {
     GBA_Memcpy32(&system->spritePalette[0], spritesPal, sizeof(spritesPal));
 
     SoundPlayer *player = SoundPlayer_GetInstance();
-    SoundPlayer_Enable(player);
+    //SoundPlayer_Enable(player);
 
     const SoundSampler *sampler = SineSoundSampler_GetInstance();
 
@@ -41,10 +41,10 @@ Scene_DoEnter() {
     static const char notes2[] = "B  | Z  G^/2 Z/2  Z              A/2  G^/2 | E Z        Z2            | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4       | C2 A,2 | B,2 G^,2 | A,2 D,2 | D,2  G^,2 | C2 A,2 | B,2 G^,2 | A, C E E | E4  | Z  G^/2 Z/2  Z  A/2  G/2 | E Z        Z2           | G^ G^/2 A/2  B  Z  | Z2 Z/2 A/2 B/2 C`/2 | Z/2 F/2  A/2  C` B/2  A/2  | G.  E/2  G  F/2  E/2  | G^ G^/2 A/2  B  Z  | Z4      |";
 
     static AsciiSoundTrack sound1 = {0};
-    SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1, 2800);
+    SoundTrack *track1 = AsciiSoundTrack_FromNotes(&sound1, notes1);
 
     static AsciiSoundTrack sound2 = {0};
-    SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2, 2800);
+    SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
     static SoundChannel channel1 = {0};
     SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
@@ -93,7 +93,7 @@ static void
 Scene_DoPlay() {
   GBA_Input_PollStates();
 
-  SoundPlayer *player = SoundPlayer_GetInstance();
+//SoundPlayer *player = SoundPlayer_GetInstance();
   Camera *camera = Camera_GetInstance();
   Course *course = Course_GetInstance();
   Selector *selector = Selector_GetInstance();
@@ -121,8 +121,8 @@ Scene_DoPlay() {
     Progress_SetCollectedCoins(progress, coins);
   }
 
-  SoundPlayer_MixChannels(player);
-  SoundPlayer_VSync(player);
+//SoundPlayer_MixChannels(player);
+//SoundPlayer_VSync(player);
   GBA_VSyncWait();
 
   Course_Draw(course, camera);

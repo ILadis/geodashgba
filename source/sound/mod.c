@@ -67,7 +67,7 @@ Tone_FromPeriod(
 
       if (distance < closest) {
         tone->note = note;
-        tone->octave = octave;
+        tone->octave = octave + 3;
 
         closest = distance;
       }
@@ -119,7 +119,7 @@ ModuleChannel_NextTone(void *self) {
   Tone *tone = &channel->tone;
   Tone_FromPeriod(tone, period);
 
-  tone->length = 3000;
+  tone->ticks = 4 * (1 << NOTE_TICKS_PRECISION);
   channel->sample = sample;
   channel->position++;
 
@@ -127,7 +127,7 @@ ModuleChannel_NextTone(void *self) {
 }
 
 static void
-ModuleChannel_Prepare(
+ModuleChannel_TickTone(
     unused void *self,
     SoundChannel *channel,
     const Tone *tone)
@@ -163,7 +163,7 @@ ModuleChannel_GetSample(
 }
 
 static bool
-ModuleTrack_ReadMetaData(ModuleTrack *module) {
+ModuleTrack_ParseTrack(ModuleTrack *module) {
   const Reader *reader = module->reader;
 
   int signature;
@@ -236,13 +236,13 @@ ModuleTrack_FromReader(
     channel->track.self = channel;
     channel->track.Next = ModuleChannel_NextTone;
     channel->sampler.self = channel;
-    channel->sampler.Prepare = ModuleChannel_Prepare;
+    channel->sampler.Tick = ModuleChannel_TickTone;
     channel->sampler.Get = ModuleChannel_GetSample;
     channel->number = i;
     channel->position = 0;
   }
 
-  if (!ModuleTrack_ReadMetaData(module)) {
+  if (!ModuleTrack_ParseTrack(module)) {
     return false;
   }
 
