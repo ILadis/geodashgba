@@ -26,6 +26,7 @@ int main() {
 
     SoundChannel_SetTrackAndSampler(&channels[i], track, sampler);
     SoundPlayer_AddChannel(player, &channels[i]);
+    SoundChannel_SetTempo(&channels[i], player->frequency / 20); // 1/20th of a second per full note
   }
 
   DataSource *output = File_From(&(File) {0}, stdout);

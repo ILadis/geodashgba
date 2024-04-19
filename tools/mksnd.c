@@ -45,6 +45,9 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
+
+  SoundChannel_SetTempo(&channel1, player->frequency / 2); // .5 seconds per full note
+  SoundChannel_SetTempo(&channel2, player->frequency / 2);
 }
 
 /* Produce and play sound files with:

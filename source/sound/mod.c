@@ -16,7 +16,7 @@
 #define SIGNATURE_POSITION 1080
 #define PATTERN_POSITION   1084
 
-// amiga periods for first octave
+// amiga periods for first octave (C-1 to B-1)
 static const unsigned int Period1[] = {
   [NOTE_C]      = 856,
   [NOTE_CSHARP] = 808,
@@ -41,6 +41,14 @@ static inline unsigned int
 Tone_GetModFrequency(const Tone *tone) {
   // TODO use finetune lookup table
   return 3579545 / Tone_GetPeriod(tone);
+
+  /* Note: a C-1 would have a frequency of 3579545 / 856 = ~4181Hz, this
+   * does not match the frequency of an actual C-1 (which would be ~32Hz).
+   *
+   * So this is currently not normalized and tones returned from a module track
+   * can only be used by a module sampler correctly, because these frequencies
+   * are later used to resample the module samples.
+   */
 }
 
 static inline void
@@ -67,7 +75,7 @@ Tone_FromPeriod(
 
       if (distance < closest) {
         tone->note = note;
-        tone->octave = octave + 3;
+        tone->octave = octave;
 
         closest = distance;
       }
@@ -90,7 +98,11 @@ ModuleChannel_CurrentPattern(
   unsigned int channels = module->numChannels;
 
   // 64 patterns per order and 4 bytes per pattern for each channel
-  unsigned int offset = (channels * 64 * 4 * order) + (channels * 4 * row) + (channel->number * 4) + PATTERN_POSITION;
+  unsigned int offset = PATTERN_POSITION
+    + (channels * 64 * 4 * order)
+    + (channels * 4 * row)
+    + (channel->number * 4);
+
   if (!Reader_SeekTo(reader, offset)) {
     return NULL;
   }
@@ -98,12 +110,20 @@ ModuleChannel_CurrentPattern(
   return Reader_ReadValue(reader, pattern, 4);
 }
 
+static inline bool
+ModuleChannel_HasNextTone(ModuleChannel *channel) {
+  /* Note: multiply module length (= number of patterns) by number of patterns
+   * per order (= 64) to get the number of total patterns in this track.
+   */
+  const unsigned int endpos = channel->module->length * 64;
+  return channel->position < endpos;
+}
+
 static const Tone*
 ModuleChannel_NextTone(void *self) {
   ModuleChannel *channel = self;
 
-  // FIXME move to helper function: end of track?
-  if (channel->position >= channel->module->length * 64) {
+  if (!ModuleChannel_HasNextTone(channel)) {
     return NULL;
   }
 
@@ -162,28 +182,9 @@ ModuleChannel_GetSample(
   return byte;
 }
 
-static bool
-ModuleTrack_ParseTrack(ModuleTrack *module) {
+static inline void
+ModuleTrack_ParseOrders(ModuleTrack *module) {
   const Reader *reader = module->reader;
-
-  int signature;
-  if (!Reader_SeekTo(reader, SIGNATURE_POSITION) || !Reader_ReadInt32(reader, &signature)) {
-    return false;
-  }
-
-  switch (signature) {
-  case ModuleTrack_SignatureValue('M', '.', 'K', '.'):
-    module->numChannels = 4;
-    break;
-  case ModuleTrack_SignatureValue('6', 'C', 'H', 'N'):
-    module->numChannels = 6;
-    break;
-  case ModuleTrack_SignatureValue('8', 'C', 'H', 'N'):
-    module->numChannels = 8;
-    break;
-  default:
-    return false;
-  }
 
   Reader_SeekTo(reader, ORDERS_POSITION);
   Reader_ReadUInt8(reader, &module->length);
@@ -193,6 +194,11 @@ ModuleTrack_ParseTrack(ModuleTrack *module) {
     Reader_ReadUInt8(reader, &module->orders[i]);
     module->numPatterns = Math_max(module->numPatterns, module->orders[i] + 1);
   }
+}
+
+static inline void
+ModuleTrack_ParseSamples(ModuleTrack *module) {
+  const Reader *reader = module->reader;
 
   unsigned int data = module->numChannels * 4 * 64 * module->numPatterns + PATTERN_POSITION;
   Reader_SeekTo(reader, SAMPLES_POSITION);
@@ -216,6 +222,34 @@ ModuleTrack_ParseTrack(ModuleTrack *module) {
     sample->data = data;
     data += sample->length;
   }
+}
+
+static bool
+ModuleTrack_ParseTrack(ModuleTrack *module) {
+  const Reader *reader = module->reader;
+
+  int signature;
+  if (!Reader_SeekTo(reader, SIGNATURE_POSITION) || !Reader_ReadInt32(reader, &signature)) {
+    return false;
+  }
+
+  switch (signature) {
+  case ModuleTrack_SignatureValue('M', '.', 'K', '.'):
+    module->numChannels = 4;
+    break;
+  case ModuleTrack_SignatureValue('6', 'C', 'H', 'N'):
+    module->numChannels = 6;
+    break;
+  case ModuleTrack_SignatureValue('8', 'C', 'H', 'N'):
+    module->numChannels = 8;
+    break;
+  default:
+    return false;
+  }
+
+  ModuleTrack_ParseOrders(module);
+  ModuleTrack_ParseSamples(module);
+  // Patterns are parsed on the fly (when a new note/tone is requested)
 
   return true;
 }

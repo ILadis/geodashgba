@@ -48,23 +48,23 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
   SoundTrack *track = ModuleTrack_GetSoundTrack(&module, 0);
 
   const Tone tones[] = {
-    { .note = NOTE_G,      .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 5 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 5 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 5 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 5 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_F,      .octave = 4 },
+    { .note = NOTE_G,      .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 2 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 2 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 2 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 2 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_F,      .octave = 1 },
   };
 
   // act
@@ -73,7 +73,7 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
 
     // assert
     assert(tone->note == tones[i].note);
-    assert(tone->octave == tones[i].octave );
+    assert(tone->octave == tones[i].octave);
   }
 }
 
@@ -88,23 +88,23 @@ test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
   SoundTrack *track = ModuleTrack_GetSoundTrack(&module, 1);
 
   const Tone tones[] = {
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_D,      .octave = 5 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_PAUSE,  .octave = 4 },
-    { .note = NOTE_G,      .octave = 4 },
-    { .note = NOTE_G,      .octave = 4 },
-    { .note = NOTE_A,      .octave = 4 },
-    { .note = NOTE_ASHARP, .octave = 4 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_D,      .octave = 2 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_PAUSE,  .octave = 1 },
+    { .note = NOTE_G,      .octave = 1 },
+    { .note = NOTE_G,      .octave = 1 },
+    { .note = NOTE_A,      .octave = 1 },
+    { .note = NOTE_ASHARP, .octave = 1 },
   };
 
   // act
@@ -125,8 +125,11 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
   ModuleTrack module = {0};
   ModuleTrack_FromReader(&module, reader);
 
+  ModuleSample *sample = &module.samples[0];
+  ModuleChannel *channel = &module.channels[0];
+
   SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  module.channels[0].sample = 1;
+  channel->sample = 1; // set active sample to 1
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -141,6 +144,11 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
     // assert
     assert(sample == samples[i]);
   }
+
+  assert(sample->finetune == 1);
+  assert(sample->loop.start == 0);
+  assert(sample->loop.length == 32);
+  assert(sample->length == length(samples));
 }
 
 test(GetSample_ShouldReturnExpectedDataForSecondSample) {
@@ -151,8 +159,11 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
   ModuleTrack module = {0};
   ModuleTrack_FromReader(&module, reader);
 
+  ModuleSample *sample = &module.samples[1];
+  ModuleChannel *channel = &module.channels[0];
+
   SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  module.channels[0].sample = 2;
+  channel->sample = 2; // set active sample to 2
 
   char samples[] = {
     0x00, 0x00, 0x01, 0x40, 0x53, 0x42, 0x29, 0x39, 0x36, 0x36, 0x36, 0x36,
@@ -170,6 +181,11 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
     // assert
     assert(sample == samples[i]);
   }
+
+  assert(sample->finetune == 1);
+  assert(sample->loop.start == 0);
+  assert(sample->loop.length == 64);
+  assert(sample->length == length(samples));
 }
 
 test(GetSample_ShouldReturnExpectedDataForThirdSample) {
@@ -180,8 +196,11 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
   ModuleTrack module = {0};
   ModuleTrack_FromReader(&module, reader);
 
+  ModuleSample *sample = &module.samples[2];
+  ModuleChannel *channel = &module.channels[0];
+
   SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  module.channels[0].sample = 3;
+  channel->sample = 3; // set active sample to 3
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x06, 0x11, 0x1f, 0x27, 0x2c, 0x32, 0x37, 0x3d,
@@ -196,6 +215,11 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
     // assert
     assert(sample == samples[i]);
   }
+
+  assert(sample->finetune == 1);
+  assert(sample->loop.start == 0);
+  assert(sample->loop.length == 32);
+  assert(sample->length == length(samples));
 }
 
 suite(

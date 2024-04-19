@@ -250,7 +250,9 @@ SoundChannel_Fill(
       break;
     }
 
-    SoundSampler_TickTone(channel->sampler, channel, tone);
+    if (tone->note != NOTE_PAUSE) {
+      SoundSampler_TickTone(channel->sampler, channel, tone);
+    }
   }
 
   return index;
