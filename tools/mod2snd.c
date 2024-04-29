@@ -21,11 +21,12 @@ int main() {
   static SoundChannel channels[4] = {{0}};
 
   for (unsigned int i = 0; i < module.numChannels; i++) {
+    SoundPlayer_AddChannel(player, &channels[i]);
+
     SoundTrack *track = ModuleTrack_GetSoundTrack(&module, i);
     SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, i);
 
     SoundChannel_SetTrackAndSampler(&channels[i], track, sampler);
-    SoundPlayer_AddChannel(player, &channels[i]);
     SoundChannel_SetTempo(&channels[i], player->frequency / 20); // 1/20th of a second per full note
   }
 

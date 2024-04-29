@@ -16,7 +16,10 @@
 #define SIGNATURE_POSITION 1080
 #define PATTERN_POSITION   1084
 
-// amiga periods for first octave (C-1 to B-1)
+/* Note: these are the amiga period values for the first octave (C-1 to B-1).
+ * An amiga period represents the amount of samples that should be played
+ * between each amiga vblank.
+ */
 static const unsigned int Period1[] = {
   [NOTE_C]      = 856,
   [NOTE_CSHARP] = 808,
@@ -37,20 +40,16 @@ Tone_GetPeriod(const Tone *tone) {
   return (tone->note > length(Period1)) ? 0 : (Period1[tone->note] * 2) >> tone->octave;
 }
 
+/* Note: this converts amige periods to samples/s (Hz). This value determines
+ * the amount of samples that should be played per second for the given note.
+ */
 static inline unsigned int
 Tone_GetModFrequency(const Tone *tone) {
   // TODO use finetune lookup table
   return 3579545 / Tone_GetPeriod(tone);
-
-  /* Note: a C-1 would have a frequency of 3579545 / 856 = ~4181Hz, this
-   * does not match the frequency of an actual C-1 (which would be ~32Hz).
-   *
-   * So this is currently not normalized and tones returned from a module track
-   * can only be used by a module sampler correctly, because these frequencies
-   * are later used to resample the module samples.
-   */
 }
 
+// finds the closest note for the given amiga period value
 static inline void
 Tone_FromPeriod(
     Tone *tone,
@@ -84,7 +83,7 @@ Tone_FromPeriod(
 }
 
 bool
-ModuleChannel_CurrentPattern(
+ModuleChannel_ReadCurrentPattern(
     ModuleChannel *channel,
     unsigned char pattern[4])
 {
@@ -112,10 +111,10 @@ ModuleChannel_CurrentPattern(
 
 static inline bool
 ModuleChannel_HasNextTone(ModuleChannel *channel) {
-  /* Note: multiply module length (= number of patterns) by number of patterns
+  /* Note: multiply length of module track (= number of orders) by number of patterns
    * per order (= 64) to get the number of total patterns in this track.
    */
-  const unsigned int endpos = channel->module->length * 64;
+  const unsigned int endpos = channel->module->numOrders * 64;
   return channel->position < endpos;
 }
 
@@ -128,7 +127,7 @@ ModuleChannel_NextTone(void *self) {
   }
 
   unsigned char pattern[4];
-  if (!ModuleChannel_CurrentPattern(channel, pattern)) {
+  if (!ModuleChannel_ReadCurrentPattern(channel, pattern)) {
     return NULL;
   }
 
@@ -171,6 +170,7 @@ ModuleChannel_GetSample(
   ModuleTrack *module = channel->module;
   ModuleSample *sample = &module->samples[number - 1];
 
+  // TODO get rid of modulo operator
   unsigned int position = sample->data + (index % sample->length);
 
   Reader *reader = module->reader;
@@ -187,7 +187,7 @@ ModuleTrack_ParseOrders(ModuleTrack *module) {
   const Reader *reader = module->reader;
 
   Reader_SeekTo(reader, ORDERS_POSITION);
-  Reader_ReadUInt8(reader, &module->length);
+  Reader_ReadUInt8(reader, &module->numOrders);
 
   Reader_SeekTo(reader, ORDERS_POSITION + 2);
   for (unsigned int i = 0; i < length(module->orders); i++) {
@@ -249,7 +249,7 @@ ModuleTrack_ParseTrack(ModuleTrack *module) {
 
   ModuleTrack_ParseOrders(module);
   ModuleTrack_ParseSamples(module);
-  // Patterns are parsed on the fly (when a new note/tone is requested)
+  // patterns are parsed on the fly (when a new note/tone is requested)
 
   return true;
 }
@@ -262,7 +262,7 @@ ModuleTrack_FromReader(
   module->reader = reader;
   module->numChannels = 0;
   module->numPatterns = 0;
-  module->length = 0;
+  module->numOrders = 0;
 
   for (unsigned int i = 0; i < length(module->channels); i++) {
     ModuleChannel *channel = &module->channels[i];

@@ -109,9 +109,9 @@ typedef struct ModuleTrack {
   Reader *reader;
   unsigned char numChannels; // number of channels in this track
   unsigned char numPatterns; // number of patterns in this track
+  unsigned char numOrders;   // length of this track in number of orders
 
   unsigned char orders[128];
-  unsigned char length;      // length of this track (number of orders in this track)
 
   struct ModuleChannel {
     struct ModuleTrack *module;
@@ -120,7 +120,7 @@ typedef struct ModuleTrack {
     struct Tone tone;      // current parsed note from sound track
     unsigned char number;  // number of this channel in sound track
     unsigned int position; // current position of playback
-    unsigned int sample;
+    unsigned int sample;   // sample number this channel is currently playing
   } channels[4];
 
   struct ModuleSample {
@@ -186,7 +186,7 @@ SoundChannel_Pitch(
 void
 SoundChannel_SetTempo(
     SoundChannel *channel,
-    unsigned int frequency);
+    unsigned int frequency); // the duration one note tick should last (e.g. 5Hz = 0.2 seconds)
 
 unsigned int
 SoundChannel_Fill(
@@ -198,7 +198,7 @@ typedef struct SoundPlayer {
   char *buffers[2];       // buffers for mixing
   char *active;           // currently active buffer
   unsigned int size;      // buffer size
-  unsigned int frequency; // current playback frequency
+  unsigned int frequency; // current playback frequency (amount of samples to play per second)
   unsigned int reciproc;  // holds inverse of current playback frequency (4.28 fixed point integer)
   struct SoundChannel *channels[4];
 } SoundPlayer;

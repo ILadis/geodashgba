@@ -1,160 +1,6 @@
 
 #include <sound.h>
 
-// frequences of octave zero as 24.8 fixed point integers
-static const unsigned int Octave[] = {
-  [NOTE_C]      = 16.3516 * (1 << 8),
-  [NOTE_CSHARP] = 17.3239 * (1 << 8),
-  [NOTE_D]      = 18.3540 * (1 << 8),
-  [NOTE_DSHARP] = 19.4454 * (1 << 8),
-  [NOTE_E]      = 20.6017 * (1 << 8),
-  [NOTE_F]      = 21.8268 * (1 << 8),
-  [NOTE_FSHARP] = 23.1247 * (1 << 8),
-  [NOTE_G]      = 24.4997 * (1 << 8),
-  [NOTE_GSHARP] = 25.9565 * (1 << 8),
-  [NOTE_A]      = 27.5000 * (1 << 8),
-  [NOTE_ASHARP] = 29.1352 * (1 << 8),
-  [NOTE_B]      = 30.8677 * (1 << 8),
-};
-
-unsigned int
-Tone_GetFrequency(const Tone *tone) {
-  return (tone->note > length(Octave)) ? 0 : Octave[tone->note] * (1 << tone->octave);
-}
-
-static const enum Note notes[] = {
-  [ 4] = NOTE_C,
-         NOTE_CSHARP,
-  [ 6] = NOTE_D,
-         NOTE_DSHARP,
-  [ 8] = NOTE_E,
-  [10] = NOTE_F,
-         NOTE_FSHARP,
-  [12] = NOTE_G,
-         NOTE_GSHARP,
-  [ 0] = NOTE_A,
-         NOTE_ASHARP,
-  [ 2] = NOTE_B,
-};
-
-static inline bool
-Note_FromSymbol(
-    Note *note,
-    char symbol)
-{
-  // pause symbol
-  if (symbol == 'Z') {
-    *note = NOTE_PAUSE;
-    return true;
-  }
-
-  unsigned int index = (symbol - 'A') * 2;
-  if (index > length(notes)) {
-    return false;
-  }
-
-  *note = notes[index];
-  return true;
-}
-
-static const Tone*
-AsciiSoundTrack_NextTone(void *self) {
-  AsciiSoundTrack *track = self;
-
-  unsigned int index = track->index;
-  const char *notes = track->notes;
-
-  enum Note note;
-  char symbol = notes[index];
-  if (!Note_FromSymbol(&note, symbol)) {
-    return false;
-  }
-
-  unsigned int octave = 4;
-  unsigned int dotted = 0;
-  unsigned int ticks = (1 << NOTE_TICKS_PRECISION);
-  bool shorten = false;
-
-  while (true) {
-    char modifier = notes[++index];
-    if (modifier == ' ' || modifier == '|') {
-      continue;
-    }
-
-    switch (modifier) {
-      case '^': note += 1; continue;
-      case '_': note -= 1; continue;
-      case '`': octave += 1; continue;
-      case ',': octave -= 1; continue;
-      case '/': shorten = true; continue;
-      case '2': ticks = shorten ? ticks >> 1 : ticks << 1; continue;
-      case '4': ticks = shorten ? ticks >> 2 : ticks << 2; continue;
-      case '8': ticks = shorten ? ticks >> 3 : ticks << 3; continue;
-      case '.': ticks += ticks >> ++dotted; continue;
-    }
-
-    break;
-  }
-
-  Tone *tone = &track->tone;
-  tone->note = note;
-  tone->octave = octave;
-  tone->ticks = ticks;
-  track->index = index;
-
-  return tone;
-}
-
-SoundTrack*
-AsciiSoundTrack_FromNotes(
-    AsciiSoundTrack *track,
-    const char *notes)
-{
-  track->notes = notes;
-  track->index = 0;
-
-  track->base.self = track;
-  track->base.Next = AsciiSoundTrack_NextTone;
-
-  return &track->base;
-}
-
-static void
-SineSoundSampler_TickTone(
-    unused void *self,
-    SoundChannel *channel,
-    const Tone *tone)
-{
-  const int pi2 = 256;
-
-  unsigned int frequency = Tone_GetFrequency(tone); // returns a 24.8 fixed point integer
-  unsigned int alpha = (pi2 * frequency) >> 8;
-
-  SoundChannel_Pitch(channel, alpha);
-}
-
-static int
-SineSoundSampler_GetSample(
-    unused void *self,
-    unsigned int index)
-{
-  int value = Math_sin(index);
-
-  // convert to sample size of 8 bits (range -127..+127)
-  return (value * 127) >> 8;
-}
-
-const SoundSampler*
-SineSoundSampler_GetInstance() {
-  static SoundSampler sampler = {
-    .self = NULL,
-    .Tick = SineSoundSampler_TickTone,
-    .Get = SineSoundSampler_GetSample,
-  };
-
-  return &sampler;
-}
-
 void
 SoundChannel_SetTrackAndSampler(
     SoundChannel *channel,
@@ -182,10 +28,10 @@ SoundChannel_SetTempo(
     SoundChannel *channel,
     unsigned int frequency)
 {
-  unsigned int reciproc = *channel->reciproc;
+  unsigned int speed = *channel->reciproc * frequency;
 
-  unsigned int samplesPerTick = *(channel->frequency) >> (NOTE_TICKS_PRECISION); // now holds samples to advance for one full second
-  samplesPerTick = (samplesPerTick * frequency * reciproc) >> (SOUND_RECIPROC_PRECISION);
+  unsigned int samplesPerSecond = *(channel->frequency) >> (NOTE_TICKS_PRECISION);
+  unsigned int samplesPerTick = (samplesPerSecond * speed) >> (SOUND_RECIPROC_PRECISION);
 
   channel->samplesPerTick = samplesPerTick;
   channel->samplesUntilTick = samplesPerTick;
@@ -285,8 +131,8 @@ SoundPlayer_Enable(unused SoundPlayer *player) {
 
   GBA_SoundControl enable = {
     .soundARatio = 1,  // volume at 100%
-    .soundAEnable = 3, // left and right speaker
-    .soundATimer = 0,  // use timer 0
+    .soundAEnable = 3, // use both left and right speaker
+    .soundATimer = 0,  // use timer 0 to trigger DMA
     .soundAReset = 1,
   };
 
@@ -363,10 +209,10 @@ SoundPlayer_VSync(SoundPlayer *player) {
   GBA_DirectMemcpy *dma1 = system->directMemcpy[1];
 
   GBA_DirectMemcpy copy = {0};
-  copy.chunkSize = 1;  // copy words
+  copy.chunkSize = 1;  // copy words (4 bytes at a time)
+  copy.srcAdjust = 0;  // increment destination address
   copy.dstAdjust = 2;  // fixed destination address
-  copy.repeat = 1;     // copy at VBlank
-  copy.timingMode = 3; // fifo mode
+  copy.timingMode = 3; // sound/fifo mode
   copy.enable = 1;
 
   if (player->active == buffer1) {
