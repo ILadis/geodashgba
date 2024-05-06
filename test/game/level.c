@@ -4,14 +4,13 @@
 
 test(From_ShouldInitializeAsciiLevelAsExpected) {
   // arrange
-  Buffer buffer = Buffer_CreateNew(
+  char data[] = ""
     "       \n"
     "       \n"
-    "       "
-  );
+    "       ";
 
   AsciiLevel ascii;
-  DataSource *source = Buffer_AsDataSource(&buffer);
+  DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
 
   // act
   Level *level = AsciiLevel_From(&ascii, source);

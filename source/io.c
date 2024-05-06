@@ -45,20 +45,17 @@ Buffer_From(
   buffer->position = 0;
   buffer->length = length;
 
-  return Buffer_AsDataSource(buffer);
-}
-
-DataSource*
-Buffer_AsDataSource(Buffer *buffer) {
   int Buffer_Read(void *buffer);
   bool Buffer_Write(void *buffer, unsigned char byte);
   bool Buffer_SeekTo(void *buffer, unsigned int position);
   unsigned int Buffer_GetLength(void *buffer);
+  unsigned int Buffer_GetPosition(void *buffer);
 
   Reader *reader = &buffer->source.reader;
   reader->self = buffer;
   reader->Read = Buffer_Read;
   reader->GetLength = Buffer_GetLength;
+  reader->GetPosition = Buffer_GetPosition;
   reader->SeekTo = Buffer_SeekTo;
 
   Writer *writer = &buffer->source.writer;
@@ -67,6 +64,19 @@ Buffer_AsDataSource(Buffer *buffer) {
   writer->SeekTo = Buffer_SeekTo;
 
   return &buffer->source;
+}
+
+DataSource*
+Buffer_FromString(
+    Buffer *buffer,
+    char *string)
+{
+  unsigned int length = 0;
+  while (string[length] != '\0') {
+    length++;
+  }
+
+  return Buffer_From(buffer, string, length);
 }
 
 int
@@ -118,6 +128,12 @@ Buffer_SeekTo(
 }
 
 unsigned int
+Buffer_GetPosition(void *self) {
+  Buffer *buffer = self;
+  return buffer->position;
+}
+
+unsigned int
 Buffer_GetLength(void *self) {
   Buffer *buffer = self;
   return buffer->length;
@@ -154,12 +170,14 @@ File_From(
   bool File_Write(void *file, unsigned char byte);
   bool File_SeekTo(void *file, unsigned int position);
   unsigned int File_GetLength(void *file);
+  unsigned int File_GetPosition(void *file);
 
   Reader *reader = &file->source.reader;
   reader->self = file;
   reader->Read = File_Read;
   reader->SeekTo = File_SeekTo;
   reader->GetLength = File_GetLength;
+  reader->GetPosition = File_GetPosition;
 
   Writer *writer = &file->source.writer;
   writer->self = file;
@@ -214,6 +232,19 @@ File_GetLength(void *self) {
 
   fseek(fp, position, SEEK_SET);
   return (unsigned int) length;
+}
+
+unsigned int
+File_GetPosition(void *self) {
+  File *file = self;
+  FILE *fp = file->fp;
+
+  long position = ftell(fp);
+  if (position < 0) {
+    return 0;
+  }
+
+  return (unsigned int) position;
 }
 
 #endif

@@ -1,13 +1,14 @@
-#ifndef STREAM_H
-#define STREAM_H
+#ifndef IO_H
+#define IO_H
 
 #include <types.h>
 
 typedef struct Reader {
   void *self;
   int  (*Read)(void *self);
-  unsigned int (*GetLength)(void *self);
   bool (*SeekTo)(void *self, unsigned int position);
+  unsigned int (*GetPosition)(void *self);
+  unsigned int (*GetLength)(void *self);
 } Reader;
 
 static inline int
@@ -61,14 +62,19 @@ Reader_ReadUInt8(const Reader *reader, unsigned char *value) {
   return Reader_ReadValue(reader, value, 1);
 }
 
-static inline unsigned int
-Reader_GetLength(const Reader *reader) {
-  return reader->GetLength(reader->self);
-}
-
 static inline bool
 Reader_SeekTo(const Reader *reader, unsigned int position) {
   return reader->SeekTo(reader->self, position);
+}
+
+static inline unsigned int
+Reader_GetPosition(const Reader *reader) {
+  return reader->GetPosition(reader->self);
+}
+
+static inline unsigned int
+Reader_GetLength(const Reader *reader) {
+  return reader->GetLength(reader->self);
 }
 
 typedef struct Writer {
@@ -125,7 +131,9 @@ Buffer_From(
     unsigned int length);
 
 DataSource*
-Buffer_AsDataSource(Buffer *buffer);
+Buffer_FromString(
+    Buffer *buffer,
+    char *string);
 
 #ifdef NOGBA
 #include <stdio.h>
