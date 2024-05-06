@@ -1,21 +1,10 @@
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <string.h>
-
-typedef union Color {
-  int value;
-  struct {
-    int blue: 8;
-    int green: 8;
-    int red: 8;
-  };
-} Color;
 
 void header(FILE *fp, const char *format, ...);
-void pixel(FILE *fp, float depth, Color *color);
+void pixel(FILE *fp, float depth, int *color);
 
 // https://en.wikipedia.org/wiki/Netpbm
 int main(int argc, char **argv) {
@@ -76,10 +65,10 @@ int main(int argc, char **argv) {
     // look ahead and determine width of next glyph
     for (int y = 0; y < font.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        Color color;
+        int color;
         pixel(in, image.depth, &color);
 
-        if (color.value != 0xFFFFFF && x >= width) {
+        if (color!= 0xFFFFFF && x >= width) {
           width = x + 1;
         }
       }
@@ -90,11 +79,11 @@ int main(int argc, char **argv) {
 
     struct {
       const char *name;
-      const Color color;
+      const int color;
     } fields[] = {
-      { "fill",       { 0x0000FF } },
-      { "outline",    { 0xFF0000 } },
-      { "highlight",  { 0x00FF00 } },
+      { "fill",      0x0000FF },
+      { "outline",   0xFF0000 },
+      { "highlight", 0x00FF00 },
     };
 
     fprintf(out, "\n");
@@ -110,17 +99,18 @@ int main(int argc, char **argv) {
         for (int x = 0; x < image.width; x++) {
           int index = x % 8;
 
-          Color color;
+          int color;
           pixel(in, image.depth, &color);
 
           if (index == 0 && x < width) {
             fprintf(out, x == 0 ? "    " : ", ");
-            strcpy(byte, "00000000");
           }
 
           char *bit = &byte[7 - index];
-          if (color.value == fields[j].color.value) {
+          if (color == fields[j].color) {
             *bit = '1';
+          } else {
+            *bit = '0';
           }
 
           if (index == 7 && x < width) {
@@ -158,7 +148,7 @@ void header(FILE *fp, const char *format, ...) {
   char line[256] = {0};
 
   do {
-    fgets(line, 255, fp);
+    fgets(line, sizeof(line), fp);
   } while (line[0] == '#');
 
   va_list arguments;
@@ -168,14 +158,23 @@ void header(FILE *fp, const char *format, ...) {
   va_end(arguments);
 }
 
-
-
-void pixel(FILE *fp, float depth, Color *color) {
+void pixel(FILE *fp, float depth, int *pixel) {
   int red   = fgetc(fp);
   int green = fgetc(fp);
   int blue  = fgetc(fp);
 
-  color->red = (red / depth) * 0xFF;
-  color->green = (green / depth) * 0xFF;
-  color->blue = (blue / depth) * 0xFF;
+  union {
+    int value;
+    struct {
+      int blue: 8;
+      int green: 8;
+      int red: 8;
+    };
+  } color;
+
+  color.red = (red / depth) * 0xFF;
+  color.green = (green / depth) * 0xFF;
+  color.blue = (blue / depth) * 0xFF;
+
+  *pixel = color.value;
 }

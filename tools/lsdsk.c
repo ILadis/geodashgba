@@ -3,7 +3,6 @@
 
 #include <io.h>
 #include <disk.h>
-#include <math.h>
 #include <log.h>
 
 static DataSource *source = NULL;
