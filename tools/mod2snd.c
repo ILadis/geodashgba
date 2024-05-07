@@ -12,22 +12,29 @@ int main() {
   DataSource *input = File_From(&(File) {0}, stdin);
   Reader *reader = DataSource_AsReader(input);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_SetFrequency(player, 16384);
 
-  static SoundChannel channels[4] = {{0}};
+  static ModuleSoundSampler samplers[32] = {0};
+  for (unsigned int i = 0; i < length(samplers); i++) {
+    ModuleSoundSampler_FromReader(&samplers[i], reader, i);
+  }
 
-  for (unsigned int i = 0; i < module.numChannels; i++) {
+  static ModuleSoundTrack tracks[4] = {0};
+  for (unsigned int i = 0; i < length(tracks); i++) {
+    ModuleSoundTrack_FromReader(&tracks[i], reader, i);
+  }
+
+  static SoundChannel channels[4] = {0};
+  for (unsigned int i = 0; i < length(channels); i++) {
     SoundPlayer_AddChannel(player, &channels[i]);
 
-    SoundTrack *track = ModuleTrack_GetSoundTrack(&module, i);
-    SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, i);
-
-    SoundChannel_SetTrackAndSampler(&channels[i], track, sampler);
     SoundChannel_SetTempo(&channels[i], player->frequency / 20); // 1/20th of a second per full note
+    SoundChannel_AssignTrack(&channels[i], &tracks[i].base);
+
+    for (unsigned int j = 0; j < length(samplers); j++) {
+      SoundChannel_AddSampler(&channels[i], &samplers[j].base);
+    }
   }
 
   DataSource *output = File_From(&(File) {0}, stdout);

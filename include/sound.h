@@ -26,25 +26,13 @@ typedef enum Note {
 typedef struct Tone {
   Note note;
   unsigned int octave;
+  unsigned int sample;
   unsigned int ticks; // number of ticks this tone should last (.6 fixed point integer, 64 == one full note)
 
   // TODO consider adding effects here
 } Tone;
 
 #define NOTE_TICKS_PRECISION 6
-
-unsigned int
-Tone_GetFrequency(const Tone *tone);
-
-static inline int
-Tone_GetBaseFrequency() {
-  const Tone base = {
-    .note = NOTE_C,
-    .octave = 4,
-  };
-
-  return Tone_GetFrequency(&base);
-}
 
 typedef struct SoundTrack {
   void *self;
@@ -68,93 +56,57 @@ AsciiSoundTrack_FromNotes(
     AsciiSoundTrack *track,
     const char *notes);
 
+typedef struct ModuleSoundTrack {
+  SoundTrack base;
+  const Reader *reader;
+  unsigned int position; // current position in module track
+  unsigned int channel;  // channel number of module track
+  Tone tone;             // current parsed note from module track
+} ModuleSoundTrack;
+
+SoundTrack*
+ModuleSoundTrack_FromReader(
+    ModuleSoundTrack *track,
+    const Reader *reader,
+    unsigned int channel);
+
 typedef struct SoundChannel SoundChannel;
 
 typedef struct SoundSampler {
   void *self;
-  void (*Tick)(void *self, SoundChannel *channel, const Tone *tone);
   int (*Get)(void *self, unsigned int index);
+  unsigned int (*Frequency)(void *self, const Tone *tone);
 } SoundSampler;
-
-static inline void
-SoundSampler_TickTone(const SoundSampler *sampler, SoundChannel *channel, const Tone *tone) {
-  // TODO probably add current tick value
-  sampler->Tick(sampler->self, channel, tone);
-}
 
 static inline int
 SoundSampler_GetSample(const SoundSampler *sampler, unsigned int index) {
   return sampler->Get(sampler->self, index);
 }
 
+static inline unsigned int
+SoundSampler_GetFrequency(const SoundSampler *sampler, const Tone *tone) {
+  return sampler->Frequency(sampler->self, tone);
+}
+
 const SoundSampler*
 SineSoundSampler_GetInstance();
 
-typedef struct WaveSoundSampler {
+typedef struct ModuleSoundSampler {
   SoundSampler base;
-  Reader *reader;
-  unsigned int offset;
-  struct {
-    unsigned int rate;   // sample rate in Hz
-    unsigned short size; // sample size in bytes
-  } sample;
-} WaveSoundSampler;
+  const Reader *reader;
+  unsigned int index;
+} ModuleSoundSampler;
 
 SoundSampler*
-WaveSoundSampler_FromReader(
-    WaveSoundSampler *wave,
-    Reader *reader);
+ModuleSoundSampler_FromReader(
+    ModuleSoundSampler *sampler,
+    const Reader *reader,
+    unsigned int index);
 
-typedef struct ModuleTrack {
-  Reader *reader;
-  unsigned char numChannels; // number of channels in this track
-  unsigned char numPatterns; // number of patterns in this track
-  unsigned char numOrders;   // length of this track in number of orders
-
-  unsigned char orders[128];
-
-  struct ModuleChannel {
-    struct ModuleTrack *module;
-    struct SoundTrack track;
-    struct SoundSampler sampler;
-    struct Tone tone;      // current parsed note from sound track
-    unsigned char number;  // number of this channel in sound track
-    unsigned int position; // current position of playback
-    unsigned int sample;   // sample number this channel is currently playing
-  } channels[4];
-
-  struct ModuleSample {
-    unsigned int data; // TODO find better name for this
-    unsigned char finetune;
-    unsigned short length;
-    unsigned char volume;
-    struct {
-      unsigned short start;
-      unsigned short length;
-    } loop;
-  } samples[31];
-} ModuleTrack;
-
-typedef struct ModuleChannel ModuleChannel;
-typedef struct ModuleSample ModuleSample;
-
-bool
-ModuleTrack_FromReader(
-    ModuleTrack *track,
-    Reader *reader);
-
-SoundTrack*
-ModuleTrack_GetSoundTrack(
-    ModuleTrack *track,
-    unsigned int channel);
-
-SoundSampler*
-ModuleTrack_GetSoundSampler(
-    ModuleTrack *track,
-    unsigned int channel);
-
+// TODO rename to TrackSoundChannel
 typedef struct SoundChannel {
   const SoundSampler *sampler;
+  const SoundSampler *samplers[32];
   const unsigned int *frequency; // points to sound player frequency
   const unsigned int *reciproc;  // points to inverse of sound player frequency (4.28 fixed point integer)
   unsigned int position;         // position in current sample (20.12 fixed point integer)
@@ -173,9 +125,13 @@ typedef struct SoundChannel {
 #define SOUND_RECIPROC_PRECISION 24
 
 void
-SoundChannel_SetTrackAndSampler(
+SoundChannel_AssignTrack(
     SoundChannel *channel,
-    SoundTrack *track,
+    SoundTrack *track);
+
+void
+SoundChannel_AddSampler(
+    SoundChannel *channel,
     const SoundSampler *sampler);
 
 void

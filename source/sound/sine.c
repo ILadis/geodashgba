@@ -17,43 +17,43 @@ static const unsigned int Octave[] = {
   [NOTE_B]      = 30.8677 * (1 << 8),
 };
 
-unsigned int
+static inline unsigned int
 Tone_GetFrequency(const Tone *tone) {
   return (tone->note > length(Octave)) ? 0 : Octave[tone->note] * (1 << tone->octave);
 }
-
-static void
-SineSoundSampler_TickTone(
-    unused void *self,
-    SoundChannel *channel,
-    const Tone *tone)
-{
-  const int pi2 = 256;
-
-  unsigned int frequency = Tone_GetFrequency(tone); // returns a 24.8 fixed point integer
-  unsigned int alpha = (pi2 * frequency) >> 8;
-
-  SoundChannel_Pitch(channel, alpha);
-}
-
 
 static int
 SineSoundSampler_GetSample(
     unused void *self,
     unsigned int index)
 {
+  // returns a 1.8 fixed point integer
   int value = Math_sin(index);
 
   // convert to sample size of 8 bits (range -127..+127)
   return (value * 127) >> 8;
 }
 
+static unsigned int
+SineSoundSampler_GetFrequency(
+    unused void *self,
+    const Tone *tone)
+{
+  const int pi2 = 256;
+
+  // returns a 24.8 fixed point integer
+  unsigned int frequency = Tone_GetFrequency(tone);
+  unsigned int alpha = (pi2 * frequency) >> 8;
+
+  return alpha;
+}
+
 const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
-    .Tick = SineSoundSampler_TickTone,
     .Get = SineSoundSampler_GetSample,
+    .Frequency = SineSoundSampler_GetFrequency,
   };
 
   return &sampler;

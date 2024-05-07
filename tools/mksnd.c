@@ -15,16 +15,18 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
   static SoundChannel channel1 = {0};
-  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
+  SoundChannel_AssignTrack(&channel1, track1);
+  SoundChannel_AddSampler(&channel1, sampler);
 
   static SoundChannel channel2 = {0};
-  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
+  SoundChannel_AssignTrack(&channel2, track2);
+  SoundChannel_AddSampler(&channel2, sampler);
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
 
-  SoundChannel_SetTempo(&channel1, player->frequency / 2); // .5 seconds per full note
-  SoundChannel_SetTempo(&channel2, player->frequency / 2);
+  SoundChannel_SetTempo(&channel1, player->frequency / 3); // 1/3th of a seconds per full note
+  SoundChannel_SetTempo(&channel2, player->frequency / 3);
 }
 
 unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
@@ -38,16 +40,18 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
   static SoundChannel channel1 = {0};
-  SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
+  SoundChannel_AssignTrack(&channel1, track1);
+  SoundChannel_AddSampler(&channel1, sampler);
 
   static SoundChannel channel2 = {0};
-  SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
+  SoundChannel_AssignTrack(&channel2, track2);
+  SoundChannel_AddSampler(&channel2, sampler);
 
   SoundPlayer_AddChannel(player, &channel1);
   SoundPlayer_AddChannel(player, &channel2);
 
-  SoundChannel_SetTempo(&channel1, player->frequency / 2); // .5 seconds per full note
-  SoundChannel_SetTempo(&channel2, player->frequency / 2);
+  SoundChannel_SetTempo(&channel1, player->frequency / 4); // 1/4th of a seconds per full note
+  SoundChannel_SetTempo(&channel2, player->frequency / 4);
 }
 
 /* Produce and play sound files with:
@@ -55,14 +59,7 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
  *   ffplay -f s8 -ar 8192 -ac 1 tools/play.snd
  */
 int main() {
-  DataSource *input = File_From(&(File) {0}, stdin);
-  Reader *reader = DataSource_AsReader(input);
-
-  const SoundSampler *sampler = Reader_GetLength(reader) > 0
-    // use wave sound sampler if WAV file is provided on stdin
-    ? WaveSoundSampler_FromReader(&(WaveSoundSampler) {0}, reader)
-    // use sine sound sampler as fallback if no WAV file is provided
-    : SineSoundSampler_GetInstance();
+  const SoundSampler *sampler = SineSoundSampler_GetInstance();
 
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_SetFrequency(player, 8192);

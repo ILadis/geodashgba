@@ -26,7 +26,7 @@ CFLAGS   := $(ARCH) -O2 -Wall -Wextra -fno-strict-aliasing -nostdinc -mcpu=arm7t
 LDFLAGS  := $(ARCH) $(SPECS)
 
 # test cases
-TESTS    := $(basename $(wildcard test/*.c) $(wildcard test/game/*.c) $(wildcard test/sound/*.c))
+TESTS    := $(basename $(wildcard test/*.c) $(wildcard test/game/*.c) $(wildcard test/tools/*.c) $(wildcard test/sound/*.c))
 RUNNER   := exec
 
 # debug settings

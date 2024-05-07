@@ -2,15 +2,24 @@
 #include <sound.h>
 
 void
-SoundChannel_SetTrackAndSampler(
+SoundChannel_AssignTrack(
     SoundChannel *channel,
-    SoundTrack *track,
-    const SoundSampler *sampler)
+    SoundTrack *track)
 {
   channel->track = track;
-  channel->sampler = sampler;
-  channel->position = 0;
-  channel->increment = 1 << SOUND_CHANNEL_PRECISION;
+}
+
+void
+SoundChannel_AddSampler(
+    SoundChannel *channel,
+    const SoundSampler *sampler)
+{
+  for (unsigned int i = 0; i < length(channel->samplers); i++) {
+    if (channel->samplers[i] == NULL) {
+      channel->samplers[i] = sampler;
+      break;
+    }
+  }
 }
 
 void
@@ -51,10 +60,15 @@ SoundChannel_NextToneIfRequired(SoundChannel *channel) {
 
     channel->tone = tone;
     channel->position = 0;
+    channel->increment = 0;
     channel->ticks = 0;
 
     if (tone->note != NOTE_PAUSE) {
-      SoundSampler_TickTone(channel->sampler, channel, tone);
+      const SoundSampler *sampler = channel->samplers[tone->sample];
+      channel->sampler = sampler;
+
+      unsigned int frequency = SoundSampler_GetFrequency(sampler, tone);
+      SoundChannel_Pitch(channel, frequency);
     }
   }
 
@@ -90,14 +104,11 @@ SoundChannel_Fill(
     }
 
     channel->ticks++;
+    // TODO actually tick tone (process effects)
     channel->samplesUntilTick = channel->samplesPerTick;
 
     if (!SoundChannel_NextToneIfRequired(channel)) {
       break;
-    }
-
-    if (tone->note != NOTE_PAUSE) {
-      SoundSampler_TickTone(channel->sampler, channel, tone);
     }
   }
 

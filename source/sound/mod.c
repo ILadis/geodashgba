@@ -40,11 +40,11 @@ Tone_GetPeriod(const Tone *tone) {
   return (tone->note > length(Period1)) ? 0 : (Period1[tone->note] * 2) >> tone->octave;
 }
 
-/* Note: this converts amige periods to samples/s (Hz). This value determines
+/* Note: this converts amiga periods to samples/s (Hz). This value determines
  * the amount of samples that should be played per second for the given note.
  */
 static inline unsigned int
-Tone_GetModFrequency(const Tone *tone) {
+Tone_GetFrequency(const Tone *tone) {
   // TODO use finetune lookup table
   return 3579545 / Tone_GetPeriod(tone);
 }
@@ -58,7 +58,7 @@ Tone_FromPeriod(
   unsigned int closest = ~0;
 
   if (period == 0) {
-    tone->octave = 4;
+    tone->octave = 1;
     tone->note = NOTE_PAUSE;
   }
 
@@ -82,25 +82,184 @@ Tone_FromPeriod(
   }
 }
 
-bool
-ModuleChannel_ReadCurrentPattern(
-    ModuleChannel *channel,
+static bool
+ModuleSoundTrack_VerifySignature(const Reader *reader) {
+  int signature;
+  if (!Reader_SeekTo(reader, SIGNATURE_POSITION) || !Reader_ReadInt32(reader, &signature)) {
+    return false;
+  }
+
+  switch (signature) {
+  case ModuleTrack_SignatureValue('M', '.', 'K', '.'):
+  case ModuleTrack_SignatureValue('6', 'C', 'H', 'N'):
+  case ModuleTrack_SignatureValue('8', 'C', 'H', 'N'):
+    return true;
+  default:
+    return false;
+  }
+}
+
+static bool
+ModuleSoundTrack_NumberOfChannels(
+    const Reader *reader,
+    unsigned int *channels)
+{
+  int signature;
+  if (!Reader_SeekTo(reader, SIGNATURE_POSITION) || !Reader_ReadInt32(reader, &signature)) {
+    return false;
+  }
+
+  switch (signature) {
+  case ModuleTrack_SignatureValue('M', '.', 'K', '.'):
+    *channels = 4;
+    break;
+  case ModuleTrack_SignatureValue('6', 'C', 'H', 'N'):
+    *channels = 6;
+    break;
+  case ModuleTrack_SignatureValue('8', 'C', 'H', 'N'):
+    *channels = 8;
+    break;
+  default:
+    return false;
+  }
+
+  return true;
+}
+
+static inline bool
+ModuleSoundTrack_NumberOfOrders(
+    const Reader *reader,
+    unsigned char *orders)
+{
+  if (!Reader_SeekTo(reader, ORDERS_POSITION)) {
+    return false;
+  }
+
+  return Reader_ReadUInt8(reader, orders);
+}
+
+static inline bool
+ModuleSoundTrack_NumberOfPatterns(
+    const Reader *reader,
+    unsigned char *patterns)
+{
+  if (!Reader_SeekTo(reader, ORDERS_POSITION + 2)) {
+    return false;
+  }
+
+  unsigned char count = 0;
+  for (unsigned int i = 0; i < 32; i++) {
+    unsigned char pattern = 0;
+    if (!Reader_ReadUInt8(reader, &pattern)) {
+      return false;
+    }
+
+    count = Math_max(count, pattern + 1);
+  }
+
+  *patterns = count;
+  return true;
+}
+
+static inline bool
+ModuleSoundTrack_LengthOfSample(
+    const Reader *reader,
+    unsigned int sample,
+    unsigned short *length)
+{
+  unsigned int position = SAMPLES_POSITION + (30 * sample) + 22;
+  if (!Reader_SeekTo(reader, position)) {
+    return false;
+  }
+
+  unsigned short value = 0;
+  if (!Reader_ReadUInt16(reader, &value)) {
+    return false;
+  }
+
+  *length = ModuleTrack_ValueOf(value);
+  return true;
+}
+
+static inline bool
+ModuleSoundTrack_PositionOfSample(
+    const Reader *reader,
+    unsigned int sample,
+    unsigned int *position)
+{
+  unsigned int lengths = 0;
+
+  for (unsigned int i = 0; i < sample; i++) {
+    unsigned int position = SAMPLES_POSITION + (30 * i) + 22;
+    if (!Reader_SeekTo(reader, position)) {
+      return false;
+    }
+
+    unsigned short length = 0;
+    if (!Reader_ReadUInt16(reader, &length)) {
+      return false;
+    }
+
+    lengths += ModuleTrack_ValueOf(length);
+  }
+
+  unsigned int channels = 0;
+  if (!ModuleSoundTrack_NumberOfChannels(reader, &channels)) {
+    return false;
+  }
+
+  unsigned char patterns = 0;
+  if (!ModuleSoundTrack_NumberOfPatterns(reader, &patterns)) {
+    return false;
+  }
+
+  *position = PATTERN_POSITION + (channels * 4 * 64 * patterns) + lengths;
+  return true;
+}
+
+static bool
+ModuleSoundTrack_CurrentOrder(
+    ModuleSoundTrack *track,
+    unsigned char *order)
+{
+  const Reader *reader = track->reader;
+
+  // divide position by 64 to get current order index
+  unsigned int index = track->position >> 6;
+  unsigned int position = ORDERS_POSITION + 2 + index;
+
+  if (!Reader_SeekTo(reader, position)) {
+    return false;
+  }
+
+  return Reader_ReadUInt8(reader, order);
+}
+
+static bool
+ModuleSoundTrack_CurrentPattern(
+    ModuleSoundTrack *track,
     unsigned char pattern[4])
 {
-  ModuleTrack *module = channel->module;
-  Reader *reader = module->reader;
+  const Reader *reader = track->reader;
 
-  int index = channel->position >> 6; // divide position by 64 to get current order index
-  unsigned char order = module->orders[index];
+  unsigned char order = 0;
+  if (!ModuleSoundTrack_CurrentOrder(track, &order)) {
+    return false;
+  }
 
-  unsigned int row = channel->position & 63; // current row is calculated by modulo 64
-  unsigned int channels = module->numChannels;
+  unsigned int channels = 0;
+  if (!ModuleSoundTrack_NumberOfChannels(reader, &channels)) {
+    return NULL;
+  }
+
+  // current row is calculated by modulo 64
+  unsigned int row = track->position & 63;
 
   // 64 patterns per order and 4 bytes per pattern for each channel
   unsigned int offset = PATTERN_POSITION
     + (channels * 64 * 4 * order)
     + (channels * 4 * row)
-    + (channel->number * 4);
+    + (track->channel * 4);
 
   if (!Reader_SeekTo(reader, offset)) {
     return NULL;
@@ -110,199 +269,124 @@ ModuleChannel_ReadCurrentPattern(
 }
 
 static inline bool
-ModuleChannel_HasNextTone(ModuleChannel *channel) {
+ModuleSoundTrack_HasNextTone(ModuleSoundTrack *track) {
+  const Reader *reader = track->reader;
+
+  unsigned char orders = 0;
+  if (!ModuleSoundTrack_NumberOfOrders(reader, &orders)) {
+    return false;
+  }
+
   /* Note: multiply length of module track (= number of orders) by number of patterns
    * per order (= 64) to get the number of total patterns in this track.
    */
-  const unsigned int endpos = channel->module->numOrders * 64;
-  return channel->position < endpos;
+  unsigned int length = orders * 64;
+  return track->position < length;
 }
 
 static const Tone*
-ModuleChannel_NextTone(void *self) {
-  ModuleChannel *channel = self;
+ModuleSoundTrack_NextTone(void *self) {
+  ModuleSoundTrack *track = self;
 
-  if (!ModuleChannel_HasNextTone(channel)) {
+  if (!ModuleSoundTrack_HasNextTone(track)) {
     return NULL;
   }
 
   unsigned char pattern[4];
-  if (!ModuleChannel_ReadCurrentPattern(channel, pattern)) {
+  if (!ModuleSoundTrack_CurrentPattern(track, pattern)) {
     return NULL;
   }
 
-  // TODO add ModulePattern struct to store all fields
+  // TODO parse finetune and effects
   unsigned int period = ((pattern[0] & 0b00001111) << 8) + pattern[1];
   unsigned int sample = (pattern[0] & 0b11110000) + (pattern[2] >> 4);
 
-  Tone *tone = &channel->tone;
+  Tone *tone = &track->tone;
   Tone_FromPeriod(tone, period);
 
   tone->ticks = 4 * (1 << NOTE_TICKS_PRECISION);
-  channel->sample = sample;
-  channel->position++;
+  tone->sample = sample;
+
+  track->position++;
 
   return tone;
 }
 
-static void
-ModuleChannel_TickTone(
+SoundTrack*
+ModuleSoundTrack_FromReader(
+    ModuleSoundTrack *track,
+    const Reader *reader,
+    unsigned int channel)
+{
+  track->reader = reader;
+  track->channel = channel;
+  track->position = 0;
+
+  unsigned int channels = 0;
+  if (!ModuleSoundTrack_NumberOfChannels(reader, &channels) || channel >= channels) {
+    return NULL;
+  }
+
+  track->base.self = track;
+  track->base.Next = ModuleSoundTrack_NextTone;
+
+  return &track->base;
+}
+
+static unsigned int
+ModuleSoundSampler_GetFrequency(
     unused void *self,
-    SoundChannel *channel,
     const Tone *tone)
 {
-  unsigned int frequency = Tone_GetModFrequency(tone);
-  SoundChannel_Pitch(channel, frequency);
+  return Tone_GetFrequency(tone);
 }
 
 static int
-ModuleChannel_GetSample(
+ModuleSoundSampler_GetSample(
     void *self,
     unsigned int index)
 {
-  ModuleChannel *channel = self;
+  ModuleSoundSampler *sampler = self;
+  const Reader *reader = sampler->reader;
 
-  unsigned int number = channel->sample;
-  if (number == 0) {
+  unsigned int position = 0;
+  if (!ModuleSoundTrack_PositionOfSample(reader, sampler->index, &position)) {
     return 0;
   }
 
-  ModuleTrack *module = channel->module;
-  ModuleSample *sample = &module->samples[number - 1];
-
-  // TODO get rid of modulo operator
-  unsigned int position = sample->data + (index % sample->length);
-
-  Reader *reader = module->reader;
-  Reader_SeekTo(reader, position);
-
-  char byte = 0;
-  Reader_ReadInt8(reader, &byte);
-
-  return byte;
-}
-
-static inline void
-ModuleTrack_ParseOrders(ModuleTrack *module) {
-  const Reader *reader = module->reader;
-
-  Reader_SeekTo(reader, ORDERS_POSITION);
-  Reader_ReadUInt8(reader, &module->numOrders);
-
-  Reader_SeekTo(reader, ORDERS_POSITION + 2);
-  for (unsigned int i = 0; i < length(module->orders); i++) {
-    Reader_ReadUInt8(reader, &module->orders[i]);
-    module->numPatterns = Math_max(module->numPatterns, module->orders[i] + 1);
-  }
-}
-
-static inline void
-ModuleTrack_ParseSamples(ModuleTrack *module) {
-  const Reader *reader = module->reader;
-
-  unsigned int data = module->numChannels * 4 * 64 * module->numPatterns + PATTERN_POSITION;
-  Reader_SeekTo(reader, SAMPLES_POSITION);
-  for (unsigned int i = 0; i < length(module->samples); i++) {
-    ModuleSample *sample = &module->samples[i];
-
-    // skip name of module sample
-    char name[22];
-    Reader_ReadValue(reader, name, length(name));
-
-    Reader_ReadUInt16(reader, &sample->length);
-    Reader_ReadUInt8(reader, &sample->finetune);
-    Reader_ReadUInt8(reader, &sample->volume);
-    Reader_ReadUInt16(reader, &sample->loop.start);
-    Reader_ReadUInt16(reader, &sample->loop.length);
-
-    sample->length = ModuleTrack_ValueOf(sample->length);
-    sample->loop.start = ModuleTrack_ValueOf(sample->loop.start);
-    sample->loop.length = ModuleTrack_ValueOf(sample->loop.length);
-
-    sample->data = data;
-    data += sample->length;
-  }
-}
-
-static bool
-ModuleTrack_ParseTrack(ModuleTrack *module) {
-  const Reader *reader = module->reader;
-
-  int signature;
-  if (!Reader_SeekTo(reader, SIGNATURE_POSITION) || !Reader_ReadInt32(reader, &signature)) {
-    return false;
+  // TODO properly apply loop start/length and volume
+  unsigned short length = 0;
+  if (!ModuleSoundTrack_LengthOfSample(reader, sampler->index, &length) || length == 0) {
+    return 0;
   }
 
-  switch (signature) {
-  case ModuleTrack_SignatureValue('M', '.', 'K', '.'):
-    module->numChannels = 4;
-    break;
-  case ModuleTrack_SignatureValue('6', 'C', 'H', 'N'):
-    module->numChannels = 6;
-    break;
-  case ModuleTrack_SignatureValue('8', 'C', 'H', 'N'):
-    module->numChannels = 8;
-    break;
-  default:
-    return false;
+  position += index % length;
+  if (!Reader_SeekTo(reader, position)) {
+    return 0;
   }
 
-  ModuleTrack_ParseOrders(module);
-  ModuleTrack_ParseSamples(module);
-  // patterns are parsed on the fly (when a new note/tone is requested)
+  char value = 0;
+  Reader_ReadInt8(reader, &value);
 
-  return true;
-}
-
-bool
-ModuleTrack_FromReader(
-    ModuleTrack *module,
-    Reader *reader)
-{
-  module->reader = reader;
-  module->numChannels = 0;
-  module->numPatterns = 0;
-  module->numOrders = 0;
-
-  for (unsigned int i = 0; i < length(module->channels); i++) {
-    ModuleChannel *channel = &module->channels[i];
-    channel->module = module;
-    channel->track.self = channel;
-    channel->track.Next = ModuleChannel_NextTone;
-    channel->sampler.self = channel;
-    channel->sampler.Tick = ModuleChannel_TickTone;
-    channel->sampler.Get = ModuleChannel_GetSample;
-    channel->number = i;
-    channel->position = 0;
-  }
-
-  if (!ModuleTrack_ParseTrack(module)) {
-    return false;
-  }
-
-  return true;
-}
-
-SoundTrack*
-ModuleTrack_GetSoundTrack(
-    ModuleTrack *track,
-    unsigned int channel)
-{
-  if (channel > track->numChannels || channel > length(track->channels)) {
-    return NULL;
-  }
-
-  return &track->channels[channel].track;
+  return value;
 }
 
 SoundSampler*
-ModuleTrack_GetSoundSampler(
-    ModuleTrack *track,
-    unsigned int channel)
+ModuleSoundSampler_FromReader(
+    ModuleSoundSampler *sampler,
+    const Reader *reader,
+    unsigned int index)
 {
-  if (channel > track->numChannels || channel > length(track->channels)) {
+  sampler->reader = reader;
+  sampler->index = index;
+
+  if (!ModuleSoundTrack_VerifySignature(reader) || index >= 32) {
     return NULL;
   }
 
-  return &track->channels[channel].sampler;
+  sampler->base.self = sampler;
+  sampler->base.Frequency = ModuleSoundSampler_GetFrequency;
+  sampler->base.Get = ModuleSoundSampler_GetSample;
+
+  return &sampler->base;
 }

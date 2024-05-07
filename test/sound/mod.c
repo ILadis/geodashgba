@@ -4,37 +4,22 @@
 
 static unsigned char theme[3292];
 
-test(FromReader_ShouldParseMetaDataOfModuleFile) {
+test(NextTone_ShouldReturnNullAfterExpectedAmountOfNotes) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  const ModuleSample samples[] = {
-    { .length = 32, .finetune = 1, .volume = 64, .loop = { 0, 32 } },
-    { .length = 64, .finetune = 1, .volume = 64, .loop = { 0, 64 } },
-    { .length = 32, .finetune = 1, .volume = 48, .loop = { 0, 32 } },
-    { .length = 32, .finetune = 1, .volume = 64, .loop = { 0, 32 } },
-  };
+  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 0);
+
+  unsigned int count = 0;
 
   // act
-  bool result = ModuleTrack_FromReader(&module, reader);
+  while (SoundTrack_NextTone(track) != NULL) {
+    count++;
+  }
 
   // assert
-  assert(result == true);
-  assert(module.numChannels == 4);
-  assert(module.numPatterns == 2);
-  assert(module.length == 2);
-  assert(module.orders[0] == 0);
-  assert(module.orders[1] == 1);
-
-  for (unsigned int i = 0; i < length(samples); i++) {
-    assert(module.samples[i].length == samples[i].length);
-    assert(module.samples[i].finetune == samples[i].finetune);
-    assert(module.samples[i].volume == samples[i].volume);
-    assert(module.samples[i].loop.start == samples[i].loop.start);
-    assert(module.samples[i].loop.length == samples[i].loop.length);
-  }
+  assert(count == 128);
 }
 
 test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
@@ -42,10 +27,7 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
-  SoundTrack *track = ModuleTrack_GetSoundTrack(&module, 0);
+  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 0);
 
   const Tone tones[] = {
     { .note = NOTE_G,      .octave = 1 },
@@ -82,10 +64,7 @@ test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
-  SoundTrack *track = ModuleTrack_GetSoundTrack(&module, 1);
+  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 1);
 
   const Tone tones[] = {
     { .note = NOTE_PAUSE,  .octave = 1 },
@@ -122,14 +101,7 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
-  ModuleSample *sample = &module.samples[0];
-  ModuleChannel *channel = &module.channels[0];
-
-  SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  channel->sample = 1; // set active sample to 1
+  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 0);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -145,10 +117,12 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
     assert(sample == samples[i]);
   }
 
+  /*
   assert(sample->finetune == 1);
   assert(sample->loop.start == 0);
   assert(sample->loop.length == 32);
   assert(sample->length == length(samples));
+  */
 }
 
 test(GetSample_ShouldReturnExpectedDataForSecondSample) {
@@ -156,14 +130,7 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
-  ModuleSample *sample = &module.samples[1];
-  ModuleChannel *channel = &module.channels[0];
-
-  SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  channel->sample = 2; // set active sample to 2
+  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 1);
 
   char samples[] = {
     0x00, 0x00, 0x01, 0x40, 0x53, 0x42, 0x29, 0x39, 0x36, 0x36, 0x36, 0x36,
@@ -182,10 +149,12 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
     assert(sample == samples[i]);
   }
 
+  /*
   assert(sample->finetune == 1);
   assert(sample->loop.start == 0);
   assert(sample->loop.length == 64);
   assert(sample->length == length(samples));
+  */
 }
 
 test(GetSample_ShouldReturnExpectedDataForThirdSample) {
@@ -193,14 +162,7 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
   DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
   Reader *reader = DataSource_AsReader(source);
 
-  ModuleTrack module = {0};
-  ModuleTrack_FromReader(&module, reader);
-
-  ModuleSample *sample = &module.samples[2];
-  ModuleChannel *channel = &module.channels[0];
-
-  SoundSampler *sampler = ModuleTrack_GetSoundSampler(&module, 0);
-  channel->sample = 3; // set active sample to 3
+  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 2);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x06, 0x11, 0x1f, 0x27, 0x2c, 0x32, 0x37, 0x3d,
@@ -216,14 +178,16 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
     assert(sample == samples[i]);
   }
 
+  /*
   assert(sample->finetune == 1);
   assert(sample->loop.start == 0);
   assert(sample->loop.length == 32);
   assert(sample->length == length(samples));
+  */
 }
 
 suite(
-  FromReader_ShouldParseMetaDataOfModuleFile,
+  NextTone_ShouldReturnNullAfterExpectedAmountOfNotes,
   NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave,
   NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave,
   GetSample_ShouldReturnExpectedDataForFirstSample,

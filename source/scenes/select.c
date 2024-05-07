@@ -47,13 +47,16 @@ Scene_DoEnter() {
     SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
     static SoundChannel channel1 = {0};
-    SoundChannel_SetTrackAndSampler(&channel1, track1, sampler);
+    SoundPlayer_AddChannel(player, &channel1);
+    SoundChannel_AssignTrack(&channel1, track1);
+    SoundChannel_AddSampler(&channel1, sampler);
+    SoundChannel_SetTempo(&channel1, 5);
 
     static SoundChannel channel2 = {0};
-    SoundChannel_SetTrackAndSampler(&channel2, track2, sampler);
-
-    SoundPlayer_AddChannel(player, &channel1);
     SoundPlayer_AddChannel(player, &channel2);
+    SoundChannel_AssignTrack(&channel2, track2);
+    SoundChannel_AddSampler(&channel2, sampler);
+    SoundChannel_SetTempo(&channel1, 5);
 
     once = false;
   }
