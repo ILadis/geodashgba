@@ -69,6 +69,9 @@ SoundChannel_NextToneIfRequired(SoundChannel *channel) {
 
       unsigned int frequency = SoundSampler_GetFrequency(sampler, tone);
       SoundChannel_Pitch(channel, frequency);
+
+      unsigned char volume = SoundSampler_GetVolume(sampler);
+      SoundChannel_SetVolume(channel, volume);
     }
   }
 
@@ -88,6 +91,7 @@ SoundChannel_Fill(
   unsigned int index = 0;
   while (index < size) {
     const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
+    const unsigned char volume = channel->volume;
     const Tone *tone = channel->tone;
 
     int value = 0;
@@ -96,7 +100,7 @@ SoundChannel_Fill(
     }
 
     channel->position += channel->increment;
-    buffer[index++] += value;
+    buffer[index++] += (value * volume) >> SOUND_VOLUME_PRECISION;
 
     channel->samplesUntilTick--;
     if (channel->samplesUntilTick > 0) {

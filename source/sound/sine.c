@@ -48,12 +48,18 @@ SineSoundSampler_GetFrequency(
   return alpha;
 }
 
+static unsigned char
+SineSoundSampler_GetVolume(unused void *self) {
+  return 1 << SOUND_VOLUME_PRECISION;
+}
+
 const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
     .Get = SineSoundSampler_GetSample,
     .Frequency = SineSoundSampler_GetFrequency,
+    .Volume = SineSoundSampler_GetVolume,
   };
 
   return &sampler;

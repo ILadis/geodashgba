@@ -40,13 +40,56 @@ Tone_GetPeriod(const Tone *tone) {
   return (tone->note > length(Period1)) ? 0 : (Period1[tone->note] * 2) >> tone->octave;
 }
 
+/* Note: these are the amiga period values for the first octave (C-1 to B-1)
+ * for each of the 16 available finetune levels. Module samples specify which
+ * finetune level should be used when playing back sound.
+ */
+static const unsigned int FinetunePeriod1[][12] = {
+  // Finetune 0
+  { 856,808,762,720,678,640,604,570,538,508,480,453 },
+  // Finetune 1
+  { 850,802,757,715,674,637,601,567,535,505,477,450 },
+  // Finetune 2
+  { 844,796,752,709,670,632,597,563,532,502,474,447 },
+  // Finetune 3
+  { 838,791,746,704,665,628,592,559,528,498,470,444 },
+  // Finetune 4
+  { 832,785,741,699,660,623,588,555,524,495,467,441 },
+  // Finetune 5
+  { 826,779,736,694,655,619,584,551,520,491,463,437 },
+  // Finetune 6
+  { 820,774,730,689,651,614,580,547,516,487,460,434 },
+  // Finetune 7
+  { 814,768,725,684,646,610,575,543,513,484,457,431 },
+  // Finetune -8
+  { 907,856,808,762,720,678,640,604,570,538,508,480 },
+  // Finetune -7
+  { 900,850,802,757,715,675,636,601,567,535,505,477 },
+  // Finetune -6
+  { 894,844,796,752,709,670,632,597,563,532,502,474 },
+  // Finetune -5
+  { 887,838,791,746,704,665,628,592,559,528,498,470 },
+  // Finetune -4
+  { 881,832,785,741,699,660,623,588,555,524,494,467 },
+  // Finetune -3
+  { 875,826,779,736,694,655,619,584,551,520,491,463 },
+  // Finetune -2
+  { 868,820,774,730,689,651,614,580,547,516,487,460 },
+  // Finetune -1
+  { 862,814,768,725,684,646,610,575,543,513,484,457 },
+};
+
+static inline unsigned int
+Tone_GetFinetunePeriod(const Tone *tone, unsigned char finetune) {
+  return (tone->note > length(FinetunePeriod1[finetune])) ? 0 : (FinetunePeriod1[finetune][tone->note] * 2) >> tone->octave;
+}
+
 /* Note: this converts amiga periods to samples/s (Hz). This value determines
  * the amount of samples that should be played per second for the given note.
  */
 static inline unsigned int
-Tone_GetFrequency(const Tone *tone) {
-  // TODO use finetune lookup table
-  return 3579545 / Tone_GetPeriod(tone);
+Tone_GetFrequency(const Tone *tone, unsigned char finetune) {
+  return 3579545 / Tone_GetFinetunePeriod(tone, finetune);
 }
 
 // finds the closest note for the given amiga period value
@@ -162,10 +205,38 @@ ModuleSoundTrack_NumberOfPatterns(
 }
 
 static inline bool
+ModuleSoundTrack_FinetuneOfSample(
+    const Reader *reader,
+    unsigned int sample,
+    unsigned char *finetune)
+{
+  unsigned int position = SAMPLES_POSITION + (30 * sample) + 24;
+  if (!Reader_SeekTo(reader, position)) {
+    return false;
+  }
+
+  return Reader_ReadUInt8(reader, finetune);
+}
+
+static inline bool
+ModuleSoundTrack_VolumeOfSample(
+    const Reader *reader,
+    unsigned int sample,
+    unsigned char *volume)
+{
+  unsigned int position = SAMPLES_POSITION + (30 * sample) + 25;
+  if (!Reader_SeekTo(reader, position)) {
+    return false;
+  }
+
+  return Reader_ReadUInt8(reader, volume);
+}
+
+static inline bool
 ModuleSoundTrack_LengthOfSample(
     const Reader *reader,
     unsigned int sample,
-    unsigned short *length)
+    unsigned int *length)
 {
   unsigned int position = SAMPLES_POSITION + (30 * sample) + 22;
   if (!Reader_SeekTo(reader, position)) {
@@ -190,17 +261,12 @@ ModuleSoundTrack_PositionOfSample(
   unsigned int lengths = 0;
 
   for (unsigned int i = 0; i < sample; i++) {
-    unsigned int position = SAMPLES_POSITION + (30 * i) + 22;
-    if (!Reader_SeekTo(reader, position)) {
+    unsigned int length = 0;
+    if (!ModuleSoundTrack_LengthOfSample(reader, i, &length)) {
       return false;
     }
 
-    unsigned short length = 0;
-    if (!Reader_ReadUInt16(reader, &length)) {
-      return false;
-    }
-
-    lengths += ModuleTrack_ValueOf(length);
+    lengths += length;
   }
 
   unsigned int channels = 0;
@@ -297,7 +363,7 @@ ModuleSoundTrack_NextTone(void *self) {
     return NULL;
   }
 
-  // TODO parse finetune and effects
+  // TODO parse effect and effect parameter
   unsigned int period = ((pattern[0] & 0b00001111) << 8) + pattern[1];
   unsigned int sample = (pattern[0] & 0b11110000) + (pattern[2] >> 4);
 
@@ -335,10 +401,32 @@ ModuleSoundTrack_FromReader(
 
 static unsigned int
 ModuleSoundSampler_GetFrequency(
-    unused void *self,
+    void *self,
     const Tone *tone)
 {
-  return Tone_GetFrequency(tone);
+  ModuleSoundSampler *sampler = self;
+  const Reader *reader = sampler->reader;
+
+  unsigned char finetune = 0;
+  if (!ModuleSoundTrack_FinetuneOfSample(reader, sampler->index, &finetune)) {
+    return 0;
+  }
+
+  return Tone_GetFrequency(tone, finetune);
+}
+
+static unsigned char
+ModuleSoundSampler_GetVolume(void *self)
+{
+  ModuleSoundSampler *sampler = self;
+  const Reader *reader = sampler->reader;
+
+  unsigned char volume = 0;
+  if (!ModuleSoundTrack_VolumeOfSample(reader, sampler->index, &volume)) {
+    return 0;
+  }
+
+  return volume;
 }
 
 static int
@@ -355,7 +443,7 @@ ModuleSoundSampler_GetSample(
   }
 
   // TODO properly apply loop start/length and volume
-  unsigned short length = 0;
+  unsigned int length = 0;
   if (!ModuleSoundTrack_LengthOfSample(reader, sampler->index, &length) || length == 0) {
     return 0;
   }
@@ -385,8 +473,9 @@ ModuleSoundSampler_FromReader(
   }
 
   sampler->base.self = sampler;
-  sampler->base.Frequency = ModuleSoundSampler_GetFrequency;
   sampler->base.Get = ModuleSoundSampler_GetSample;
+  sampler->base.Frequency = ModuleSoundSampler_GetFrequency;
+  sampler->base.Volume = ModuleSoundSampler_GetVolume;
 
   return &sampler->base;
 }

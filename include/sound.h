@@ -26,8 +26,8 @@ typedef enum Note {
 typedef struct Tone {
   Note note;
   unsigned int octave;
-  unsigned int sample;
-  unsigned int ticks; // number of ticks this tone should last (.6 fixed point integer, 64 == one full note)
+  unsigned int sample; // index of sample this tone will use
+  unsigned int ticks;  // number of ticks this tone will last (.6 fixed point integer, 64 == one full note)
 
   // TODO consider adding effects here
 } Tone;
@@ -76,6 +76,7 @@ typedef struct SoundSampler {
   void *self;
   int (*Get)(void *self, unsigned int index);
   unsigned int (*Frequency)(void *self, const Tone *tone);
+  unsigned char (*Volume)(void *self);
 } SoundSampler;
 
 static inline int
@@ -86,6 +87,11 @@ SoundSampler_GetSample(const SoundSampler *sampler, unsigned int index) {
 static inline unsigned int
 SoundSampler_GetFrequency(const SoundSampler *sampler, const Tone *tone) {
   return sampler->Frequency(sampler->self, tone);
+}
+
+static inline unsigned char
+SoundSampler_GetVolume(const SoundSampler *sampler) {
+  return sampler->Volume(sampler->self);
 }
 
 const SoundSampler*
@@ -111,6 +117,7 @@ typedef struct SoundChannel {
   const unsigned int *reciproc;  // points to inverse of sound player frequency (4.28 fixed point integer)
   unsigned int position;         // position in current sample (20.12 fixed point integer)
   unsigned int increment;        // position increment per loop (20.12 fixed point integer)
+  unsigned char volume;          // volume at which this sound channel plays (1.6 fixed point integer)
 
   SoundTrack *track;
   const Tone *tone;
@@ -123,6 +130,7 @@ typedef struct SoundChannel {
 // 20.12 fixed point integer (for both increment and position)
 #define SOUND_CHANNEL_PRECISION 12
 #define SOUND_RECIPROC_PRECISION 24
+#define SOUND_VOLUME_PRECISION 6
 
 void
 SoundChannel_AssignTrack(
@@ -138,6 +146,14 @@ void
 SoundChannel_Pitch(
     SoundChannel *channel,
     unsigned int frequency);
+
+static inline void
+SoundChannel_SetVolume(
+    SoundChannel *channel,
+    unsigned char volume)
+{
+  channel->volume = Math_max(volume, 1 << SOUND_VOLUME_PRECISION);
+}
 
 void
 SoundChannel_SetTempo(
