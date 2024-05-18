@@ -117,12 +117,8 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
     assert(sample == samples[i]);
   }
 
-  /*
-  assert(sample->finetune == 1);
-  assert(sample->loop.start == 0);
-  assert(sample->loop.length == 32);
-  assert(sample->length == length(samples));
-  */
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  assert(volume == 64);
 }
 
 test(GetSample_ShouldReturnExpectedDataForSecondSample) {
@@ -149,12 +145,8 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
     assert(sample == samples[i]);
   }
 
-  /*
-  assert(sample->finetune == 1);
-  assert(sample->loop.start == 0);
-  assert(sample->loop.length == 64);
-  assert(sample->length == length(samples));
-  */
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  assert(volume == 64);
 }
 
 test(GetSample_ShouldReturnExpectedDataForThirdSample) {
@@ -178,12 +170,33 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
     assert(sample == samples[i]);
   }
 
-  /*
-  assert(sample->finetune == 1);
-  assert(sample->loop.start == 0);
-  assert(sample->loop.length == 32);
-  assert(sample->length == length(samples));
-  */
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  assert(volume == 48);
+}
+
+test(GetSample_ShouldReturnExpectedDataForFourthSample) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 3);
+
+  char samples[] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xda, 0xdc, 0xdf, 0xe1, 0xe3, 0xe6, 0xe8, 0xea,
+    0xed, 0xef, 0xf1, 0xf3, 0xf6, 0xf8, 0xfa, 0xfd,
+  };
+
+  // act
+  for (unsigned int i = 0; i < length(samples); i++) {
+    int sample = SoundSampler_GetSample(sampler, i);
+
+    // assert
+    assert(sample == samples[i]);
+  }
+
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  assert(volume == 64);
 }
 
 suite(
@@ -192,7 +205,8 @@ suite(
   NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave,
   GetSample_ShouldReturnExpectedDataForFirstSample,
   GetSample_ShouldReturnExpectedDataForSecondSample,
-  GetSample_ShouldReturnExpectedDataForThirdSample)
+  GetSample_ShouldReturnExpectedDataForThirdSample,
+  GetSample_ShouldReturnExpectedDataForFourthSample);
 
 static unsigned char theme[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,

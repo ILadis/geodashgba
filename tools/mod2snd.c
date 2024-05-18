@@ -29,7 +29,8 @@ int main() {
   for (unsigned int i = 0; i < length(channels); i++) {
     SoundPlayer_AddChannel(player, &channels[i]);
 
-    SoundChannel_SetTempo(&channels[i], player->frequency / 20); // 1/20th of a second per full note
+    SoundChannel_SetSpeed(&channels[i], 6);
+    SoundChannel_SetTempo(&channels[i], 125);
     SoundChannel_AssignTrack(&channels[i], &tracks[i].base);
 
     for (unsigned int j = 0; j < length(samplers); j++) {

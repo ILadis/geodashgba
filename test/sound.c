@@ -13,7 +13,7 @@ test(NextTone_ShouldReturnToneWithExpectedNoteAndLength) {
   // assert
   assert(tone->note == NOTE_DSHARP);
   assert(tone->octave == 5);
-  assert(tone->ticks == 3 * (1 << NOTE_TICKS_PRECISION));
+  assert(tone->ticks == 3 * (1 << TONE_TICKS_PRECISION));
 }
 
 test(Fill_ShouldReturnExpectedAmountOfSamples) {
@@ -25,7 +25,8 @@ test(Fill_ShouldReturnExpectedAmountOfSamples) {
   SoundTrack *track= AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes);
 
   SoundChannel channel = {0};
-  SoundChannel_SetTrackAndSampler(&channel, track, sampler);
+  SoundChannel_AssignTrack(&channel, track);
+  SoundChannel_AddSampler(&channel, sampler);
 
   SoundPlayer player = {0};
   SoundPlayer_SetFrequency(&player, 8192);
@@ -53,7 +54,8 @@ test(MixChannels_ShouldReturnFalseWhenTrackIsDonePlayingAndResetActiveBuffer) {
   SoundTrack *track = AsciiSoundTrack_FromNotes(&(AsciiSoundTrack){0}, notes);
 
   SoundChannel channel = {0};
-  SoundChannel_SetTrackAndSampler(&channel, track, sampler);
+  SoundChannel_AssignTrack(&channel, track);
+  SoundChannel_AddSampler(&channel, sampler);
 
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_SetFrequency(player, 8192);

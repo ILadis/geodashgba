@@ -46,37 +46,37 @@ Tone_GetPeriod(const Tone *tone) {
  */
 static const unsigned int FinetunePeriod1[][12] = {
   // Finetune 0
-  { 856,808,762,720,678,640,604,570,538,508,480,453 },
+  { 856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453 },
   // Finetune 1
-  { 850,802,757,715,674,637,601,567,535,505,477,450 },
+  { 850, 802, 757, 715, 674, 637, 601, 567, 535, 505, 477, 450 },
   // Finetune 2
-  { 844,796,752,709,670,632,597,563,532,502,474,447 },
+  { 844, 796, 752, 709, 670, 632, 597, 563, 532, 502, 474, 447 },
   // Finetune 3
-  { 838,791,746,704,665,628,592,559,528,498,470,444 },
+  { 838, 791, 746, 704, 665, 628, 592, 559, 528, 498, 470, 444 },
   // Finetune 4
-  { 832,785,741,699,660,623,588,555,524,495,467,441 },
+  { 832, 785, 741, 699, 660, 623, 588, 555, 524, 495, 467, 441 },
   // Finetune 5
-  { 826,779,736,694,655,619,584,551,520,491,463,437 },
+  { 826, 779, 736, 694, 655, 619, 584, 551, 520, 491, 463, 437 },
   // Finetune 6
-  { 820,774,730,689,651,614,580,547,516,487,460,434 },
+  { 820, 774, 730, 689, 651, 614, 580, 547, 516, 487, 460, 434 },
   // Finetune 7
-  { 814,768,725,684,646,610,575,543,513,484,457,431 },
+  { 814, 768, 725, 684, 646, 610, 575, 543, 513, 484, 457, 431 },
   // Finetune -8
-  { 907,856,808,762,720,678,640,604,570,538,508,480 },
+  { 907, 856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480 },
   // Finetune -7
-  { 900,850,802,757,715,675,636,601,567,535,505,477 },
+  { 900, 850, 802, 757, 715, 675, 636, 601, 567, 535, 505, 477 },
   // Finetune -6
-  { 894,844,796,752,709,670,632,597,563,532,502,474 },
+  { 894, 844, 796, 752, 709, 670, 632, 597, 563, 532, 502, 474 },
   // Finetune -5
-  { 887,838,791,746,704,665,628,592,559,528,498,470 },
+  { 887, 838, 791, 746, 704, 665, 628, 592, 559, 528, 498, 470 },
   // Finetune -4
-  { 881,832,785,741,699,660,623,588,555,524,494,467 },
+  { 881, 832, 785, 741, 699, 660, 623, 588, 555, 524, 494, 467 },
   // Finetune -3
-  { 875,826,779,736,694,655,619,584,551,520,491,463 },
+  { 875, 826, 779, 736, 694, 655, 619, 584, 551, 520, 491, 463 },
   // Finetune -2
-  { 868,820,774,730,689,651,614,580,547,516,487,460 },
+  { 868, 820, 774, 730, 689, 651, 614, 580, 547, 516, 487, 460 },
   // Finetune -1
-  { 862,814,768,725,684,646,610,575,543,513,484,457 },
+  { 862, 814, 768, 725, 684, 646, 610, 575, 543, 513, 484, 457 },
 };
 
 static inline unsigned int
@@ -89,7 +89,7 @@ Tone_GetFinetunePeriod(const Tone *tone, unsigned char finetune) {
  */
 static inline unsigned int
 Tone_GetFrequency(const Tone *tone, unsigned char finetune) {
-  return 3579545 / Tone_GetFinetunePeriod(tone, finetune);
+  return Math_div(3579545, Tone_GetFinetunePeriod(tone, finetune));
 }
 
 // finds the closest note for the given amiga period value
@@ -363,15 +363,33 @@ ModuleSoundTrack_NextTone(void *self) {
     return NULL;
   }
 
-  // TODO parse effect and effect parameter
+  unsigned int sample =  (pattern[0] & 0b11110000) + (pattern[2] >> 4);
   unsigned int period = ((pattern[0] & 0b00001111) << 8) + pattern[1];
-  unsigned int sample = (pattern[0] & 0b11110000) + (pattern[2] >> 4);
+  unsigned char effect = (pattern[2] & 0b00001111);
+  unsigned char param  =  pattern[3];
+
+  // FIXME reconsider if periods should be used instead of frequencies
+  switch (effect) {
+  case SOUND_EFFECT_PORTA_UP:
+  case SOUND_EFFECT_PORTA_DOWN:
+    // convert param from period to frequency (Hz)
+    param = param != 0 ? Math_div(3579545, param) : param;
+    break;
+  }
 
   Tone *tone = &track->tone;
   Tone_FromPeriod(tone, period);
 
-  tone->ticks = 4 * (1 << NOTE_TICKS_PRECISION);
-  tone->sample = sample;
+  /* Note: sample number 0 means the current played sample should not be
+   * changed. The sound channel is also using 0-indexed sampler numbers,
+   * which means the first sample has number 0. To convert the sample
+   * number 1 is subtracted.
+   */
+
+  tone->ticks = 1 << TONE_TICKS_PRECISION;
+  tone->sample = sample - 1;
+  tone->effect.type = effect;
+  tone->effect.param = param;
 
   track->position++;
 

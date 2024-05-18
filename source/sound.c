@@ -2,14 +2,6 @@
 #include <sound.h>
 
 void
-SoundChannel_AssignTrack(
-    SoundChannel *channel,
-    SoundTrack *track)
-{
-  channel->track = track;
-}
-
-void
 SoundChannel_AddSampler(
     SoundChannel *channel,
     const SoundSampler *sampler)
@@ -35,88 +27,272 @@ SoundChannel_Pitch(
 void
 SoundChannel_SetTempo(
     SoundChannel *channel,
-    unsigned int frequency)
+    unsigned char tempo)
 {
-  unsigned int speed = *channel->reciproc * frequency;
+  unsigned int frequency = Math_div(tempo * 2, 5);
+  unsigned int samples = Math_div(*channel->frequency, frequency);
+  channel->samplesPerTick = samples;
+}
 
-  unsigned int samplesPerSecond = *(channel->frequency) >> (NOTE_TICKS_PRECISION);
-  unsigned int samplesPerTick = (samplesPerSecond * speed) >> (SOUND_RECIPROC_PRECISION);
+static void
+SoundEffect_Arpeggio(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
 
-  channel->samplesPerTick = samplesPerTick;
-  channel->samplesUntilTick = samplesPerTick;
+  unsigned char noteX = (param & 0b11110000) >> 4;
+  unsigned char noteY = (param & 0b00001111) >> 0;
+
+  // FIXME steps are actually repeating after every 3 ticks
+  unsigned int step = channel->ticks & 0x3; // modulo 4
+
+  Tone next = {
+    .octave = tone->octave,
+    .note = tone->note,
+  };
+
+  switch (step) {
+  case 0: // play original note
+    break;
+  case 1: // play original note + X
+    next.note += noteX;
+    break;
+  case 2: // play original note + Y
+    next.note += noteY;
+    break;
+  }
+
+  unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
+  SoundChannel_Pitch(channel, frequency);
+}
+
+static void
+SoundEffect_PortaUp(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+
+  unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
+  frequency += param * channel->ticks;
+
+  SoundChannel_Pitch(channel, frequency);
+}
+
+static void
+SoundEffect_PortaDown(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+
+  unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
+  frequency -= param * channel->ticks;
+
+  SoundChannel_Pitch(channel, frequency);
+}
+
+static void
+SoundEffect_SetOffset(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+  channel->position = (param * 256) << SOUND_CHANNEL_PRECISION;
+}
+
+static void
+SoundEffect_SlideVolume(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+
+  unsigned char increase = (param & 0b11110000) >> 4;
+  unsigned char decrease = (param & 0b00001111) >> 0;
+
+  unsigned char volume = channel->volume + increase - decrease;
+
+  const unsigned char max = 1 << SOUND_VOLUME_PRECISION;
+  // clamp new volume (if going below zero or above maximum)
+  if (decrease && volume > max) volume = 0;
+  if (increase && volume > max) volume = max;
+
+  channel->volume = volume;
+}
+
+static void
+SoundEffect_SetVolume(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+  SoundChannel_SetVolume(channel, param);
+}
+
+static void
+SoundEffect_SetTempo(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  unsigned char param = tone->effect.param;
+
+  if (param < 32) {
+    SoundChannel_SetSpeed(channel, param);
+  } else {
+    SoundChannel_SetTempo(channel, param);
+  }
+}
+
+static void
+SoundEffect_JumptoOrder(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  ModuleSoundTrack *track = channel->track->self;
+
+  // FIXME must happen to every channel/track
+  unsigned char param = tone->effect.param;
+  track->position = param * 64;
+}
+
+static void
+SoundEffect_BreaktoRow(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  ModuleSoundTrack *track = channel->track->self;
+
+  // FIXME must happen to every channel/track
+  unsigned char param = tone->effect.param;
+  track->position = ((track->position + 64) & ~63) + param;
+}
+
+static void
+SoundEffect_ApplyFor(
+    const Tone *tone,
+    SoundChannel *channel)
+{
+  static const SoundEffectFn entry[SOUND_EFFECT_COUNT] = {
+    [SOUND_EFFECT_SET_OFFSET]   = SoundEffect_SetOffset,
+    [SOUND_EFFECT_SET_VOLUME]   = SoundEffect_SetVolume,
+    [SOUND_EFFECT_SET_TEMPO]    = SoundEffect_SetTempo,
+    [SOUND_EFFECT_JUMPTO_ORDER] = SoundEffect_JumptoOrder,
+    [SOUND_EFFECT_BREAKTO_ROW]  = SoundEffect_BreaktoRow,
+  };
+
+  static const SoundEffectFn update[SOUND_EFFECT_COUNT] = {
+    [SOUND_EFFECT_ARPEGGIO] = SoundEffect_Arpeggio,
+    [SOUND_EFFECT_PORTA_UP] = SoundEffect_PortaUp,
+    [SOUND_EFFECT_PORTA_DOWN] = SoundEffect_PortaDown,
+    [SOUND_EFFECT_VOLUME_SLIDE] = SoundEffect_SlideVolume,
+  };
+
+  const SoundEffectFn *effects = channel->ticks == 0 ? entry : update;
+
+  SoundEffect effect = tone->effect;
+  SoundEffectFn handler = effect.type < SOUND_EFFECT_COUNT ? effects[effect.type] : NULL;
+
+  if (effect.type != 0 && effect.param != 0 && handler != NULL) {
+    handler(tone, channel);
+  }
 }
 
 static inline bool
-SoundChannel_NextToneIfRequired(SoundChannel *channel) {
+SoundChannel_TickTone(SoundChannel *channel) {
   const Tone *tone = channel->tone;
-  unsigned int ticks = channel->ticks;
+  unsigned int ticks = ++channel->ticks;
 
-  if (tone == NULL || ticks >= tone->ticks) {
+  // FIXME should consider tone->ticks (i.e. length of note)
+  bool next = tone == NULL || ticks >= channel->speed;
+  if (next) {
     tone = SoundTrack_NextTone(channel->track);
 
-    if (tone == NULL) {
-      return false; // end of track
-    }
-
     channel->tone = tone;
-    channel->position = 0;
-    channel->increment = 0;
     channel->ticks = 0;
 
-    if (tone->note != NOTE_PAUSE) {
-      const SoundSampler *sampler = channel->samplers[tone->sample];
+    if (tone == NULL) {
+      // reached end of track
+      return false;
+    }
+
+    const SoundSampler *sampler = tone->sample < length(channel->samplers) ? channel->samplers[tone->sample]: NULL;
+    if (sampler != NULL) {
       channel->sampler = sampler;
 
-      unsigned int frequency = SoundSampler_GetFrequency(sampler, tone);
-      SoundChannel_Pitch(channel, frequency);
-
+      // volume is reset when (new) sample is given
       unsigned char volume = SoundSampler_GetVolume(sampler);
       SoundChannel_SetVolume(channel, volume);
     }
+
+    // if there is no note keep on playing previous one (do not reset position)
+    if (tone->note != NOTE_PAUSE) {
+      channel->position = 0;
+
+      unsigned int frequency = SoundSampler_GetFrequency(sampler, tone);
+      SoundChannel_Pitch(channel, frequency);
+    }
   }
 
+  SoundEffect_ApplyFor(tone, channel);
   return true;
+}
+
+static inline int*
+SoundChannel_FillBuffer(
+    SoundChannel *channel,
+    int *buffer,
+    unsigned int size)
+{
+  const unsigned char volume = channel->volume;
+  unsigned int index = 0;
+
+  while (index < size) {
+    const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
+
+    int value = 0;
+    // TODO improve thos (use NullSampler if tone is a pause)
+    if (channel->sampler != NULL) {
+      value = SoundSampler_GetSample(channel->sampler, position);
+    }
+
+    channel->position += channel->increment;
+    buffer[index++] += (value * volume) >> SOUND_VOLUME_PRECISION;
+  }
+
+  return &buffer[index];
 }
 
 unsigned int
 SoundChannel_Fill(
     SoundChannel *channel,
     int *buffer,
-    unsigned int size)
+    const unsigned int size)
 {
-  if (!SoundChannel_NextToneIfRequired(channel)) {
-    return 0; // end of track
-  }
+  unsigned int remaining = size;
 
-  unsigned int index = 0;
-  while (index < size) {
-    const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
-    const unsigned char volume = channel->volume;
-    const Tone *tone = channel->tone;
-
-    int value = 0;
-    if (tone->note != NOTE_PAUSE) {
-      value = SoundSampler_GetSample(channel->sampler, position);
+  while (remaining > 0) {
+    if (channel->samplesUntilTick == 0) {
+      if (!SoundChannel_TickTone(channel)) {
+        break; // reached end of track
+      }
+      channel->samplesUntilTick = channel->samplesPerTick;
     }
 
-    channel->position += channel->increment;
-    buffer[index++] += (value * volume) >> SOUND_VOLUME_PRECISION;
-
-    channel->samplesUntilTick--;
-    if (channel->samplesUntilTick > 0) {
-      continue;
+    if (channel->samplesUntilTick < remaining) {
+      buffer = SoundChannel_FillBuffer(channel, buffer, channel->samplesUntilTick);
+      remaining -= channel->samplesUntilTick;
+      channel->samplesUntilTick = 0;
     }
-
-    channel->ticks++;
-    // TODO actually tick tone (process effects)
-    channel->samplesUntilTick = channel->samplesPerTick;
-
-    if (!SoundChannel_NextToneIfRequired(channel)) {
-      break;
+    else {
+      buffer = SoundChannel_FillBuffer(channel, buffer, remaining);
+      channel->samplesUntilTick -= remaining;
+      remaining = 0;
     }
   }
 
-  return index;
+  return (size - remaining);
 }
 
 SoundPlayer*

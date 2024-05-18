@@ -51,7 +51,7 @@ AsciiSoundTrack_NextTone(void *self) {
 
   unsigned int octave = 4;
   unsigned int dotted = 0;
-  unsigned int ticks = (1 << NOTE_TICKS_PRECISION);
+  unsigned int ticks = 1 << TONE_TICKS_PRECISION;
   bool shorten = false;
 
   while (true) {

@@ -6,6 +6,7 @@
 #include <gba.h>
 #include <io.h>
 
+
 typedef enum Note {
   NOTE_C,
   NOTE_CSHARP,
@@ -23,16 +24,39 @@ typedef enum Note {
 
 #define NOTE_PAUSE ((enum Note) 0xFF)
 
+typedef struct SoundEffect {
+  enum {
+    SOUND_EFFECT_ARPEGGIO     = 0x0,
+    SOUND_EFFECT_PORTA_UP     = 0x1,
+    SOUND_EFFECT_PORTA_DOWN   = 0x2,
+    SOUND_EFFECT_PORTA_TONE   = 0x3,
+    // ...
+    SOUND_EFFECT_SET_OFFSET   = 0x9,
+    SOUND_EFFECT_VOLUME_SLIDE = 0xA,
+    SOUND_EFFECT_JUMPTO_ORDER = 0xB,
+    SOUND_EFFECT_SET_VOLUME   = 0xC,
+    SOUND_EFFECT_BREAKTO_ROW  = 0xD,
+    SOUND_EFFECT_SET_TEMPO    = 0xF,
+  } type;
+  unsigned char param;
+} SoundEffect;
+
+#define SOUND_EFFECT_COUNT 16
+
 typedef struct Tone {
   Note note;
   unsigned int octave;
   unsigned int sample; // index of sample this tone will use
   unsigned int ticks;  // number of ticks this tone will last (.6 fixed point integer, 64 == one full note)
 
-  // TODO consider adding effects here
+  // TODO reconsider adding effects here
+  struct SoundEffect effect;
 } Tone;
 
-#define NOTE_TICKS_PRECISION 6
+#define TONE_TICKS_PRECISION 6
+
+typedef struct SoundChannel SoundChannel;
+typedef void (*SoundEffectFn)(const Tone *tone, SoundChannel *channel);
 
 typedef struct SoundTrack {
   void *self;
@@ -69,8 +93,6 @@ ModuleSoundTrack_FromReader(
     ModuleSoundTrack *track,
     const Reader *reader,
     unsigned int channel);
-
-typedef struct SoundChannel SoundChannel;
 
 typedef struct SoundSampler {
   void *self;
@@ -122,6 +144,7 @@ typedef struct SoundChannel {
   SoundTrack *track;
   const Tone *tone;
   unsigned int ticks;            // amount of times tone was already ticked
+  unsigned char speed;
 
   unsigned int samplesPerTick;
   unsigned int samplesUntilTick;
@@ -132,10 +155,10 @@ typedef struct SoundChannel {
 #define SOUND_RECIPROC_PRECISION 24
 #define SOUND_VOLUME_PRECISION 6
 
-void
-SoundChannel_AssignTrack(
-    SoundChannel *channel,
-    SoundTrack *track);
+static inline void
+SoundChannel_AssignTrack(SoundChannel *channel, SoundTrack *track) {
+  channel->track = track;
+}
 
 void
 SoundChannel_AddSampler(
@@ -152,13 +175,19 @@ SoundChannel_SetVolume(
     SoundChannel *channel,
     unsigned char volume)
 {
-  channel->volume = Math_max(volume, 1 << SOUND_VOLUME_PRECISION);
+  const unsigned char max = 1 << SOUND_VOLUME_PRECISION;
+  channel->volume = volume > max ? max : volume;
 }
 
 void
 SoundChannel_SetTempo(
     SoundChannel *channel,
-    unsigned int frequency); // the duration one note tick should last (e.g. 5Hz = 0.2 seconds)
+    unsigned char tempo);
+
+static inline void
+SoundChannel_SetSpeed(SoundChannel *channel, unsigned char speed) {
+  channel->speed = speed;
+}
 
 unsigned int
 SoundChannel_Fill(
