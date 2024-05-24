@@ -247,4 +247,36 @@ File_GetPosition(void *self) {
   return (unsigned int) position;
 }
 
+int
+Writer_Printf(
+    Writer *writer,
+    const char *format, ...)
+{
+  int result = -1;
+
+  va_list arguments;
+  va_start(arguments, format);
+
+  bool File_Write(void *file, unsigned char byte);
+  if (writer->Write == File_Write) {
+    File *file = writer->self;
+    result = vfprintf(file->fp, format, arguments);
+  }
+
+  bool Buffer_Write(void *buffer, unsigned char byte);
+  if (writer->Write == Buffer_Write) {
+    Buffer *buffer = writer->self;
+
+    void *data = &buffer->data[buffer->position];
+    unsigned int length = buffer->length - buffer->position;
+
+    result = vsnprintf(data, length, format, arguments);
+    buffer->position += result < 0 ? 0 : result;
+  }
+
+  va_end(arguments);
+
+  return result;
+}
+
 #endif

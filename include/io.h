@@ -89,6 +89,49 @@ Writer_Write(const Writer *writer, unsigned char byte) {
 }
 
 static inline bool
+Writer_WriteValue(const Writer *writer, void *value, unsigned int length) {
+  unsigned char *values = value;
+
+  for (unsigned int i = 0; i < length; i++) {
+    if (!Writer_Write(writer, values[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static inline bool
+Writer_WriteInt32(const Writer *writer, int value) {
+  return Writer_WriteValue(writer, &value, 4);
+}
+
+static inline bool
+Writer_WriteUInt32(const Writer *writer, unsigned int value) {
+  return Writer_WriteValue(writer, &value, 4);
+}
+
+static inline bool
+Writer_WriteInt16(const Writer *writer, short value) {
+  return Writer_WriteValue(writer, &value, 2);
+}
+
+static inline bool
+Writer_WriteUInt16(const Writer *writer, unsigned short value) {
+  return Writer_WriteValue(writer, &value, 2);
+}
+
+static inline bool
+Writer_WriteInt8(const Writer *writer, char value) {
+  return Writer_WriteValue(writer, &value, 1);
+}
+
+static inline bool
+Writer_WriteUInt8(const Writer *writer, unsigned char value) {
+  return Writer_WriteValue(writer, &value, 1);
+}
+
+static inline bool
 Writer_SeekTo(const Writer *writer, unsigned int position) {
   return writer->SeekTo(writer->self, position);
 }
@@ -137,6 +180,7 @@ Buffer_FromString(
 
 #ifdef NOGBA
 #include <stdio.h>
+#include <stdarg.h>
 
 typedef struct File {
   FILE *fp;
@@ -153,6 +197,11 @@ DataSource*
 File_From(
     File *file,
     FILE *fp);
+
+int
+Writer_Printf(
+    Writer *writer,
+    const char *format, ...);
 
 #endif
 #endif
