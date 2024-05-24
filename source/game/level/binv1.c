@@ -62,7 +62,7 @@ Binv1Level_ReadValue(
   // big endian is unsupported
 }
 
-// TODO use equivalent reader functions instead (see io.h) 
+// TODO use equivalent reader functions instead (see io.h)
 
 static inline bool
 Binv1Level_ReadInt8(Binv1Level *level, int *value) {
@@ -99,6 +99,8 @@ Binv1Level_WriteValue(
   return true;
   // big endian is unsupported
 }
+
+// TODO use equivalent writer functions instead (see io.h)
 
 static inline bool
 Binv1Level_WriteInt8(Binv1Level *level, int value) {
