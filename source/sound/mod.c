@@ -383,7 +383,7 @@ ModuleSoundTrack_NextTone(void *self) {
   /* Note: sample number 0 means the current played sample should not be
    * changed. The sound channel is also using 0-indexed sampler numbers,
    * which means the first sample has number 0. To convert the sample
-   * number 1 is subtracted.
+   * to 0-indexed numbers 1 is subtracted.
    */
 
   tone->ticks = 1 << TONE_TICKS_PRECISION;
@@ -394,6 +394,12 @@ ModuleSoundTrack_NextTone(void *self) {
   track->position++;
 
   return tone;
+}
+
+static bool
+ModuleSoundTrack_AddTone() {
+  // not implemented
+  return false;
 }
 
 SoundTrack*
@@ -412,6 +418,7 @@ ModuleSoundTrack_FromReader(
   }
 
   track->base.self = track;
+  track->base.Add = ModuleSoundTrack_AddTone;
   track->base.Next = ModuleSoundTrack_NextTone;
 
   return &track->base;
@@ -434,8 +441,7 @@ ModuleSoundSampler_GetFrequency(
 }
 
 static unsigned char
-ModuleSoundSampler_GetVolume(void *self)
-{
+ModuleSoundSampler_GetVolume(void *self) {
   ModuleSoundSampler *sampler = self;
   const Reader *reader = sampler->reader;
 

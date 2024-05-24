@@ -36,6 +36,12 @@ Note_FromSymbol(
   return true;
 }
 
+static bool
+AsciiSoundTrack_AddTone() {
+  // not implemented
+  return false;
+}
+
 static const Tone*
 AsciiSoundTrack_NextTone(void *self) {
   AsciiSoundTrack *track = self;
@@ -93,6 +99,7 @@ AsciiSoundTrack_FromNotes(
   track->index = 0;
 
   track->base.self = track;
+  track->base.Add  = AsciiSoundTrack_AddTone;
   track->base.Next = AsciiSoundTrack_NextTone;
 
   return &track->base;

@@ -15,7 +15,7 @@ int main() {
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_SetFrequency(player, 16384);
 
-  static ModuleSoundSampler samplers[32] = {0};
+  static ModuleSoundSampler samplers[31] = {0};
   for (unsigned int i = 0; i < length(samplers); i++) {
     ModuleSoundSampler_FromReader(&samplers[i], reader, i);
   }
@@ -25,17 +25,15 @@ int main() {
     ModuleSoundTrack_FromReader(&tracks[i], reader, i);
   }
 
-  static SoundChannel channels[4] = {0};
+  static ModuleSoundChannel channels[4] = {0};
   for (unsigned int i = 0; i < length(channels); i++) {
-    SoundPlayer_AddChannel(player, &channels[i]);
-
-    SoundChannel_SetSpeed(&channels[i], 6);
-    SoundChannel_SetTempo(&channels[i], 125);
-    SoundChannel_AssignTrack(&channels[i], &tracks[i].base);
+    SoundChannel *channel = ModuleSoundChannel_ForTrack(&channels[i], &tracks[i].base);
 
     for (unsigned int j = 0; j < length(samplers); j++) {
-      SoundChannel_AddSampler(&channels[i], &samplers[j].base);
+      ModuleSoundChannel_AddSampler(&channels[i], &samplers[j].base);
     }
+
+    SoundPlayer_AddChannel(player, channel);
   }
 
   DataSource *output = File_From(&(File) {0}, stdout);

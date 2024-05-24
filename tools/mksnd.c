@@ -14,19 +14,17 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
   static AsciiSoundTrack sound2 = {0};
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
-  static SoundChannel channel1 = {0};
-  SoundChannel_AssignTrack(&channel1, track1);
-  SoundChannel_AddSampler(&channel1, sampler);
+  static ModuleSoundChannel module1 = {0};
+  SoundChannel *channel1 = ModuleSoundChannel_ForTrack(&module1, track1);
 
-  static SoundChannel channel2 = {0};
-  SoundChannel_AssignTrack(&channel2, track2);
-  SoundChannel_AddSampler(&channel2, sampler);
+  ModuleSoundChannel_AddSampler(&module1, sampler);
+  SoundPlayer_AddChannel(player, channel1);
 
-  SoundPlayer_AddChannel(player, &channel1);
-  SoundPlayer_AddChannel(player, &channel2);
+  static ModuleSoundChannel module2 = {0};
+  SoundChannel *channel2 = ModuleSoundChannel_ForTrack(&module2, track2);
 
-  SoundChannel_SetTempo(&channel1, player->frequency / 3); // 1/3th of a seconds per full note
-  SoundChannel_SetTempo(&channel2, player->frequency / 3);
+  ModuleSoundChannel_AddSampler(&module2, sampler);
+  SoundPlayer_AddChannel(player, channel2);
 }
 
 unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
@@ -39,19 +37,17 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
   static AsciiSoundTrack sound2 = {0};
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
-  static SoundChannel channel1 = {0};
-  SoundChannel_AssignTrack(&channel1, track1);
-  SoundChannel_AddSampler(&channel1, sampler);
+  static ModuleSoundChannel module1 = {0};
+  SoundChannel *channel1 = ModuleSoundChannel_ForTrack(&module1, track1);
 
-  static SoundChannel channel2 = {0};
-  SoundChannel_AssignTrack(&channel2, track2);
-  SoundChannel_AddSampler(&channel2, sampler);
+  ModuleSoundChannel_AddSampler(&module1, sampler);
+  SoundPlayer_AddChannel(player, channel1);
 
-  SoundPlayer_AddChannel(player, &channel1);
-  SoundPlayer_AddChannel(player, &channel2);
+  static ModuleSoundChannel module2 = {0};
+  SoundChannel *channel2 = ModuleSoundChannel_ForTrack(&module2, track2);
 
-  SoundChannel_SetTempo(&channel1, player->frequency / 4); // 1/4th of a seconds per full note
-  SoundChannel_SetTempo(&channel2, player->frequency / 4);
+  ModuleSoundChannel_AddSampler(&module2, sampler);
+  SoundPlayer_AddChannel(player, channel2);
 }
 
 /* Produce and play sound files with:

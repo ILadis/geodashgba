@@ -6,7 +6,6 @@
 #include <gba.h>
 #include <io.h>
 
-
 typedef enum Note {
   NOTE_C,
   NOTE_CSHARP,
@@ -45,27 +44,45 @@ typedef struct SoundEffect {
 
 typedef struct Tone {
   Note note;
+  SoundEffect effect;
   unsigned int octave;
   unsigned int sample; // index of sample this tone will use
   unsigned int ticks;  // number of ticks this tone will last (.6 fixed point integer, 64 == one full note)
-
-  // TODO reconsider adding effects here
-  struct SoundEffect effect;
 } Tone;
 
 #define TONE_TICKS_PRECISION 6
 
-typedef struct SoundChannel SoundChannel;
-typedef void (*SoundEffectFn)(const Tone *tone, SoundChannel *channel);
-
 typedef struct SoundTrack {
   void *self;
+  bool (*Add)(void *self, const Tone *tone);
   const Tone* (*Next)(void *self);
 } SoundTrack;
+
+static inline bool
+SoundTrack_AddTone(SoundTrack *track, const Tone *tone) {
+  return track->Add(track->self, tone);
+}
 
 static inline const Tone*
 SoundTrack_NextTone(SoundTrack *track) {
   return track->Next(track->self);
+}
+
+static inline bool
+SoundTrack_Convert(
+    SoundTrack *from,
+    SoundTrack *to)
+{
+  while (true) {
+    const Tone *tone = SoundTrack_NextTone(from);
+    if (tone == NULL) {
+      return true;
+    }
+
+    if (!SoundTrack_AddTone(to, tone)) {
+      return false;
+    }
+  }
 }
 
 typedef struct AsciiSoundTrack {
@@ -80,6 +97,17 @@ AsciiSoundTrack_FromNotes(
     AsciiSoundTrack *track,
     const char *notes);
 
+typedef struct Binv1SoundTrack {
+  SoundTrack base;
+  DataSource *source;
+  Tone tone;
+} Binv1SoundTrack;
+
+SoundTrack*
+Binv1SoundTrack_From(
+    Binv1SoundTrack *track,
+    DataSource *source);
+
 typedef struct ModuleSoundTrack {
   SoundTrack base;
   const Reader *reader;
@@ -93,6 +121,16 @@ ModuleSoundTrack_FromReader(
     ModuleSoundTrack *track,
     const Reader *reader,
     unsigned int channel);
+
+static inline SoundTrack*
+ModuleSoundTrack_From(
+    ModuleSoundTrack *track,
+    DataSource *source,
+    unsigned int channel)
+{
+  const Reader *reader = DataSource_AsReader(source);
+  return ModuleSoundTrack_FromReader(track, reader, channel);
+}
 
 typedef struct SoundSampler {
   void *self;
@@ -117,6 +155,9 @@ SoundSampler_GetVolume(const SoundSampler *sampler) {
 }
 
 const SoundSampler*
+NullSoundSampler_GetInstance();
+
+const SoundSampler*
 SineSoundSampler_GetInstance();
 
 typedef struct ModuleSoundSampler {
@@ -131,69 +172,50 @@ ModuleSoundSampler_FromReader(
     const Reader *reader,
     unsigned int index);
 
-// TODO rename to TrackSoundChannel
 typedef struct SoundChannel {
-  const SoundSampler *sampler;
-  const SoundSampler *samplers[32];
+  void *self;
   const unsigned int *frequency; // points to sound player frequency
   const unsigned int *reciproc;  // points to inverse of sound player frequency (4.28 fixed point integer)
-  unsigned int position;         // position in current sample (20.12 fixed point integer)
-  unsigned int increment;        // position increment per loop (20.12 fixed point integer)
-  unsigned char volume;          // volume at which this sound channel plays (1.6 fixed point integer)
+  unsigned int (*Fill)(void *self, int *buffer, unsigned int size);
+} SoundChannel;
+
+static inline unsigned int
+SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
+  return channel->Fill(channel->self, buffer, size);
+}
+
+typedef struct ModuleSoundChannel {
+  SoundChannel base;
 
   SoundTrack *track;
   const Tone *tone;
-  unsigned int ticks;            // amount of times tone was already ticked
-  unsigned char speed;
+  const SoundSampler *sampler;
+  const SoundSampler *samplers[31];
+
+  unsigned int position;  // position in current sample (20.12 fixed point integer)
+  unsigned int increment; // position increment per loop (20.12 fixed point integer)
+  unsigned char volume;   // volume at which this sound channel plays (1.6 fixed point integer)
+  unsigned char ticks;    // amount of times tone was already ticked
+  unsigned char speed;    // amount of times a tone must be ticked before advancing to next tone
 
   unsigned int samplesPerTick;
   unsigned int samplesUntilTick;
-} SoundChannel;
+} ModuleSoundChannel;
 
 // 20.12 fixed point integer (for both increment and position)
 #define SOUND_CHANNEL_PRECISION 12
 #define SOUND_RECIPROC_PRECISION 24
 #define SOUND_VOLUME_PRECISION 6
 
-static inline void
-SoundChannel_AssignTrack(SoundChannel *channel, SoundTrack *track) {
-  channel->track = track;
-}
+SoundChannel*
+ModuleSoundChannel_ForTrack(
+    ModuleSoundChannel *channel,
+    SoundTrack *track);
 
 void
-SoundChannel_AddSampler(
-    SoundChannel *channel,
+ModuleSoundChannel_AddSampler(
+    ModuleSoundChannel *channel,
     const SoundSampler *sampler);
-
-void
-SoundChannel_Pitch(
-    SoundChannel *channel,
-    unsigned int frequency);
-
-static inline void
-SoundChannel_SetVolume(
-    SoundChannel *channel,
-    unsigned char volume)
-{
-  const unsigned char max = 1 << SOUND_VOLUME_PRECISION;
-  channel->volume = volume > max ? max : volume;
-}
-
-void
-SoundChannel_SetTempo(
-    SoundChannel *channel,
-    unsigned char tempo);
-
-static inline void
-SoundChannel_SetSpeed(SoundChannel *channel, unsigned char speed) {
-  channel->speed = speed;
-}
-
-unsigned int
-SoundChannel_Fill(
-    SoundChannel *channel,
-    int *buffer,
-    unsigned int size);
 
 typedef struct SoundPlayer {
   char *buffers[2];       // buffers for mixing

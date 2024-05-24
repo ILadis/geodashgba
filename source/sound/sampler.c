@@ -23,6 +23,33 @@ Tone_GetFrequency(const Tone *tone) {
 }
 
 static int
+NullSoundSampler_GetSample() {
+  return 0;
+}
+
+static unsigned int
+NullSoundSampler_GetFrequency() {
+  return 0;
+}
+
+static unsigned char
+NullSoundSampler_GetVolume() {
+  return 1 << SOUND_VOLUME_PRECISION;
+}
+
+const SoundSampler*
+NullSoundSampler_GetInstance() {
+  static SoundSampler sampler = {
+    .self = NULL,
+    .Get = NullSoundSampler_GetSample,
+    .Frequency = NullSoundSampler_GetFrequency,
+    .Volume = NullSoundSampler_GetVolume,
+  };
+
+  return &sampler;
+}
+
+static int
 SineSoundSampler_GetSample(
     unused void *self,
     unsigned int index)
