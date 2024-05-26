@@ -167,11 +167,11 @@ SoundEffect_JumptoOrder(
     const Tone *tone,
     ModuleSoundChannel *channel)
 {
-  ModuleSoundTrack *track = channel->track->self;
-
   // FIXME must happen to every channel/track
   unsigned char param = tone->effect.param;
-  track->position = param * 64;
+  unsigned int position = param * 64;
+
+  SoundTrack_SeektTo(channel->track, position);
 }
 
 static void
@@ -179,11 +179,14 @@ SoundEffect_BreaktoRow(
     const Tone *tone,
     ModuleSoundChannel *channel)
 {
+  // FIXME should not rely on a specific sound track 
   ModuleSoundTrack *track = channel->track->self;
 
   // FIXME must happen to every channel/track
   unsigned char param = tone->effect.param;
-  track->position = ((track->position + 64) & ~63) + param;
+  unsigned int position = ((track->position + 64) & ~63) + param;
+
+  SoundTrack_SeektTo(channel->track, position);
 }
 
 static inline void
@@ -238,7 +241,8 @@ ModuleSoundChannel_TickTone(ModuleSoundChannel *channel) {
     unsigned int index = tone->sample & length(channel->samplers);
     const SoundSampler *sampler = channel->samplers[index];
 
-    if (sampler != NULL) {
+    // FIXME improve check for "no sample" (where sample index == -1)
+    if (sampler != NULL && tone->sample < 32) {
       channel->sampler = sampler;
 
       // volume is reset when (new) sample is given
@@ -250,7 +254,7 @@ ModuleSoundChannel_TickTone(ModuleSoundChannel *channel) {
     if (tone->note != NOTE_PAUSE) {
       channel->position = 0;
 
-      unsigned int frequency = SoundSampler_GetFrequency(sampler, tone);
+      unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
       ModuleSoundChannel_Pitch(channel, frequency);
     }
   }

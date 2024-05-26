@@ -10,19 +10,18 @@
  */
 int main() {
   DataSource *input = File_From(&(File) {0}, stdin);
-  Reader *reader = DataSource_AsReader(input);
 
   SoundPlayer *player = SoundPlayer_GetInstance();
   SoundPlayer_SetFrequency(player, 16384);
 
   static ModuleSoundSampler samplers[31] = {0};
   for (unsigned int i = 0; i < length(samplers); i++) {
-    ModuleSoundSampler_FromReader(&samplers[i], reader, i);
+    ModuleSoundSampler_From(&samplers[i], input, i);
   }
 
   static ModuleSoundTrack tracks[4] = {0};
   for (unsigned int i = 0; i < length(tracks); i++) {
-    ModuleSoundTrack_FromReader(&tracks[i], reader, i);
+    ModuleSoundTrack_From(&tracks[i], input, i);
   }
 
   static ModuleSoundChannel channels[4] = {0};

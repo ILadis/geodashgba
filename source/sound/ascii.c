@@ -90,6 +90,27 @@ AsciiSoundTrack_NextTone(void *self) {
   return tone;
 }
 
+static bool
+AsciiSoundTrack_SeekTo(
+    void *self,
+    unsigned int position)
+{
+  AsciiSoundTrack *track = self;
+  unsigned int index = track->index;
+
+  track->index = 0;
+
+  while (position > 0) {
+    if (!AsciiSoundTrack_NextTone(self)) {
+      track->index = index; // reset to old index if seeking fails
+      return false;
+    }
+    position--;
+  }
+
+  return true;
+}
+
 SoundTrack*
 AsciiSoundTrack_FromNotes(
     AsciiSoundTrack *track,
@@ -101,6 +122,7 @@ AsciiSoundTrack_FromNotes(
   track->base.self = track;
   track->base.Add  = AsciiSoundTrack_AddTone;
   track->base.Next = AsciiSoundTrack_NextTone;
+  track->base.SeekTo = AsciiSoundTrack_SeekTo;
 
   return &track->base;
 }

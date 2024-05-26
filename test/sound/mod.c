@@ -2,14 +2,12 @@
 #include <sound.h>
 #include "../test.h"
 
-static unsigned char theme[3292];
+static unsigned char module[3292];
 
 test(NextTone_ShouldReturnNullAfterExpectedAmountOfNotes) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 0);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundTrack *track = ModuleSoundTrack_From(&(ModuleSoundTrack) {0}, source, 0);
 
   unsigned int count = 0;
 
@@ -24,10 +22,8 @@ test(NextTone_ShouldReturnNullAfterExpectedAmountOfNotes) {
 
 test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 0);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundTrack *track = ModuleSoundTrack_From(&(ModuleSoundTrack) {0}, source, 0);
 
   const Tone tones[] = {
     { .note = NOTE_G,      .octave = 1 },
@@ -61,10 +57,8 @@ test(NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave) {
 
 test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundTrack *track = ModuleSoundTrack_FromReader(&(ModuleSoundTrack) {0}, reader, 1);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundTrack *track = ModuleSoundTrack_From(&(ModuleSoundTrack) {0}, source, 1);
 
   const Tone tones[] = {
     { .note = NOTE_PAUSE,  .octave = 1 },
@@ -98,10 +92,8 @@ test(NextTone_ShouldReturnTonesOfSecondChannelWithExpectedNoteAndOctave) {
 
 test(GetSample_ShouldReturnExpectedDataForFirstSample) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 0);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 0);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -123,10 +115,8 @@ test(GetSample_ShouldReturnExpectedDataForFirstSample) {
 
 test(GetSample_ShouldReturnExpectedDataForSecondSample) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 1);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 1);
 
   char samples[] = {
     0x00, 0x00, 0x01, 0x40, 0x53, 0x42, 0x29, 0x39, 0x36, 0x36, 0x36, 0x36,
@@ -151,10 +141,8 @@ test(GetSample_ShouldReturnExpectedDataForSecondSample) {
 
 test(GetSample_ShouldReturnExpectedDataForThirdSample) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 2);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 2);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x06, 0x11, 0x1f, 0x27, 0x2c, 0x32, 0x37, 0x3d,
@@ -176,10 +164,8 @@ test(GetSample_ShouldReturnExpectedDataForThirdSample) {
 
 test(GetSample_ShouldReturnExpectedDataForFourthSample) {
   // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, theme, length(theme));
-  Reader *reader = DataSource_AsReader(source);
-
-  SoundSampler *sampler = ModuleSoundSampler_FromReader(&(ModuleSoundSampler) {0}, reader, 3);
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 3);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -208,7 +194,7 @@ suite(
   GetSample_ShouldReturnExpectedDataForThirdSample,
   GetSample_ShouldReturnExpectedDataForFourthSample);
 
-static unsigned char theme[] = {
+static unsigned char module[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x53, 0x61, 0x6d, 0x70,
   0x6c, 0x65, 0x20, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

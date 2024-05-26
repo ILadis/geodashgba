@@ -21,6 +21,7 @@ typedef enum Note {
   NOTE_B,
 } Note;
 
+#define NOTE_COUNT 12
 #define NOTE_PAUSE ((enum Note) 0xFF)
 
 typedef struct SoundEffect {
@@ -56,6 +57,7 @@ typedef struct SoundTrack {
   void *self;
   bool (*Add)(void *self, const Tone *tone);
   const Tone* (*Next)(void *self);
+  bool (*SeekTo)(void *self, unsigned int position);
 } SoundTrack;
 
 static inline bool
@@ -66,6 +68,11 @@ SoundTrack_AddTone(SoundTrack *track, const Tone *tone) {
 static inline const Tone*
 SoundTrack_NextTone(SoundTrack *track) {
   return track->Next(track->self);
+}
+
+static inline bool
+SoundTrack_SeektTo(SoundTrack *track, unsigned int position) {
+  return track->SeekTo(track->self, position);
 }
 
 static inline bool
@@ -117,20 +124,10 @@ typedef struct ModuleSoundTrack {
 } ModuleSoundTrack;
 
 SoundTrack*
-ModuleSoundTrack_FromReader(
-    ModuleSoundTrack *track,
-    const Reader *reader,
-    unsigned int channel);
-
-static inline SoundTrack*
 ModuleSoundTrack_From(
     ModuleSoundTrack *track,
     DataSource *source,
-    unsigned int channel)
-{
-  const Reader *reader = DataSource_AsReader(source);
-  return ModuleSoundTrack_FromReader(track, reader, channel);
-}
+    unsigned int channel);
 
 typedef struct SoundSampler {
   void *self;
@@ -160,6 +157,22 @@ NullSoundSampler_GetInstance();
 const SoundSampler*
 SineSoundSampler_GetInstance();
 
+typedef struct Binv1SoundSampler {
+  SoundSampler base;
+  DataSource *source;
+} Binv1SoundSampler;
+
+SoundSampler*
+Binv1SoundSampler_From(
+    Binv1SoundSampler *sampler,
+    DataSource *source);
+
+SoundSampler*
+Binv1SoundSampler_ConvertFrom(
+    Binv1SoundSampler *sampler,
+    DataSource *source,
+    const SoundSampler *other);
+
 typedef struct ModuleSoundSampler {
   SoundSampler base;
   const Reader *reader;
@@ -167,9 +180,9 @@ typedef struct ModuleSoundSampler {
 } ModuleSoundSampler;
 
 SoundSampler*
-ModuleSoundSampler_FromReader(
+ModuleSoundSampler_From(
     ModuleSoundSampler *sampler,
-    const Reader *reader,
+    DataSource *source,
     unsigned int index);
 
 typedef struct SoundChannel {

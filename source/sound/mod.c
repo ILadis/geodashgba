@@ -397,17 +397,40 @@ ModuleSoundTrack_NextTone(void *self) {
 }
 
 static bool
-ModuleSoundTrack_AddTone() {
+ModuleSoundTrack_AddTone(
+    unused void *self,
+    unused const Tone *tone)
+{
   // not implemented
   return false;
 }
 
+static bool
+ModuleSoundTrack_SeekTo(
+    void *self,
+    unsigned int position)
+{
+  ModuleSoundTrack *track = self;
+  unsigned int previous = track->position;
+
+  track->position = position;
+
+  if (!ModuleSoundTrack_HasNextTone(track)) {
+    track->position = previous; // reset to old position if seeking fails
+    return false;
+  }
+
+  return true;
+}
+
 SoundTrack*
-ModuleSoundTrack_FromReader(
+ModuleSoundTrack_From(
     ModuleSoundTrack *track,
-    const Reader *reader,
+    DataSource *source,
     unsigned int channel)
 {
+  const Reader *reader = DataSource_AsReader(source);
+
   track->reader = reader;
   track->channel = channel;
   track->position = 0;
@@ -420,6 +443,7 @@ ModuleSoundTrack_FromReader(
   track->base.self = track;
   track->base.Add = ModuleSoundTrack_AddTone;
   track->base.Next = ModuleSoundTrack_NextTone;
+  track->base.SeekTo = ModuleSoundTrack_SeekTo;
 
   return &track->base;
 }
@@ -484,11 +508,13 @@ ModuleSoundSampler_GetSample(
 }
 
 SoundSampler*
-ModuleSoundSampler_FromReader(
+ModuleSoundSampler_From(
     ModuleSoundSampler *sampler,
-    const Reader *reader,
+    DataSource *source,
     unsigned int index)
 {
+  const Reader *reader = DataSource_AsReader(source);
+
   sampler->reader = reader;
   sampler->index = index;
 
