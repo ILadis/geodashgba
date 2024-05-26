@@ -157,8 +157,11 @@ DataSource_CopyFrom(
     DataSource *src);
 
 typedef struct Buffer {
-  unsigned char *data;
   unsigned int length, position;
+  union {
+    const unsigned char *read;
+    unsigned char *write;
+  } data;
   DataSource source;
 } Buffer;
 
@@ -166,6 +169,12 @@ typedef struct Buffer {
   .data = (unsigned char[]) { bytes }, \
   .length = sizeof((unsigned char[]) { bytes }) \
 })
+
+DataSource*
+Buffer_Wrap(
+    Buffer *buffer,
+    const void *data,
+    unsigned int length);
 
 DataSource*
 Buffer_From(

@@ -58,10 +58,9 @@ DataCollection_GetLevelByIndex(
       offset += collection->allocations[i];
     }
 
-    // FIXME this is const (Buffer_Wrap requires non const)
-    /*const*/ unsigned char *data = (unsigned char *) DataCollection_GetReadBuffer(collection);
+    const unsigned char *data = DataCollection_GetReadBuffer(collection);
 
-    DataSource *source = Buffer_From(&buffer, &data[offset], length);
+    DataSource *source = Buffer_Wrap(&buffer, &data[offset], length);
     Binv1Level_From(&level, source);
 
     return &level;

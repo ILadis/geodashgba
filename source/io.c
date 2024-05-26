@@ -31,22 +31,17 @@ DataSource_CopyFrom(
 }
 
 DataSource*
-Buffer_From(
+Buffer_Wrap(
     Buffer *buffer,
-    void *data,
+    const void *data,
     unsigned int length)
 {
-  buffer->data = data;
-
   if (data == NULL) {
     return NULL;
   }
 
-  buffer->position = 0;
-  buffer->length = length;
-
   int Buffer_Read(void *buffer);
-  bool Buffer_Write(void *buffer, unsigned char byte);
+  bool Buffer_NoopWrite(void *buffer, unsigned char byte);
   bool Buffer_SeekTo(void *buffer, unsigned int position);
   unsigned int Buffer_GetLength(void *buffer);
   unsigned int Buffer_GetPosition(void *buffer);
@@ -60,10 +55,37 @@ Buffer_From(
 
   Writer *writer = &buffer->source.writer;
   writer->self = buffer;
-  writer->Write = Buffer_Write;
+  writer->Write = Buffer_NoopWrite;
   writer->SeekTo = Buffer_SeekTo;
 
+  buffer->data.read = data;
+  buffer->position = 0;
+  buffer->length = length;
+
   return &buffer->source;
+}
+
+
+DataSource*
+Buffer_From(
+    Buffer *buffer,
+    void *data,
+    unsigned int length)
+{
+  DataSource *source = Buffer_Wrap(buffer, data, length);
+
+  if (source == NULL) {
+    return NULL;
+  }
+
+  bool Buffer_Write(void *buffer, unsigned char byte);
+
+  // make buffer writeable
+  Writer *writer = &source->writer;
+  writer->Write = Buffer_Write;
+  buffer->data.write = data;
+
+  return source;
 }
 
 DataSource*
@@ -88,10 +110,15 @@ Buffer_Read(void *self) {
     return -1;
   }
 
-  int byte = buffer->data[index];
+  int byte = buffer->data.read[index];
   buffer->position++;
 
   return byte;
+}
+
+bool
+Buffer_NoopWrite(unused void *buffer, unused unsigned char byte) {
+  return false;
 }
 
 bool
@@ -106,7 +133,7 @@ Buffer_Write(
     return false;
   }
 
-  buffer->data[index] = byte;
+  buffer->data.write[index] = byte;
   buffer->position++;
 
   return true;
@@ -160,8 +187,6 @@ File_From(
     File *file,
     FILE *fp)
 {
-  file->fp = fp;
-
   if (fp == NULL) {
     return NULL;
   }
@@ -183,6 +208,8 @@ File_From(
   writer->self = file;
   writer->Write = File_Write;
   writer->SeekTo = File_SeekTo;
+
+  file->fp = fp;
 
   return &file->source;
 }
@@ -267,7 +294,7 @@ Writer_Printf(
   if (writer->Write == Buffer_Write) {
     Buffer *buffer = writer->self;
 
-    void *data = &buffer->data[buffer->position];
+    void *data = &buffer->data.write[buffer->position];
     unsigned int length = buffer->length - buffer->position;
 
     result = vsnprintf(data, length, format, arguments);
