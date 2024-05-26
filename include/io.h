@@ -165,11 +165,6 @@ typedef struct Buffer {
   DataSource source;
 } Buffer;
 
-#define Buffer_CreateNew(bytes...) ((Buffer) { \
-  .data = (unsigned char[]) { bytes }, \
-  .length = sizeof((unsigned char[]) { bytes }) \
-})
-
 DataSource*
 Buffer_Wrap(
     Buffer *buffer,
