@@ -72,7 +72,7 @@ Binv1SoundSampler_GetSample(void *self, unsigned int index) {
   unsigned int position = index & (length - 1); // length is mask for index (modulo of some power of 2)
 
   int sample = 0;
-  Reader_SeekTo(reader, 3 + NOTE_COUNT * 4 + position); // 4 bytes per frequency
+  Reader_SeekTo(reader, 3 + NOTE_COUNT * 4 + position * 4); // 4 bytes per frequency and sample
   Reader_ReadInt32(reader, &sample);
 
   return sample;
