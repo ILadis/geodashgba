@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 void header(FILE *fp, const char *format, ...);
-void pixel(FILE *fp, float depth, int *color);
+void pixel(FILE *fp, float depth, unsigned int *color);
 
 // https://en.wikipedia.org/wiki/Netpbm
 int main(int argc, char **argv) {
@@ -65,10 +65,10 @@ int main(int argc, char **argv) {
     // look ahead and determine width of next glyph
     for (int y = 0; y < font.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        int color;
+        unsigned int color;
         pixel(in, image.depth, &color);
 
-        if (color!= 0xFFFFFF && x >= width) {
+        if (color != 0xFFFFFF && x >= width) {
           width = x + 1;
         }
       }
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
     struct {
       const char *name;
-      const int color;
+      const unsigned int color;
     } fields[] = {
       { "fill",      0x0000FF },
       { "outline",   0xFF0000 },
@@ -99,10 +99,10 @@ int main(int argc, char **argv) {
         for (int x = 0; x < image.width; x++) {
           int index = x % 8;
 
-          int color;
+          unsigned int color;
           pixel(in, image.depth, &color);
 
-          if (index == 0 && x < width) {
+          if (index == 0 && x <= (width | 7)) {
             fprintf(out, x == 0 ? "    " : ", ");
           }
 
@@ -113,12 +113,12 @@ int main(int argc, char **argv) {
             *bit = '0';
           }
 
-          if (index == 7 && x < width) {
+          if (index == 7 && x <= (width | 7)) {
             fprintf(out, "0b%s", byte);
           }
         }
 
-        fprintf(out, width == 0 ? "    0b%s,\n" : width % 8 == 0 ? ",\n" : "0b%s,\n", byte);
+        fprintf(out, width == 0 ? "    0b%s,\n" : ",\n", byte);
       }
 
       fprintf(out, "  },\n");
@@ -158,19 +158,19 @@ void header(FILE *fp, const char *format, ...) {
   va_end(arguments);
 }
 
-void pixel(FILE *fp, float depth, int *pixel) {
+void pixel(FILE *fp, float depth, unsigned int *pixel) {
   int red   = fgetc(fp);
   int green = fgetc(fp);
   int blue  = fgetc(fp);
 
   union {
-    int value;
+    unsigned int value;
     struct {
-      int blue: 8;
-      int green: 8;
-      int red: 8;
+      unsigned int blue: 8;
+      unsigned int green: 8;
+      unsigned int red: 8;
     };
-  } color;
+  } color = {0};
 
   color.red = (red / depth) * 0xFF;
   color.green = (green / depth) * 0xFF;
