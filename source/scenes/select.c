@@ -102,8 +102,8 @@ Scene_DoPlay() {
   }
 
 //SoundPlayer_MixChannels(player);
-//SoundPlayer_VSync(player);
   GBA_VSyncWait();
+//SoundPlayer_VSync(player);
 
   Course_Draw(course, camera);
   Selector_Draw(selector);

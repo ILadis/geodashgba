@@ -55,15 +55,9 @@ typedef struct Tone {
 
 typedef struct SoundTrack {
   void *self;
-  bool (*Add)(void *self, const Tone *tone);
   const Tone* (*Next)(void *self);
   bool (*SeekTo)(void *self, unsigned int position);
 } SoundTrack;
-
-static inline bool
-SoundTrack_AddTone(SoundTrack *track, const Tone *tone) {
-  return track->Add(track->self, tone);
-}
 
 static inline const Tone*
 SoundTrack_NextTone(SoundTrack *track) {
@@ -73,23 +67,6 @@ SoundTrack_NextTone(SoundTrack *track) {
 static inline bool
 SoundTrack_SeektTo(SoundTrack *track, unsigned int position) {
   return track->SeekTo(track->self, position);
-}
-
-static inline bool
-SoundTrack_Convert(
-    SoundTrack *from,
-    SoundTrack *to)
-{
-  while (true) {
-    const Tone *tone = SoundTrack_NextTone(from);
-    if (tone == NULL) {
-      return true;
-    }
-
-    if (!SoundTrack_AddTone(to, tone)) {
-      return false;
-    }
-  }
 }
 
 typedef struct AsciiSoundTrack {
@@ -106,14 +83,15 @@ AsciiSoundTrack_FromNotes(
 
 typedef struct Binv1SoundTrack {
   SoundTrack base;
-  DataSource *source;
-  Tone tone;
+  unsigned int position, length;
+  const Tone *tones;
 } Binv1SoundTrack;
 
 SoundTrack*
 Binv1SoundTrack_From(
     Binv1SoundTrack *track,
-    DataSource *source);
+    const Tone *tones,
+    unsigned int length);
 
 typedef struct ModuleSoundTrack {
   SoundTrack base;
@@ -159,19 +137,26 @@ SineSoundSampler_GetInstance();
 
 typedef struct Binv1SoundSampler {
   SoundSampler base;
-  DataSource *source;
+  unsigned char volume;
+  const unsigned int *frequencies;
+  unsigned int length;
+  const int *samples;
 } Binv1SoundSampler;
-
-SoundSampler*
-Binv1SoundSampler_From(
-    Binv1SoundSampler *sampler,
-    DataSource *source);
 
 SoundSampler*
 Binv1SoundSampler_ConvertFrom(
     Binv1SoundSampler *sampler,
-    DataSource *source,
     const SoundSampler *other);
+
+unsigned int
+Binv1SoundSampler_To(
+    Binv1SoundSampler *sampler,
+    unsigned int *data);
+
+SoundSampler*
+Binv1SoundSampler_From(
+    Binv1SoundSampler *sampler,
+    const unsigned int *data);
 
 typedef struct ModuleSoundSampler {
   SoundSampler base;

@@ -397,15 +397,6 @@ ModuleSoundTrack_NextTone(void *self) {
 }
 
 static bool
-ModuleSoundTrack_AddTone(
-    unused void *self,
-    unused const Tone *tone)
-{
-  // not implemented
-  return false;
-}
-
-static bool
 ModuleSoundTrack_SeekTo(
     void *self,
     unsigned int position)
@@ -441,7 +432,6 @@ ModuleSoundTrack_From(
   }
 
   track->base.self = track;
-  track->base.Add = ModuleSoundTrack_AddTone;
   track->base.Next = ModuleSoundTrack_NextTone;
   track->base.SeekTo = ModuleSoundTrack_SeekTo;
 
