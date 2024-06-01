@@ -110,6 +110,7 @@ SoundPlayer_VSync(SoundPlayer *player) {
   copy.srcAdjust = 0;  // increment destination address
   copy.dstAdjust = 2;  // fixed destination address
   copy.timingMode = 3; // sound/fifo mode
+  copy.repeat = 1;     // repeat copy once sound buffer is empty
   copy.enable = 1;
 
   if (player->active == buffer1) {
