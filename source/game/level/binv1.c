@@ -117,10 +117,10 @@ Binv1Level_WriteInt16(Binv1Level *level, int value) {
   return Binv1Level_WriteValue(level, &value, 2);
 }
 
-static bool
-Binv1Level_SetCursorTo(
+static inline bool
+Binv1Level_SetCursorToIndex(
     Binv1Level *level,
-    Chunk *chunk)
+    unsigned int index)
 {
   Reader *reader = DataSource_AsReader(level->source);
   Reader_SeekTo(reader, 0);
@@ -132,7 +132,6 @@ Binv1Level_SetCursorTo(
   unsigned int offset = header + 1;
   Reader_SeekTo(reader, offset);
 
-  int index = chunk->index;
   while (index-- > 0) {
     int count = 0;
     if (!Binv1Level_ReadInt8(level, &count)) {
@@ -148,6 +147,14 @@ Binv1Level_SetCursorTo(
   }
 
   return true;
+}
+
+static bool
+Binv1Level_SetCursorTo(
+    Binv1Level *level,
+    Chunk *chunk)
+{
+  return Binv1Level_SetCursorToIndex(level, chunk->index);
 }
 
 static unsigned int
@@ -223,13 +230,10 @@ Binv1Level_GetName(
 int
 Binv1Level_GetChunkCount(void *self) {
   Binv1Level *level = self;
-  Chunk chunk = {0};
 
-  int index = 1;
+  unsigned int index = 1;
   do {
-    Chunk_AssignIndex(&chunk, index);
-
-    if (!Binv1Level_SetCursorTo(level, &chunk)) {
+    if (!Binv1Level_SetCursorToIndex(level, index)) {
       return index - 1;
     }
 
