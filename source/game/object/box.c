@@ -127,12 +127,12 @@ Object_CreateBoxWithChains(
 
 static const GBA_TileMapRef block = {
   .width = 2, .height = 2,
-  .tiles = (GBA_Tile[]) {
+  .tiles = GBA_Tiles_Of(
     { .tileId = 18, .vFlip = 0, .hFlip = 0 },
     { .tileId = 18, .vFlip = 0, .hFlip = 1 },
     { .tileId = 26, .vFlip = 0, .hFlip = 0 },
     { .tileId = 26, .vFlip = 0, .hFlip = 1 },
-  }
+  )
 };
 
 static void
@@ -155,132 +155,132 @@ Object_DrawRegularBoxes(
 
 static const GBA_TileMapRef boxes[] = {
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 28, .vFlip = 0, .hFlip = 1 },
       { .tileId = 28, .vFlip = 0, .hFlip = 0 },
       { .tileId = 28, .vFlip = 1, .hFlip = 1 },
       { .tileId = 28, .vFlip = 1, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 28, .vFlip = 0, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 28, .vFlip = 1, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 28, .vFlip = 0, .hFlip = 1 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 28, .vFlip = 1, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 36, .vFlip = 1, .hFlip = 1 },
       { .tileId = 36, .vFlip = 1, .hFlip = 0 },
       { .tileId = 28, .vFlip = 1, .hFlip = 1 },
       { .tileId = 28, .vFlip = 1, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 35, .vFlip = 1, .hFlip = 0 },
       { .tileId = 36, .vFlip = 1, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 28, .vFlip = 1, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 36, .vFlip = 1, .hFlip = 1 },
       { .tileId = 35, .vFlip = 1, .hFlip = 1 },
       { .tileId = 28, .vFlip = 1, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 35, .vFlip = 1, .hFlip = 0 },
       { .tileId = 35, .vFlip = 1, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 28, .vFlip = 0, .hFlip = 1 },
       { .tileId = 28, .vFlip = 0, .hFlip = 0 },
       { .tileId = 36, .vFlip = 0, .hFlip = 1 },
       { .tileId = 36, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 28, .vFlip = 0, .hFlip = 0 },
       { .tileId = 35, .vFlip = 0, .hFlip = 0 },
       { .tileId = 36, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 28, .vFlip = 0, .hFlip = 1 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 36, .vFlip = 0, .hFlip = 1 },
       { .tileId = 35, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 35, .vFlip = 0, .hFlip = 0 },
       { .tileId = 35, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2,  .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 36, .vFlip = 1, .hFlip = 1 },
       { .tileId = 36, .vFlip = 1, .hFlip = 0 },
       { .tileId = 36, .vFlip = 0, .hFlip = 1 },
       { .tileId = 36, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 35, .vFlip = 1, .hFlip = 0 },
       { .tileId = 36, .vFlip = 1, .hFlip = 0 },
       { .tileId = 35, .vFlip = 0, .hFlip = 0 },
       { .tileId = 36, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   { .width = 2,  .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 36, .vFlip = 1, .hFlip = 1 },
       { .tileId = 35, .vFlip = 1, .hFlip = 1 },
       { .tileId = 36, .vFlip = 0, .hFlip = 1 },
       { .tileId = 35, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 35, .vFlip = 1, .hFlip = 0 },
       { .tileId = 35, .vFlip = 1, .hFlip = 1 },
       { .tileId = 35, .vFlip = 0, .hFlip = 0 },
       { .tileId = 35, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 
@@ -333,7 +333,7 @@ Object_DrawBox(
 static const GBA_TileMapRef pole[] = {
   // pole
   { .width = 2, .height = 5,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
       { .tileId = 30, .vFlip = 0, .hFlip = 0 },
@@ -345,86 +345,86 @@ static const GBA_TileMapRef pole[] = {
       { .tileId = 18, .vFlip = 0, .hFlip = 1 },
       { .tileId = 26, .vFlip = 0, .hFlip = 0 },
       { .tileId = 26, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   // pole frames
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 23, .vFlip = 0, .hFlip = 0 },
       { .tileId = 23, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 47, .vFlip = 0, .hFlip = 0 },
       { .tileId = 47, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 23, .vFlip = 0, .hFlip = 0 },
       { .tileId = 23, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 22, .vFlip = 0, .hFlip = 0 },
       { .tileId = 22, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 
 static const GBA_TileMapRef vbox[] = {
   // top
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 35, .vFlip = 1, .hFlip = 0 },
       { .tileId = 35, .vFlip = 1, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   // middle
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 27, .vFlip = 1, .hFlip = 0 },
       { .tileId = 27, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   // bottom
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 27, .vFlip = 0, .hFlip = 0 },
       { .tileId = 27, .vFlip = 0, .hFlip = 1 },
       { .tileId = 35, .vFlip = 0, .hFlip = 0 },
       { .tileId = 35, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 
@@ -477,7 +477,7 @@ Object_AnimateBoxWithPole(
 
 static const GBA_TileMapRef chains = {
   .width = 2, .height = 5,
-  .tiles = (GBA_Tile[]) {
+  .tiles = GBA_Tiles_Of(
     // chains
     { .tileId = 88, .vFlip = 0, .hFlip = 0 },
     { .tileId = 89, .vFlip = 0, .hFlip = 0 },
@@ -490,7 +490,7 @@ static const GBA_TileMapRef chains = {
     { .tileId = 18, .vFlip = 0, .hFlip = 1 },
     { .tileId = 26, .vFlip = 0, .hFlip = 0 },
     { .tileId = 26, .vFlip = 0, .hFlip = 1 },
-  }
+  )
 };
 
 void

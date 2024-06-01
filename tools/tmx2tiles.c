@@ -41,7 +41,7 @@ layer:
     }
 
     if (strcmp(buffer, "data") == 0) {
-      fprintf(out, "  .tiles = (GBA_Tile[]) {\n");
+      fprintf(out, "  .tiles = GBA_Tiles_Of(\n");
       goto data;
     }
 
@@ -64,7 +64,7 @@ data:
     }
 
     if (strcmp(buffer, "/data") == 0) {
-      fprintf(out, "  },\n");
+      fprintf(out, "  ),\n");
       goto layer;
     }
   }

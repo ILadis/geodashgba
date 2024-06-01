@@ -88,7 +88,7 @@ Object_HitPortal(
 
 static const GBA_TileMapRef portal = {
   .width = 3, .height = 6,
-  .tiles = (GBA_Tile[]) {
+  .tiles = GBA_Tiles_Of(
     { .tileId = 168, .vFlip = 0, .hFlip = 0 },
     { .tileId = 169, .vFlip = 0, .hFlip = 0 },
     { .tileId = 170, .vFlip = 0, .hFlip = 0 },
@@ -107,7 +107,7 @@ static const GBA_TileMapRef portal = {
     { .tileId = 187, .vFlip = 0, .hFlip = 0 },
     { .tileId = 188, .vFlip = 0, .hFlip = 0 },
     { .tileId = 189, .vFlip = 0, .hFlip = 0 },
-  }
+  )
 };
 
 void

@@ -139,18 +139,18 @@ Progress_DrawBarPixels(
 
 static const GBA_TileMapRef bars[][5] = {
   [MODE_PLAY] = {
-    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 48, } } },
-    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 49, } } },
-    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 50, } } },
-    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 51, } } },
-    { .width = 1, .height = 1, .tiles = (GBA_Tile[]) { { .tileId = 52, } } },
+    { .width = 1, .height = 1, .tiles = GBA_Tiles_Of({ .tileId = 48, }) },
+    { .width = 1, .height = 1, .tiles = GBA_Tiles_Of({ .tileId = 49, }) },
+    { .width = 1, .height = 1, .tiles = GBA_Tiles_Of({ .tileId = 50, }) },
+    { .width = 1, .height = 1, .tiles = GBA_Tiles_Of({ .tileId = 51, }) },
+    { .width = 1, .height = 1, .tiles = GBA_Tiles_Of({ .tileId = 52, }) },
   },
   [MODE_SELECT] = {
-    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  96 }, { .tileId = 104 }, } },
-    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  97 }, { .tileId = 105 }, } },
-    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  98 }, { .tileId = 106 }, } },
-    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId =  99 }, { .tileId = 107 }, } },
-    { .width = 1, .height = 2, .tiles = (GBA_Tile[]) { { .tileId = 100 }, { .tileId = 108 }, } },
+    { .width = 1, .height = 2, .tiles = GBA_Tiles_Of({ .tileId =  96 }, { .tileId = 104 }) },
+    { .width = 1, .height = 2, .tiles = GBA_Tiles_Of({ .tileId =  97 }, { .tileId = 105 }) },
+    { .width = 1, .height = 2, .tiles = GBA_Tiles_Of({ .tileId =  98 }, { .tileId = 106 }) },
+    { .width = 1, .height = 2, .tiles = GBA_Tiles_Of({ .tileId =  99 }, { .tileId = 107 }) },
+    { .width = 1, .height = 2, .tiles = GBA_Tiles_Of({ .tileId = 100 }, { .tileId = 108 }) },
   }
 };
 
@@ -240,21 +240,21 @@ Progress_DrawBar(Progress *progress) {
 static const GBA_TileMapRef coin[] = {
   // collected
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 174, .vFlip = 0, .hFlip = 0 },
       { .tileId = 175, .vFlip = 0, .hFlip = 0 },
       { .tileId = 182, .vFlip = 0, .hFlip = 0 },
       { .tileId = 183, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   // not collected
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 206, .vFlip = 0, .hFlip = 0 },
       { .tileId = 207, .vFlip = 0, .hFlip = 0 },
       { .tileId = 214, .vFlip = 0, .hFlip = 0 },
       { .tileId = 215, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   }
 };
 

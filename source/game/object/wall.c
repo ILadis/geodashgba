@@ -34,10 +34,10 @@ Object_CreateGoalWall(
 
 static const GBA_TileMapRef wall = {
   .width = 1, .height = 2,
-  .tiles = (GBA_Tile[]) {
+  .tiles = GBA_Tiles_Of(
     { .tileId = 27, .vFlip = 0, .hFlip = 0 },
     { .tileId = 27, .vFlip = 1, .hFlip = 0 },
-  }
+  )
 };
 
 void

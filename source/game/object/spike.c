@@ -94,46 +94,46 @@ Object_CreateTinySpike(Object *object) {
 static const GBA_TileMapRef spikes[] = {
   [SPIKE_VARIANT_REGULAR + DIRECTION_LEFT] = {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 43, .vFlip = 1, .hFlip = 0 },
       { .tileId = 44, .vFlip = 1, .hFlip = 0 },
       { .tileId = 43, .vFlip = 0, .hFlip = 0 },
       { .tileId = 44, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   [SPIKE_VARIANT_REGULAR + DIRECTION_RIGHT] = {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 44, .vFlip = 1, .hFlip = 1 },
       { .tileId = 43, .vFlip = 1, .hFlip = 1 },
       { .tileId = 44, .vFlip = 0, .hFlip = 1 },
       { .tileId = 43, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   [SPIKE_VARIANT_REGULAR + DIRECTION_UP] = {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 17, .vFlip = 0, .hFlip = 0 },
       { .tileId = 17, .vFlip = 0, .hFlip = 1 },
       { .tileId = 25, .vFlip = 0, .hFlip = 0 },
       { .tileId = 25, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   [SPIKE_VARIANT_REGULAR + DIRECTION_DOWN] = {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 25, .vFlip = 1, .hFlip = 0 },
       { .tileId = 25, .vFlip = 1, .hFlip = 1 },
       { .tileId = 17, .vFlip = 1, .hFlip = 0 },
       { .tileId = 17, .vFlip = 1, .hFlip = 1 },
-    }
+    )
   },
   [SPIKE_VARIANT_TINY] = {
     .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 45, .vFlip = 0, .hFlip = 0 },
       { .tileId = 45, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 

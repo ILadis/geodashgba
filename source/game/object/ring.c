@@ -54,12 +54,12 @@ Object_HitRing(
 
 static const GBA_TileMapRef ring = {
   .width = 2, .height = 2,
-  .tiles = (GBA_Tile[]) {
+  .tiles = GBA_Tiles_Of(
     { .tileId = 46, .vFlip = 0, .hFlip = 0 },
     { .tileId = 46, .vFlip = 0, .hFlip = 1 },
     { .tileId = 46, .vFlip = 1, .hFlip = 0 },
     { .tileId = 46, .vFlip = 1, .hFlip = 1 },
-  }
+  )
 };
 
 void

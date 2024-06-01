@@ -58,34 +58,34 @@ Object_HitCoin(
 static const GBA_TileMapRef coin[] = {
   // coin frames
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 192, .vFlip = 0, .hFlip = 0 },
       { .tileId = 193, .vFlip = 0, .hFlip = 0 },
       { .tileId = 194, .vFlip = 0, .hFlip = 0 },
       { .tileId = 195, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 196, .vFlip = 0, .hFlip = 0 },
       { .tileId = 197, .vFlip = 0, .hFlip = 0 },
       { .tileId = 198, .vFlip = 0, .hFlip = 0 },
       { .tileId = 199, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 200, .vFlip = 0, .hFlip = 0 },
       { .tileId = 201, .vFlip = 0, .hFlip = 0 },
       { .tileId = 202, .vFlip = 0, .hFlip = 0 },
       { .tileId = 203, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   { // collected (empty)
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[4]) {{0}},
+    .tiles = GBA_Tiles_Of({0}, {0}, {0}, {0}),
   }
 };
 

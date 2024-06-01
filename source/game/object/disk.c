@@ -71,19 +71,19 @@ Object_CreateOffsetDisk(
 static const GBA_TileMapRef disks[] = {
   {
     .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 16, .vFlip = 0, .hFlip = 0 },
       { .tileId = 16, .vFlip = 0, .hFlip = 1 },
       { .tileId = 24, .vFlip = 0, .hFlip = 0 },
       { .tileId = 24, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   {
     .width = 2, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 32, .vFlip = 0, .hFlip = 0 },
       { .tileId = 32, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 

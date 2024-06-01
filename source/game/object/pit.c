@@ -41,7 +41,7 @@ Object_CreatePit(
 static const GBA_TileMapRef pit[] = {
   [PIT_VARIANT_REGULAR] = {
     .width = 16, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       {.tileId =  5, .vFlip = 0, .hFlip = 0 },
       {.tileId =  6, .vFlip = 0, .hFlip = 0 },
       {.tileId =  7, .vFlip = 0, .hFlip = 0 },
@@ -58,11 +58,11 @@ static const GBA_TileMapRef pit[] = {
       {.tileId = 13, .vFlip = 0, .hFlip = 0 },
       {.tileId =  6, .vFlip = 0, .hFlip = 0 },
       {.tileId =  5, .vFlip = 0, .hFlip = 0 },
-    }
+    )
   },
   [PIT_VARIANT_HANGING] = {
     .width = 16, .height = 1,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       {.tileId =  5, .vFlip = 1, .hFlip = 0 },
       {.tileId =  6, .vFlip = 1, .hFlip = 0 },
       {.tileId =  7, .vFlip = 1, .hFlip = 0 },
@@ -79,7 +79,7 @@ static const GBA_TileMapRef pit[] = {
       {.tileId = 13, .vFlip = 1, .hFlip = 0 },
       {.tileId =  6, .vFlip = 1, .hFlip = 0 },
       {.tileId =  5, .vFlip = 1, .hFlip = 0 },
-    }
+    )
   }
 };
 

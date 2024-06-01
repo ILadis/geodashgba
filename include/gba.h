@@ -369,6 +369,8 @@ typedef union GBA_Tile {
 
 typedef GBA_Tile GBA_TileMap[1024];
 
+#define GBA_Tiles_Of(tiles...) ((GBA_Tile *) ((const GBA_Tile[]) { tiles }))
+
 /* GBA_Bitmap8: the pixel value is the palette-index for that pixel.
  * GBA_Bitmap4: the pixel value is the lower nybble of the palette-index (the upper nybble is stored in GBA_Tile/GBA_Sprite).
  */

@@ -53,37 +53,37 @@ Object_HitPad(
 static const GBA_TileMapRef pad[] = {
   // pad
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 112, .vFlip = 0, .hFlip = 0 },
       { .tileId = 114, .vFlip = 0, .hFlip = 1 },
       { .tileId = 120, .vFlip = 0, .hFlip = 0 },
       { .tileId = 122, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   // pad frames
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 113, .vFlip = 0, .hFlip = 0 },
       { .tileId = 115, .vFlip = 0, .hFlip = 1 },
       { .tileId = 121, .vFlip = 0, .hFlip = 0 },
       { .tileId = 123, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 114, .vFlip = 0, .hFlip = 0 },
       { .tileId = 112, .vFlip = 0, .hFlip = 1 },
       { .tileId = 122, .vFlip = 0, .hFlip = 0 },
       { .tileId = 120, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   },
   { .width = 2, .height = 2,
-    .tiles = (GBA_Tile[]) {
+    .tiles = GBA_Tiles_Of(
       { .tileId = 115, .vFlip = 0, .hFlip = 0 },
       { .tileId = 113, .vFlip = 0, .hFlip = 1 },
       { .tileId = 123, .vFlip = 0, .hFlip = 0 },
       { .tileId = 121, .vFlip = 0, .hFlip = 1 },
-    }
+    )
   }
 };
 
