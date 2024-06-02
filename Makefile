@@ -37,9 +37,9 @@ ifdef DEBUG
   EMU     := mgba-qt -l 8 -3 --gdb
 endif
 
-.PHONY : tests tools utils assets build run clean purge
+.PHONY : tests tools utils assets game run clean purge
 
-build: main.gba main.elf
+game: main.gba main.elf
 
 run:
 	@$(EMU) main.gba
