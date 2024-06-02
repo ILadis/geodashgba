@@ -12,12 +12,14 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  DataSource *source = File_Open(&(File) {0}, argv[1], "rb+");
+  DataSource *source = File_From(&(File) {0}, stdin);
 
   if (source == NULL) {
     Logger_PrintLine(log, "Could not open mod file.");
     return 1;
   }
+
+  const char *prefix = argv[1];
 
   DataSource *output = File_From(&(File) {0}, stdout);
   Writer *writer = DataSource_AsWriter(output);
@@ -29,7 +31,7 @@ int main(int argc, char **argv) {
   for (unsigned int channel = 0; channel < 4; channel++) {
     SoundTrack *track = ModuleSoundTrack_From(&(ModuleSoundTrack) {0}, source, channel);
 
-    Writer_Printf(writer, "const Tone %s%ldBinv1Tones[] = {\n", "test", channel);
+    Writer_Printf(writer, "const Tone %sTones%ld[] = {\n", prefix, channel);
     while (true) {
       const Tone *tone = SoundTrack_NextTone(track);
       if (tone == NULL) break;
@@ -57,7 +59,7 @@ int main(int argc, char **argv) {
     unsigned int data[1024] = {0};
     unsigned int length = Binv1SoundSampler_To(&sampler, data);
 
-    Writer_Printf(writer, "const unsigned int %s%ldBinv1Samples[] = { ", "test", sample);
+    Writer_Printf(writer, "const unsigned int %sSamples%ld[] = { ", prefix, sample);
     for (unsigned int i = 0; i < length; i++) {
       Writer_Printf(writer, "%ld, ", data[i]);
     }
