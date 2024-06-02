@@ -29,38 +29,6 @@ AsciiLevel_DetermineSize(AsciiLevel *level) {
   Reader_SeekTo(reader, 0);
 }
 
-Level*
-AsciiLevel_From(
-    AsciiLevel *level,
-    DataSource *source)
-{
-  level->source = source;
-  level->base.self = level;
-  level->chunk = NULL;
-  level->limit = 0;
-
-  int  AsciiLevel_GetId(void *self);
-  void AsciiLevel_SetId(void *self, int id);
-  void AsciiLevel_GetName(void *self, char *name);
-  void AsciiLevel_SetName(void *self, char *name);
-  int  AsciiLevel_GetChunkCount(void *self);
-  bool AsciiLevel_GetChunk(void *self, Chunk *chunk);
-  bool AsciiLevel_AddChunk(void *self, Chunk *chunk);
-  Object* AsciiLevel_NextObject(void *self, Chunk *chunk);
-
-  level->base.GetId = AsciiLevel_GetId;
-  level->base.SetId = AsciiLevel_SetId;
-  level->base.GetName = AsciiLevel_GetName;
-  level->base.SetName = AsciiLevel_SetName;
-  level->base.GetChunkCount = AsciiLevel_GetChunkCount;
-  level->base.GetChunk = AsciiLevel_GetChunk;
-  level->base.AddChunk = AsciiLevel_AddChunk;
-
-  AsciiLevel_DetermineSize(level);
-
-  return &level->base;
-}
-
 static bool
 AsciiLevel_GetSymbolAt(
     AsciiLevel *level,
@@ -543,7 +511,7 @@ AsciiLevel_GetMetaData(
   return length;
 }
 
-int
+static int
 AsciiLevel_GetId(void *self) {
   AsciiLevel *level = self;
 
@@ -564,7 +532,7 @@ AsciiLevel_GetId(void *self) {
   return id;
 }
 
-void
+static void
 AsciiLevel_GetName(
     void *self,
     char *name)
@@ -578,7 +546,7 @@ AsciiLevel_GetName(
   *name = '\0';
 }
 
-int
+static int
 AsciiLevel_GetChunkCount(void *self) {
   AsciiLevel *level = self;
   Chunk chunk = {0};
@@ -603,7 +571,7 @@ AsciiLevel_GetChunkCount(void *self) {
   } while (true);
 }
 
-bool
+static bool
 AsciiLevel_GetChunk(
     void *self,
     Chunk *chunk)
@@ -705,7 +673,7 @@ AsciiLevel_GetChunk(
   return true;
 }
 
-void
+static void
 AsciiLevel_SetId(
     unused void *self,
     unused int id)
@@ -713,7 +681,7 @@ AsciiLevel_SetId(
   // not implemented
 }
 
-void
+static void
 AsciiLevel_SetName(
     unused void *self,
     unused char *name)
@@ -721,7 +689,7 @@ AsciiLevel_SetName(
   // not implemented
 }
 
-bool
+static bool
 AsciiLevel_AddChunk(
     unused void *self,
     unused Chunk *chunk)
@@ -730,11 +698,35 @@ AsciiLevel_AddChunk(
   return false;
 }
 
-Object*
+static Object*
 AsciiLevel_NextObject(
     unused void *self,
     unused Chunk *chunk)
 {
   // not implemented
   return NULL;
+}
+
+Level*
+AsciiLevel_From(
+    AsciiLevel *level,
+    DataSource *source)
+{
+  level->source = source;
+  level->base.self = level;
+  level->chunk = NULL;
+  level->limit = 0;
+
+  level->base.GetId = AsciiLevel_GetId;
+  level->base.SetId = AsciiLevel_SetId;
+  level->base.GetName = AsciiLevel_GetName;
+  level->base.SetName = AsciiLevel_SetName;
+  level->base.GetChunkCount = AsciiLevel_GetChunkCount;
+  level->base.GetChunk = AsciiLevel_GetChunk;
+  level->base.AddChunk = AsciiLevel_AddChunk;
+  level->base.NextObject = AsciiLevel_NextObject;
+
+  AsciiLevel_DetermineSize(level);
+
+  return &level->base;
 }

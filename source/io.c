@@ -1,6 +1,65 @@
 
 #include <io.h>
 
+static inline bool
+IO_IsLittleEndian() {
+  const short int value = 1;
+  const char *endian = (char *) &value;
+
+  return *endian == 1;
+}
+
+bool
+Reader_ReadValue(
+    const Reader *reader,
+    void *value,
+    unsigned int length)
+{
+#ifdef NOGBA
+  if (!IO_IsLittleEndian()) {
+    // big endian is unsupported
+    return false;
+  }
+#endif
+
+  unsigned char *values = value;
+
+  for (unsigned int i = 0; i < length; i++) {
+    int byte = Reader_Read(reader);
+    if (byte < 0) {
+      return false;
+    }
+
+    values[i] = byte;
+  }
+
+  return true;
+}
+
+bool
+Writer_WriteValue(
+    const Writer *writer,
+    void *value,
+    unsigned int length)
+{
+#ifdef NOGBA
+  if (!IO_IsLittleEndian()) {
+    // big endian is unsupported
+    return false;
+  }
+#endif
+
+  unsigned char *values = value;
+
+  for (unsigned int i = 0; i < length; i++) {
+    if (!Writer_Write(writer, values[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 int
 DataSource_CopyFrom(
     DataSource *dst,
@@ -31,6 +90,87 @@ DataSource_CopyFrom(
 }
 
 DataSource*
+Buffer_FromString(
+    Buffer *buffer,
+    char *string)
+{
+  unsigned int length = 0;
+  while (string[length] != '\0') {
+    length++;
+  }
+
+  return Buffer_From(buffer, string, length);
+}
+
+static int
+Buffer_Read(void *self) {
+  Buffer *buffer = self;
+  unsigned int index = buffer->position;
+
+  if (index >= buffer->length) {
+    return -1;
+  }
+
+  int byte = buffer->data.read[index];
+  buffer->position++;
+
+  return byte;
+}
+
+static bool
+Buffer_NoopWrite(
+    unused void *buffer,
+    unused unsigned char byte)
+{
+  return false;
+}
+
+bool
+Buffer_Write(
+    void *self,
+    unsigned char byte)
+{
+  Buffer *buffer = self;
+  unsigned int index = buffer->position;
+
+  if (index >= buffer->length) {
+    return false;
+  }
+
+  buffer->data.write[index] = byte;
+  buffer->position++;
+
+  return true;
+}
+
+static bool
+Buffer_SeekTo(
+    void *self,
+    unsigned int position)
+{
+  Buffer *buffer = self;
+  // allow seeking to end of buffer (where next read would return -1)
+  if (position > buffer->length) {
+    return false;
+  }
+
+  buffer->position = position;
+  return true;
+}
+
+static unsigned int
+Buffer_GetLength(void *self) {
+  Buffer *buffer = self;
+  return buffer->length;
+}
+
+static unsigned int
+Buffer_GetPosition(void *self) {
+  Buffer *buffer = self;
+  return buffer->position;
+}
+
+DataSource*
 Buffer_Wrap(
     Buffer *buffer,
     const void *data,
@@ -39,12 +179,6 @@ Buffer_Wrap(
   if (data == NULL) {
     return NULL;
   }
-
-  int Buffer_Read(void *buffer);
-  bool Buffer_NoopWrite(void *buffer, unsigned char byte);
-  bool Buffer_SeekTo(void *buffer, unsigned int position);
-  unsigned int Buffer_GetLength(void *buffer);
-  unsigned int Buffer_GetPosition(void *buffer);
 
   Reader *reader = &buffer->source.reader;
   reader->self = buffer;
@@ -64,7 +198,6 @@ Buffer_Wrap(
 
   return &buffer->source;
 }
-
 
 DataSource*
 Buffer_From(
@@ -88,84 +221,6 @@ Buffer_From(
   return source;
 }
 
-DataSource*
-Buffer_FromString(
-    Buffer *buffer,
-    char *string)
-{
-  unsigned int length = 0;
-  while (string[length] != '\0') {
-    length++;
-  }
-
-  return Buffer_From(buffer, string, length);
-}
-
-int
-Buffer_Read(void *self) {
-  Buffer *buffer = self;
-  unsigned int index = buffer->position;
-
-  if (index >= buffer->length) {
-    return -1;
-  }
-
-  int byte = buffer->data.read[index];
-  buffer->position++;
-
-  return byte;
-}
-
-bool
-Buffer_NoopWrite(unused void *buffer, unused unsigned char byte) {
-  return false;
-}
-
-bool
-Buffer_Write(
-    void *self,
-    unsigned char byte)
-{
-  Buffer *buffer = self;
-  unsigned int index = buffer->position;
-
-  if (index >= buffer->length) {
-    return false;
-  }
-
-  buffer->data.write[index] = byte;
-  buffer->position++;
-
-  return true;
-}
-
-bool
-Buffer_SeekTo(
-    void *self,
-    unsigned int position)
-{
-  Buffer *buffer = self;
-  // allow seeking to end of buffer (where next read would return -1)
-  if (position > buffer->length) {
-    return false;
-  }
-
-  buffer->position = position;
-  return true;
-}
-
-unsigned int
-Buffer_GetPosition(void *self) {
-  Buffer *buffer = self;
-  return buffer->position;
-}
-
-unsigned int
-Buffer_GetLength(void *self) {
-  Buffer *buffer = self;
-  return buffer->length;
-}
-
 #ifdef NOGBA
 
 DataSource*
@@ -182,46 +237,14 @@ File_Open(
   return File_From(file, fp);
 }
 
-DataSource*
-File_From(
-    File *file,
-    FILE *fp)
-{
-  if (fp == NULL) {
-    return NULL;
-  }
-
-  int File_Read(void *file);
-  bool File_Write(void *file, unsigned char byte);
-  bool File_SeekTo(void *file, unsigned int position);
-  unsigned int File_GetLength(void *file);
-  unsigned int File_GetPosition(void *file);
-
-  Reader *reader = &file->source.reader;
-  reader->self = file;
-  reader->Read = File_Read;
-  reader->SeekTo = File_SeekTo;
-  reader->GetLength = File_GetLength;
-  reader->GetPosition = File_GetPosition;
-
-  Writer *writer = &file->source.writer;
-  writer->self = file;
-  writer->Write = File_Write;
-  writer->SeekTo = File_SeekTo;
-
-  file->fp = fp;
-
-  return &file->source;
-}
-
-int
+static int
 File_Read(void *self) {
   File *file = self;
   FILE *fp = file->fp;
   return fgetc(fp);
 }
 
-bool
+static bool
 File_Write(
     void *self,
     unsigned char byte)
@@ -231,7 +254,7 @@ File_Write(
   return fputc(byte, fp) == byte;
 }
 
-bool
+static bool
 File_SeekTo(
     void *self,
     unsigned int position)
@@ -241,7 +264,7 @@ File_SeekTo(
   return fseek(fp, position, SEEK_SET) == 0;
 }
 
-unsigned int
+static unsigned int
 File_GetLength(void *self) {
   File *file = self;
   FILE *fp = file->fp;
@@ -261,7 +284,7 @@ File_GetLength(void *self) {
   return (unsigned int) length;
 }
 
-unsigned int
+static unsigned int
 File_GetPosition(void *self) {
   File *file = self;
   FILE *fp = file->fp;
@@ -272,6 +295,32 @@ File_GetPosition(void *self) {
   }
 
   return (unsigned int) position;
+}
+
+DataSource*
+File_From(
+    File *file,
+    FILE *fp)
+{
+  if (fp == NULL) {
+    return NULL;
+  }
+
+  Reader *reader = &file->source.reader;
+  reader->self = file;
+  reader->Read = File_Read;
+  reader->SeekTo = File_SeekTo;
+  reader->GetLength = File_GetLength;
+  reader->GetPosition = File_GetPosition;
+
+  Writer *writer = &file->source.writer;
+  writer->self = file;
+  writer->Write = File_Write;
+  writer->SeekTo = File_SeekTo;
+
+  file->fp = fp;
+
+  return &file->source;
 }
 
 int

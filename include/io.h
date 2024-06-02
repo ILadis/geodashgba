@@ -16,21 +16,11 @@ Reader_Read(const Reader *reader) {
   return reader->Read(reader->self);
 }
 
-static inline bool
-Reader_ReadValue(const Reader *reader, void *value, unsigned int length) {
-  unsigned char *values = value;
-
-  for (unsigned int i = 0; i < length; i++) {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    values[i] = byte;
-  }
-
-  return true;
-}
+bool
+Reader_ReadValue(
+    const Reader *reader,
+    void *value,
+    unsigned int length);
 
 static inline bool
 Reader_ReadInt32(const Reader *reader, int *value) {
@@ -88,18 +78,11 @@ Writer_Write(const Writer *writer, unsigned char byte) {
   return writer->Write(writer->self, byte);
 }
 
-static inline bool
-Writer_WriteValue(const Writer *writer, void *value, unsigned int length) {
-  unsigned char *values = value;
-
-  for (unsigned int i = 0; i < length; i++) {
-    if (!Writer_Write(writer, values[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
+bool
+Writer_WriteValue(
+    const Writer *writer,
+    void *value,
+    unsigned int length);
 
 static inline bool
 Writer_WriteInt32(const Writer *writer, int value) {
