@@ -40,7 +40,7 @@ int main() {
 
   while (SoundPlayer_MixChannels(player)) {
     for (unsigned int i = 0; i < player->size; i++) {
-      Writer_Write(writer, (unsigned char) player->active[i]);
+      Writer_WriteOne(writer, (unsigned char) player->active[i]);
     }
 
     SoundPlayer_VSync(player);

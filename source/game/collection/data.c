@@ -111,12 +111,12 @@ DataCollection_AddLevel(
   Writer *writer = DataSource_AsWriter(target);
 
   for (int i = 0; i < length; i++) {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       return false;
     }
 
-    if (!Writer_Write(writer, byte)) {
+    if (!Writer_WriteOne(writer, byte)) {
       return false;
     }
   }
@@ -133,7 +133,7 @@ DataCollection_FindSignature(const Reader *reader) {
   int index = 0;
 
   do {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       return false;
     }
@@ -164,7 +164,7 @@ DataCollection_ReadFrom(
   const unsigned int length = collection->length;
 
   while (index < header) {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       return false;
     }
@@ -178,7 +178,7 @@ DataCollection_ReadFrom(
 
   const unsigned int limit = collection->length;
   do {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       return false;
     }
@@ -199,7 +199,7 @@ DataCollection_WriteTo(
 
   unsigned int index = sizeof(collection->signature);
   while (index < length) {
-    if (!Writer_Write(writer, buffer[index++])) {
+    if (!Writer_WriteOne(writer, buffer[index++])) {
       return false;
     }
   }

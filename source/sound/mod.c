@@ -331,7 +331,7 @@ ModuleSoundTrack_CurrentPattern(
     return NULL;
   }
 
-  return Reader_ReadValue(reader, pattern, 4);
+  return Reader_Read(reader, pattern, 4);
 }
 
 static inline bool

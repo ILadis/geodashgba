@@ -116,10 +116,10 @@ test(GetLevelByIndex_ShouldReturnExpectedLevel) {
 
   Reader *reader = DataSource_AsReader(level->source);
   assert(   3 == Reader_GetLength(reader));
-  assert(0x07 == Reader_Read(reader));
-  assert(0x08 == Reader_Read(reader));
-  assert(0x09 == Reader_Read(reader));
-  assert(  -1 == Reader_Read(reader));
+  assert(0x07 == Reader_ReadOne(reader));
+  assert(0x08 == Reader_ReadOne(reader));
+  assert(0x09 == Reader_ReadOne(reader));
+  assert(  -1 == Reader_ReadOne(reader));
 }
 
 test(GetLevelByIndex_ShouldReturnNullIfLevelWithIndexDoesNotExist) {

@@ -131,10 +131,7 @@ Disk_SectorIsAlignedWithCluster(Disk *disk, unsigned int sector) {
   return (sector & (sectorsPerCluster - 1)) == 0;
 }
 
-static int
-DiskReader_ReadNext(void *self);
-
-static int
+static bool
 DiskReader_ReadAdvance(void *self) {
   Disk *disk = self;
   DiskReader *reader = &disk->reader;
@@ -145,46 +142,59 @@ DiskReader_ReadAdvance(void *self) {
   if (Disk_SectorIsAlignedWithCluster(disk, sector)) {
     cluster = Disk_GetNextCluster(disk, cluster);
     switch (cluster) {
-      case Disk_BadCluster:  return -1;
-      case Disk_ClusterMask: return -1;
+      case Disk_BadCluster:  return false;
+      case Disk_ClusterMask: return false;
     }
     sector = Disk_GetSectorOfCluster(disk, cluster);
   }
 
   if (!Disk_BufferFill(disk, sector)) {
-    return -1;
+    return false;
   }
 
   reader->position = 0;
   reader->sector = sector;
   reader->cluster = cluster;
 
-  DataSource *source = &disk->source;
-  source->reader.Read = DiskReader_ReadNext;
-
-  return DiskReader_ReadNext(self);
+  return true;
 }
 
-static int
-DiskReader_ReadNext(void *self) {
+static bool
+DiskReader_ReadNext(
+    void *self,
+    void *data,
+    unsigned int length)
+{
   Disk *disk = self;
   DiskReader *reader = &disk->reader;
   DiskInfo *info = &disk->info;
 
   if (reader->size <= 0) {
-    return -1;
+    return false;
   }
 
-  unsigned int position = reader->position++;
   const unsigned int bytesPerSector = DiskInfo_BytesPerSector(info);
+  unsigned char *buffer = data;
 
-  if (reader->position >= bytesPerSector) {
-    DataSource *source = &disk->source;
-    source->reader.Read = DiskReader_ReadAdvance;
-  }
+  do {
+    const unsigned int position = reader->position;
+    unsigned int size = (bytesPerSector - position);
+    if (length < size) size = length;
 
-  reader->size--;
-  return Disk_BufferGetU8At(disk, position);
+    for (unsigned int index = 0; index < size; index++) {
+      *buffer++ = Disk_BufferGetU8At(disk, index + position);
+    }
+
+    length -= size;
+    reader->size -= size;
+    reader->position += size;
+
+    if (length <= 0) {
+      return true;
+    }
+  } while (DiskReader_ReadAdvance(self));
+
+  return false;
 }
 
 static bool
@@ -235,23 +245,30 @@ DiskReader_SeekTo(
   return true;
 }
 
-static int
-DiskReader_InitializeRead(void *self) {
+static bool
+DiskReader_InitializeRead(
+    void *self,
+    void *buffer,
+    unsigned int length)
+{
   Disk *disk = self;
-  DiskReader *reader = &disk->reader;
   DiskEntry *entry = &disk->entry;
 
   unsigned int cluster = entry->startCluster;
   unsigned int sector = Disk_GetSectorOfCluster(disk, cluster);
 
   if (!Disk_BufferFill(disk, sector)) {
-    return -1;
+    return false;
   }
 
+  DiskReader *reader = &disk->reader;
   reader->cluster = cluster;
   reader->sector = sector;
 
-  return DiskReader_ReadNext(self);
+  DataSource *source = &disk->source;
+  source->reader.Read = DiskReader_ReadNext;
+
+  return DiskReader_ReadNext(self, buffer, length);
 }
 
 static unsigned int
@@ -335,7 +352,7 @@ Disk_ReadDirectory(
 
   next: {
     for (int i = 0; i < Disk_EntrySize; i++) {
-      int byte = Reader_Read(reader);
+      int byte = Reader_ReadOne(reader);
       if (byte < 0) return false;
     }
 

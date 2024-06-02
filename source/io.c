@@ -1,65 +1,6 @@
 
 #include <io.h>
 
-static inline bool
-IO_IsLittleEndian() {
-  const short int value = 1;
-  const char *endian = (char *) &value;
-
-  return *endian == 1;
-}
-
-bool
-Reader_ReadValue(
-    const Reader *reader,
-    void *value,
-    unsigned int length)
-{
-#ifdef NOGBA
-  if (!IO_IsLittleEndian()) {
-    // big endian is unsupported
-    return false;
-  }
-#endif
-
-  unsigned char *values = value;
-
-  for (unsigned int i = 0; i < length; i++) {
-    int byte = Reader_Read(reader);
-    if (byte < 0) {
-      return false;
-    }
-
-    values[i] = byte;
-  }
-
-  return true;
-}
-
-bool
-Writer_WriteValue(
-    const Writer *writer,
-    void *value,
-    unsigned int length)
-{
-#ifdef NOGBA
-  if (!IO_IsLittleEndian()) {
-    // big endian is unsupported
-    return false;
-  }
-#endif
-
-  unsigned char *values = value;
-
-  for (unsigned int i = 0; i < length; i++) {
-    if (!Writer_Write(writer, values[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 int
 DataSource_CopyFrom(
     DataSource *dst,
@@ -71,12 +12,12 @@ DataSource_CopyFrom(
   Writer *writer = DataSource_AsWriter(dst);
 
   do {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       break;
     }
 
-    if (!Writer_Write(writer, byte)) {
+    if (!Writer_WriteOne(writer, byte)) {
       break;
     }
 
@@ -102,25 +43,34 @@ Buffer_FromString(
   return Buffer_From(buffer, string, length);
 }
 
-static int
-Buffer_Read(void *self) {
+static bool
+Buffer_Read(
+    void *self,
+    void *data,
+    unsigned int length)
+{
   Buffer *buffer = self;
-  unsigned int index = buffer->position;
+  unsigned int offset = buffer->position;
 
-  if (index >= buffer->length) {
-    return -1;
+  if (offset + length > buffer->length) {
+    return false;
   }
 
-  int byte = buffer->data.read[index];
-  buffer->position++;
+  unsigned char *values = data;
+  for (unsigned int index = 0; index < length; index++) {
+    values[index] = buffer->data.write[offset + index];
+  }
 
-  return byte;
+  buffer->position += length;
+
+  return true;
 }
 
 static bool
 Buffer_NoopWrite(
     unused void *buffer,
-    unused unsigned char byte)
+    unused void *data,
+    unused unsigned int length)
 {
   return false;
 }
@@ -128,17 +78,22 @@ Buffer_NoopWrite(
 bool
 Buffer_Write(
     void *self,
-    unsigned char byte)
+    void *data,
+    unsigned int length)
 {
   Buffer *buffer = self;
-  unsigned int index = buffer->position;
+  unsigned int offset = buffer->position;
 
-  if (index >= buffer->length) {
+  if (offset + length > buffer->length) {
     return false;
   }
 
-  buffer->data.write[index] = byte;
-  buffer->position++;
+  unsigned char *values = data;
+  for (unsigned int index = 0; index < length; index++) {
+    buffer->data.write[offset + index] = values[index];
+  }
+
+  buffer->position += length;
 
   return true;
 }
@@ -211,8 +166,6 @@ Buffer_From(
     return NULL;
   }
 
-  bool Buffer_Write(void *buffer, unsigned char byte);
-
   // make buffer writeable
   Writer *writer = &source->writer;
   writer->Write = Buffer_Write;
@@ -237,21 +190,26 @@ File_Open(
   return File_From(file, fp);
 }
 
-static int
-File_Read(void *self) {
+static bool
+File_Read(
+    void *self,
+    void *data,
+    unsigned int length)
+{
   File *file = self;
   FILE *fp = file->fp;
-  return fgetc(fp);
+  return fread(data, 1, length, fp) == length;
 }
 
 static bool
 File_Write(
     void *self,
-    unsigned char byte)
+    void *data,
+    unsigned int length)
 {
   File *file = self;
   FILE *fp = file->fp;
-  return fputc(byte, fp) == byte;
+  return fwrite(data, 1, length, fp) == length;
 }
 
 static bool
@@ -333,13 +291,11 @@ Writer_Printf(
   va_list arguments;
   va_start(arguments, format);
 
-  bool File_Write(void *file, unsigned char byte);
   if (writer->Write == File_Write) {
     File *file = writer->self;
     result = vfprintf(file->fp, format, arguments);
   }
 
-  bool Buffer_Write(void *buffer, unsigned char byte);
   if (writer->Write == Buffer_Write) {
     Buffer *buffer = writer->self;
 

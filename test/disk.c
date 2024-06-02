@@ -317,11 +317,11 @@ test(OpenFile_ShouldReturnReaderAndReadFileBytewise) {
   assert(reader != NULL);
 
   for (unsigned int i = 0; i < entry.fileSize; i++) {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     assert(byte == registeryDat[i]);
   }
 
-  int byte = Reader_Read(reader);
+  int byte = Reader_ReadOne(reader);
   assert(byte == -1);
 }
 
@@ -365,7 +365,7 @@ test(SeekTo_ShouldAdjustPositionAndReturnExpectedBytes) {
 
     // assert
     for (int j = 0; j < 512; j++) {
-      int byte = Reader_Read(reader);
+      int byte = Reader_ReadOne(reader);
       assert(byte == seeks[i].values[j]);
     }
   }

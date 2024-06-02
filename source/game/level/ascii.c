@@ -7,7 +7,7 @@ AsciiLevel_DetermineSize(AsciiLevel *level) {
 
   int x = 0, y = 0, i = 0;
   do {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       y += i > 0 ? 1 : 0;
       break;
@@ -49,7 +49,7 @@ AsciiLevel_GetSymbolAt(
     return false;
   }
 
-  int byte = Reader_Read(reader);
+  int byte = Reader_ReadOne(reader);
   if (byte < 0) {
     return false;
   }

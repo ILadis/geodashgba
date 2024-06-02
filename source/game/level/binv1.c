@@ -167,7 +167,7 @@ Binv1Level_ReadObject(
   object->solid = solid == 1;
   object->deadly = deadly == 1;
 
-  Reader_ReadValue(reader, &object->properties, sizeof(object->properties));
+  Reader_Read(reader, &object->properties, sizeof(object->properties));
 }
 
 static bool
@@ -318,7 +318,7 @@ Binv1Level_WriteObject(
   Writer_WriteInt8(writer, object->solid ? 1 : 0);
   Writer_WriteInt8(writer, object->deadly ? 1 : 0);
 
-  Writer_WriteValue(writer, object->properties, sizeof(object->properties));
+  Writer_Write(writer, object->properties, sizeof(object->properties));
 }
 
 static bool

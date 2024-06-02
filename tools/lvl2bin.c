@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
   Reader_SeekTo(reader, 0);
   while (length-- > 0) {
-    int byte = Reader_Read(reader);
-    Writer_Write(writer, byte);
+    int byte = Reader_ReadOne(reader);
+    Writer_WriteOne(writer, byte);
   }
 }

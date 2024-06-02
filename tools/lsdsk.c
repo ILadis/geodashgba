@@ -15,7 +15,7 @@ bool read(unsigned int sector, void *buffer) {
 
   unsigned char *target = buffer;
   for (int i = 0; i < 512; i++) {
-    int byte = Reader_Read(reader);
+    int byte = Reader_ReadOne(reader);
     if (byte < 0) {
       return false;
     }
@@ -93,8 +93,8 @@ int main(int argc, char **argv) {
   }
 
   for (unsigned int i = 0; i < entry.fileSize; i++) {
-    int byte = Reader_Read(reader);
-    Writer_Write(writer, (unsigned char) byte);
+    int byte = Reader_ReadOne(reader);
+    Writer_WriteOne(writer, (unsigned char) byte);
   }
 
   return 0;
