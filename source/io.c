@@ -58,7 +58,7 @@ Buffer_Read(
 
   unsigned char *values = data;
   for (unsigned int index = 0; index < length; index++) {
-    values[index] = buffer->data.write[offset + index];
+    values[index] = buffer->data.read[offset + index];
   }
 
   buffer->position += length;

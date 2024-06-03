@@ -37,11 +37,11 @@ int main(int argc, char **argv) {
       if (tone == NULL) break;
 
       Writer_Printf(writer, "  {\n");
-      Writer_Printf(writer, "    .note = %ld,\n", tone->note);
-      Writer_Printf(writer, "    .effect = { .type = %ld, .param = %ld },\n", tone->effect.type, tone->effect.param);
-      Writer_Printf(writer, "    .octave = %ld,\n", tone->octave);
-      Writer_Printf(writer, "    .sample = %ld,\n", tone->sample);
-      Writer_Printf(writer, "    .ticks = %ld,\n", tone->ticks);
+      Writer_Printf(writer, "    .note = %u,\n", tone->note);
+      Writer_Printf(writer, "    .effect = { .type = %u, .param = %u },\n", tone->effect.type, tone->effect.param);
+      Writer_Printf(writer, "    .octave = %u,\n", tone->octave);
+      Writer_Printf(writer, "    .sample = %d,\n", tone->sample);
+      Writer_Printf(writer, "    .ticks = %u,\n", tone->ticks);
       Writer_Printf(writer, "  },\n");
     }
     Writer_Printf(writer, "};\n");
@@ -59,9 +59,9 @@ int main(int argc, char **argv) {
     unsigned int data[1024] = {0};
     unsigned int length = Binv1SoundSampler_To(&sampler, data);
 
-    Writer_Printf(writer, "const unsigned int %sSamples%ld[] = { ", prefix, sample);
+    Writer_Printf(writer, "const unsigned int %sSamples%u[] = { ", prefix, sample);
     for (unsigned int i = 0; i < length; i++) {
-      Writer_Printf(writer, "%ld, ", data[i]);
+      Writer_Printf(writer, "%d, ", data[i]);
     }
     Writer_Printf(writer, "};\n");
     Writer_Printf(writer, "\n");

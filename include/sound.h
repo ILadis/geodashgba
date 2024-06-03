@@ -109,6 +109,7 @@ ModuleSoundTrack_From(
 
 typedef struct SoundSampler {
   void *self;
+  // TODO consider adding increment and amount/length parameters
   int (*Get)(void *self, unsigned int index);
   unsigned int (*Frequency)(void *self, const Tone *tone);
   unsigned char (*Volume)(void *self);
