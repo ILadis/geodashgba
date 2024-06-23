@@ -7,16 +7,16 @@ SoundPlayer_GetInstance() {
    * determined by the target frequency (11468 samples/s divided by 60 fps). The buffer/sample
    * size also needs to be a multiple of 16 because the sound is read in chunks of 16 bytes.
    */
-  static char buffer1[192];
-  static char buffer2[192];
+  static char buffer1[304];
+  static char buffer2[304];
 
   static SoundPlayer player = {
     .active = buffer1,
     .buffers[0] = buffer1,
     .buffers[1] = buffer2,
     .size = length(buffer1),
-    .frequency = 11468,
-    .reciproc = (1 << SOUND_RECIPROC_PRECISION) / 11468,
+    .frequency = 18158,
+    .reciproc = (1 << SOUND_RECIPROC_PRECISION) / 18157,
   };
 
   return &player;
