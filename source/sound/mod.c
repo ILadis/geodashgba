@@ -467,7 +467,7 @@ ModuleSoundSampler_GetVolume(void *self) {
   return volume;
 }
 
-static int
+static inline int
 ModuleSoundSampler_GetSample(
     void *self,
     unsigned int index)
@@ -497,6 +497,25 @@ ModuleSoundSampler_GetSample(
   return value;
 }
 
+static int*
+ModuleSoundSampler_FillBuffer(
+    void *self, int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size)
+{
+  while (size-- > 0) {
+    const unsigned int index = (*position) >> SOUND_CHANNEL_PRECISION;
+    int value = ModuleSoundSampler_GetSample(self, index);
+
+    *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
+    *position += increment;
+  }
+
+  return buffer;
+}
+
 SoundSampler*
 ModuleSoundSampler_From(
     ModuleSoundSampler *sampler,
@@ -513,7 +532,8 @@ ModuleSoundSampler_From(
   }
 
   sampler->base.self = sampler;
-  sampler->base.Get = ModuleSoundSampler_GetSample;
+  sampler->base.Get  = ModuleSoundSampler_GetSample;
+  sampler->base.Fill = ModuleSoundSampler_FillBuffer;
   sampler->base.Frequency = ModuleSoundSampler_GetFrequency;
   sampler->base.Volume = ModuleSoundSampler_GetVolume;
 

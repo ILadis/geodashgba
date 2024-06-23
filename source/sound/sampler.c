@@ -27,6 +27,18 @@ NullSoundSampler_GetSample() {
   return 0;
 }
 
+static int*
+NullSoundSampler_FillBuffer(
+    unused void *self, int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unused unsigned char volume,
+    unsigned int size)
+{
+  *position += size * increment;
+  return &buffer[size];
+}
+
 static unsigned int
 NullSoundSampler_GetFrequency() {
   return 0;
@@ -42,6 +54,7 @@ NullSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
     .Get = NullSoundSampler_GetSample,
+    .Fill = NullSoundSampler_FillBuffer,
     .Frequency = NullSoundSampler_GetFrequency,
     .Volume = NullSoundSampler_GetVolume,
   };
@@ -49,7 +62,7 @@ NullSoundSampler_GetInstance() {
   return &sampler;
 }
 
-static int
+static inline int
 SineSoundSampler_GetSample(
     unused void *self,
     unsigned int index)
@@ -59,6 +72,29 @@ SineSoundSampler_GetSample(
 
   // convert to sample size of 8 bits (range -127..+127)
   return (value * 127) >> 8;
+}
+
+static int*
+SineSoundSampler_FillBuffer(
+    void *self, int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size)
+{
+  unsigned int $position = *position;
+
+  while (size-- > 0) {
+    const unsigned int index = ($position) >> SOUND_CHANNEL_PRECISION;
+    int value = SineSoundSampler_GetSample(self, index);
+
+    *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
+    $position += increment;
+  }
+
+  *position = $position;
+
+  return buffer;
 }
 
 static unsigned int
@@ -84,7 +120,8 @@ const SoundSampler*
 SineSoundSampler_GetInstance() {
   static SoundSampler sampler = {
     .self = NULL,
-    .Get = SineSoundSampler_GetSample,
+    .Get  = SineSoundSampler_GetSample,
+    .Fill = SineSoundSampler_FillBuffer,
     .Frequency = SineSoundSampler_GetFrequency,
     .Volume = SineSoundSampler_GetVolume,
   };

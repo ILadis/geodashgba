@@ -48,15 +48,41 @@ Binv1SoundTrack_From(
   return &track->base;
 }
 
-static int
+static inline int
 Binv1SoundSampler_GetSample(void *self, unsigned int index) {
   Binv1SoundSampler *sampler = self;
 
-  unsigned int length = sampler->length;
-  unsigned int position = index & (length - 1); // length is mask for index (modulo of some power of 2)
+  const unsigned int length = sampler->length;
+  const unsigned int position = index & (length - 1); // length is mask for index (modulo of some power of 2)
 
   int sample = sampler->samples[position];
   return sample;
+}
+
+static int*
+Binv1SoundSampler_FillBuffer(
+    void *self, int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size)
+{
+  Binv1SoundSampler *sampler = self;
+
+  const unsigned int length = sampler->length - 1;
+  unsigned int $position = *position;
+
+  while (size-- > 0) {
+    const unsigned int index = (($position) >> SOUND_CHANNEL_PRECISION) & length;
+    int value = sampler->samples[index];
+
+    *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
+    $position += increment;
+  }
+
+  *position = $position;
+
+  return buffer;
 }
 
 static unsigned int
@@ -138,6 +164,7 @@ Binv1SoundSampler_ConvertFrom(
   sampler->base.self = sampler;
 
   sampler->base.Get  = Binv1SoundSampler_GetSample;
+  sampler->base.Fill = Binv1SoundSampler_FillBuffer;
   sampler->base.Frequency = Binv1SoundSampler_GetFrequency;
   sampler->base.Volume = Binv1SoundSampler_GetVolume;
 
@@ -176,6 +203,7 @@ Binv1SoundSampler_From(
   sampler->base.self = sampler;
 
   sampler->base.Get  = Binv1SoundSampler_GetSample;
+  sampler->base.Fill = Binv1SoundSampler_FillBuffer;
   sampler->base.Frequency = Binv1SoundSampler_GetFrequency;
   sampler->base.Volume = Binv1SoundSampler_GetVolume;
 

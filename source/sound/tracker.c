@@ -268,22 +268,9 @@ ModuleSoundChannel_FillBuffer(
     ModuleSoundChannel *channel,
     int *buffer, const unsigned int size)
 {
-  const unsigned char volume = channel->volume;
-  unsigned int index = 0;
-
   const SoundSampler *null = NullSoundSampler_GetInstance();
   const SoundSampler *sampler = channel->sampler == NULL ? null : channel->sampler;
-
-  while (index < size) {
-    const unsigned int position = channel->position >> SOUND_CHANNEL_PRECISION;
-
-    int value = SoundSampler_GetSample(sampler, position);
-    buffer[index++] += (value * volume) >> SOUND_VOLUME_PRECISION;
-
-    channel->position += channel->increment;
-  }
-
-  return &buffer[index];
+  return SoundSampler_FillBuffer(sampler, buffer, &channel->position, channel->increment, channel->volume, size);
 }
 
 static unsigned int

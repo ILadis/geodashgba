@@ -109,8 +109,8 @@ ModuleSoundTrack_From(
 
 typedef struct SoundSampler {
   void *self;
-  // TODO consider adding increment and amount/length parameters
   int (*Get)(void *self, unsigned int index);
+  int* (*Fill)(void *self, int *buffer, unsigned int *position, unsigned int increment, unsigned char volume, unsigned int size);
   unsigned int (*Frequency)(void *self, const Tone *tone);
   unsigned char (*Volume)(void *self);
 } SoundSampler;
@@ -118,6 +118,11 @@ typedef struct SoundSampler {
 static inline int
 SoundSampler_GetSample(const SoundSampler *sampler, unsigned int index) {
   return sampler->Get(sampler->self, index);
+}
+
+static inline int*
+SoundSampler_FillBuffer(const SoundSampler *sampler, int *buffer, unsigned int *position, unsigned int increment, unsigned char volume, unsigned int size) {
+  return sampler->Fill(sampler->self, buffer, position, increment, volume, size);
 }
 
 static inline unsigned int

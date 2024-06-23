@@ -185,6 +185,51 @@ test(GetSample_ShouldReturnExpectedDataForFourthSample) {
   assert(volume == 64);
 }
 
+test(FillSample_ShouldReturnExpectedSamplesForGivenIncrement) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 1);
+
+  int buffer[6] = {0};
+  unsigned int position = 0;
+  unsigned int increment = (1 << SOUND_CHANNEL_PRECISION) * 2;
+  unsigned char volume = 1 << SOUND_VOLUME_PRECISION;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 0x00);
+  assert(buffer[1] == 0x01);
+  assert(buffer[2] == 0x53);
+  assert(buffer[3] == 0x29);
+  assert(buffer[4] == 0x36);
+  assert(buffer[5] == 0x36);
+  assert(next == buffer + 6);
+}
+
+test(FillSample_ShouldReturnExpectedSamplesForGivenVolume) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 1);
+
+  int buffer[5] = {0};
+  unsigned int position = 0;
+  unsigned int increment = (1 << SOUND_CHANNEL_PRECISION) * 2;
+  unsigned char volume = (1 << SOUND_VOLUME_PRECISION) / 2;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 0x00);
+  assert(buffer[1] == 0x00);
+  assert(buffer[2] == 0x29);
+  assert(buffer[3] == 0x14);
+  assert(buffer[4] == 0x1b);
+  assert(next == buffer + 5);
+}
+
 suite(
   NextTone_ShouldReturnNullAfterExpectedAmountOfNotes,
   NextTone_ShouldReturnTonesOfFirstChannelWithExpectedNoteAndOctave,
@@ -192,7 +237,9 @@ suite(
   GetSample_ShouldReturnExpectedDataForFirstSample,
   GetSample_ShouldReturnExpectedDataForSecondSample,
   GetSample_ShouldReturnExpectedDataForThirdSample,
-  GetSample_ShouldReturnExpectedDataForFourthSample);
+  GetSample_ShouldReturnExpectedDataForFourthSample,
+  FillSample_ShouldReturnExpectedSamplesForGivenIncrement,
+  FillSample_ShouldReturnExpectedSamplesForGivenVolume);
 
 static unsigned char module[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,

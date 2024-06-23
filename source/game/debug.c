@@ -128,12 +128,13 @@ Debug_GetElapsedTime() {
 void
 Debug_LogElapsedTime(
     char *message,
-    int timestamp)
+    int timestamp,
+    int threshold)
 {
   Logger *logger = Logger_GetInstance();
   int timespan = Debug_GetElapsedTime() - timestamp;
 
-  if (timespan > 5) {
+  if (timespan > threshold) {
     Logger_Print(logger, message);
     Logger_Print(logger, "  0x");
     Logger_PrintHex16(logger, timespan);

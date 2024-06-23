@@ -49,6 +49,82 @@ test(GetSample_ShouldReturnExpectedSamplesAndVolumeForSamplerFromData) {
   assert(volume == 64);
 }
 
+test(FillSample_ShouldReturnExpectedSamplesForGivenIncrement) {
+  // arrange
+  const unsigned int samples[] = {
+    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+  };
+
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  int buffer[6] = {0};
+  unsigned int position = 0;
+  unsigned int increment = (1 << SOUND_CHANNEL_PRECISION) / 2;
+  unsigned char volume = 1 << SOUND_VOLUME_PRECISION;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 98);
+  assert(buffer[1] == 98);
+  assert(buffer[2] == 92);
+  assert(buffer[3] == 92);
+  assert(buffer[4] == 88);
+  assert(buffer[5] == 88);
+  assert(next == buffer + 6);
+}
+
+test(FillSample_ShouldReturnExpectedSamplesForGivenVolume) {
+  // arrange
+  const unsigned int samples[] = {
+    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+  };
+
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  int buffer[3] = {0};
+  unsigned int position = 0;
+  unsigned int increment = 1 << SOUND_CHANNEL_PRECISION;
+  unsigned char volume = (1 << SOUND_VOLUME_PRECISION) / 2;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 49);
+  assert(buffer[1] == 46);
+  assert(buffer[2] == 44);
+  assert(next == buffer + 3);
+}
+
+test(FillSample_ShouldReturnExpectedSamplesAndWrapAround) {
+  // arrange
+  const unsigned int samples[] = {
+    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+  };
+
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  int buffer[32] = {0};
+  unsigned int position = 0;
+  unsigned int increment = 1 << SOUND_CHANNEL_PRECISION;
+  unsigned char volume = 1 << SOUND_VOLUME_PRECISION;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  for (unsigned int i = 0; i < 16; i++) {
+    assert(buffer[i] == buffer[16 + i]);
+    assert(buffer[i] == samples[14 + i]);
+  }
+  assert(next == buffer + 32);
+}
+
 test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSample) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
@@ -101,6 +177,9 @@ test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesForSamplerFromData) 
 suite(
   GetSample_ShouldReturnExpectedSamplesAndVolumeForConvertedSample,
   GetSample_ShouldReturnExpectedSamplesAndVolumeForSamplerFromData,
+  FillSample_ShouldReturnExpectedSamplesForGivenIncrement,
+  FillSample_ShouldReturnExpectedSamplesForGivenVolume,
+  FillSample_ShouldReturnExpectedSamplesAndWrapAround,
   GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSample,
   GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesForSamplerFromData);
 
