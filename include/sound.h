@@ -176,6 +176,16 @@ ModuleSoundSampler_From(
     DataSource *source,
     unsigned int index);
 
+typedef struct WaveSoundSampler {
+  SoundSampler base;
+  const Reader *reader;
+} WaveSoundSampler;
+
+SoundSampler*
+WaveSoundSampler_From(
+    WaveSoundSampler *sampler,
+    DataSource *source);
+
 typedef struct SoundChannel {
   void *self;
   const unsigned int *frequency; // points to sound player frequency
