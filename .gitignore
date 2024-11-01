@@ -6,7 +6,6 @@ assets/
 levels/*.bin
 tools/lvl2bin
 tools/lvl2rom
-tools/mksnd
 tools/mod2bin
 tools/mod2snd
 tools/lsdsk
