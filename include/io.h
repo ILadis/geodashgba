@@ -69,7 +69,7 @@ Reader_GetLength(const Reader *reader) {
 
 typedef struct Writer {
   void *self;
-  bool (*Write)(void *self, void *buffer, unsigned int length);
+  bool (*Write)(void *self, const void *buffer, unsigned int length);
   bool (*SeekTo)(void *self, unsigned int position);
 } Writer;
 
@@ -79,7 +79,7 @@ Writer_WriteOne(const Writer *writer, unsigned char byte) {
 }
 
 static inline bool
-Writer_Write(const Writer *writer, void *buffer, unsigned int length) {
+Writer_Write(const Writer *writer, const void *buffer, unsigned int length) {
   return writer->Write(writer->self, buffer, length);
 }
 

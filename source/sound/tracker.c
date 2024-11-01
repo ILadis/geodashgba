@@ -171,7 +171,7 @@ SoundEffect_JumptoOrder(
   unsigned char param = tone->effect.param;
   unsigned int position = param * 64;
 
-  SoundTrack_SeektTo(channel->track, position);
+  SoundTrack_SeekTo(channel->track, position);
 }
 
 static void
@@ -186,7 +186,7 @@ SoundEffect_BreaktoRow(
   unsigned char param = tone->effect.param;
   unsigned int position = ((track->position + 64) & ~63) + param;
 
-  SoundTrack_SeektTo(channel->track, position);
+  SoundTrack_SeekTo(channel->track, position);
 }
 
 static inline void

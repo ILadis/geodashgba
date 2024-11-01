@@ -386,7 +386,6 @@ ModuleSoundTrack_NextTone(void *self) {
    * to 0-indexed numbers 1 is subtracted.
    */
 
-  tone->ticks = 1 << TONE_TICKS_PRECISION;
   tone->sample = sample - 1;
   tone->effect.type = effect;
   tone->effect.param = param;

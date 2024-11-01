@@ -69,7 +69,7 @@ Buffer_Read(
 static bool
 Buffer_NoopWrite(
     unused void *buffer,
-    unused void *data,
+    unused const void *data,
     unused unsigned int length)
 {
   return false;
@@ -78,7 +78,7 @@ Buffer_NoopWrite(
 bool
 Buffer_Write(
     void *self,
-    void *data,
+    const void *data,
     unsigned int length)
 {
   Buffer *buffer = self;
@@ -88,7 +88,7 @@ Buffer_Write(
     return false;
   }
 
-  unsigned char *values = data;
+  const unsigned char *values = data;
   for (unsigned int index = 0; index < length; index++) {
     buffer->data.write[offset + index] = values[index];
   }
@@ -204,7 +204,7 @@ File_Read(
 static bool
 File_Write(
     void *self,
-    void *data,
+    const void *data,
     unsigned int length)
 {
   File *file = self;

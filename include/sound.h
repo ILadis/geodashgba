@@ -48,7 +48,6 @@ typedef struct Tone {
   SoundEffect effect;
   unsigned int octave;
   unsigned int sample; // index of sample this tone will use
-  unsigned int ticks;  // number of ticks this tone will last (.6 fixed point integer, 64 == one full note)
 } Tone;
 
 #define TONE_TICKS_PRECISION 6
@@ -65,21 +64,26 @@ SoundTrack_NextTone(SoundTrack *track) {
 }
 
 static inline bool
-SoundTrack_SeektTo(SoundTrack *track, unsigned int position) {
+SoundTrack_SeekTo(SoundTrack *track, unsigned int position) {
   return track->SeekTo(track->self, position);
 }
 
 typedef struct AsciiSoundTrack {
   SoundTrack base;
-  const char *notes;
-  unsigned int index; // index of next char to consume in notes pointer
-  Tone tone;          // current parsed note from sound track
+  const Reader *reader; // reader that holds the sound track in text form
+  Tone tone;            // current parsed note from sound track
 } AsciiSoundTrack;
 
+bool
+AsciiSoundTrack_To(
+    SoundTrack *track,
+    const Writer *writer,
+    char separator);
+
 SoundTrack*
-AsciiSoundTrack_FromNotes(
+AsciiSoundTrack_From(
     AsciiSoundTrack *track,
-    const char *notes);
+    const Reader *reader);
 
 typedef struct Binv1SoundTrack {
   SoundTrack base;

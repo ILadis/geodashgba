@@ -46,7 +46,6 @@ int main(int argc, char **argv) {
       Writer_Printf(writer, "    .effect = { .type = %u, .param = %u },\n", tone->effect.type, tone->effect.param);
       Writer_Printf(writer, "    .octave = %u,\n", tone->octave);
       Writer_Printf(writer, "    .sample = %d,\n", tone->sample);
-      Writer_Printf(writer, "    .ticks = %u,\n", tone->ticks);
       Writer_Printf(writer, "  },\n");
     }
     Writer_Printf(writer, "};\n");
