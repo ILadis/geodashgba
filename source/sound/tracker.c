@@ -2,8 +2,8 @@
 #include <sound.h>
 
 void
-ModuleSoundChannel_AddSampler(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_AddSampler(
+    TrackerSoundChannel *channel,
     const SoundSampler *sampler)
 {
   for (unsigned int i = 0; i < length(channel->samplers); i++) {
@@ -15,8 +15,8 @@ ModuleSoundChannel_AddSampler(
 }
 
 static inline void
-ModuleSoundChannel_Pitch(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_Pitch(
+    TrackerSoundChannel *channel,
     unsigned int frequency)
 {
   unsigned int reciproc = *channel->base.reciproc;
@@ -25,8 +25,8 @@ ModuleSoundChannel_Pitch(
 }
 
 static inline void
-ModuleSoundChannel_SetVolume(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_SetVolume(
+    TrackerSoundChannel *channel,
     unsigned int volume)
 {
   const unsigned char max = 1 << SOUND_VOLUME_PRECISION;
@@ -34,16 +34,16 @@ ModuleSoundChannel_SetVolume(
 }
 
 static inline void
-ModuleSoundChannel_SetSpeed(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_SetSpeed(
+    TrackerSoundChannel *channel,
     unsigned char speed)
 {
   channel->speed = speed;
 }
 
 static inline void
-ModuleSoundChannel_SetTempo(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_SetTempo(
+    TrackerSoundChannel *channel,
     unsigned char tempo)
 {
   unsigned int frequency = Math_div(tempo * 2, 5);
@@ -54,7 +54,7 @@ ModuleSoundChannel_SetTempo(
 static void
 SoundEffect_Arpeggio(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
 
@@ -81,39 +81,39 @@ SoundEffect_Arpeggio(
   }
 
   unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
-  ModuleSoundChannel_Pitch(channel, frequency);
+  TrackerSoundChannel_Pitch(channel, frequency);
 }
 
 static void
 SoundEffect_PortaUp(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
 
   unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
   frequency += param * channel->ticks;
 
-  ModuleSoundChannel_Pitch(channel, frequency);
+  TrackerSoundChannel_Pitch(channel, frequency);
 }
 
 static void
 SoundEffect_PortaDown(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
 
   unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
   frequency -= param * channel->ticks;
 
-  ModuleSoundChannel_Pitch(channel, frequency);
+  TrackerSoundChannel_Pitch(channel, frequency);
 }
 
 static void
 SoundEffect_SetOffset(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
   channel->position = (param * 256) << SOUND_CHANNEL_PRECISION;
@@ -122,7 +122,7 @@ SoundEffect_SetOffset(
 static void
 SoundEffect_SlideVolume(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
 
@@ -142,30 +142,30 @@ SoundEffect_SlideVolume(
 static void
 SoundEffect_SetVolume(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
-  ModuleSoundChannel_SetVolume(channel, param);
+  TrackerSoundChannel_SetVolume(channel, param);
 }
 
 static void
 SoundEffect_SetTempo(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   unsigned char param = tone->effect.param;
 
   if (param < 32) {
-    ModuleSoundChannel_SetSpeed(channel, param);
+    TrackerSoundChannel_SetSpeed(channel, param);
   } else {
-    ModuleSoundChannel_SetTempo(channel, param);
+    TrackerSoundChannel_SetTempo(channel, param);
   }
 }
 
 static void
 SoundEffect_JumptoOrder(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   // FIXME must happen to every channel/track
   unsigned char param = tone->effect.param;
@@ -177,7 +177,7 @@ SoundEffect_JumptoOrder(
 static void
 SoundEffect_BreaktoRow(
     const Tone *tone,
-    ModuleSoundChannel *channel)
+    TrackerSoundChannel *channel)
 {
   // FIXME should not rely on a specific sound track 
   ModuleSoundTrack *track = channel->track->self;
@@ -190,8 +190,8 @@ SoundEffect_BreaktoRow(
 }
 
 static inline void
-ModuleSoundChannel_ApplySoundEffect(ModuleSoundChannel *channel) {
-  typedef void (*SoundEffectFn)(const Tone *tone, ModuleSoundChannel *channel);
+TrackerSoundChannel_ApplySoundEffect(TrackerSoundChannel *channel) {
+  typedef void (*SoundEffectFn)(const Tone *tone, TrackerSoundChannel *channel);
 
   static const SoundEffectFn entry[SOUND_EFFECT_COUNT] = {
     [SOUND_EFFECT_SET_OFFSET]   = SoundEffect_SetOffset,
@@ -220,7 +220,7 @@ ModuleSoundChannel_ApplySoundEffect(ModuleSoundChannel *channel) {
 }
 
 static inline bool
-ModuleSoundChannel_TickTone(ModuleSoundChannel *channel) {
+TrackerSoundChannel_TickTone(TrackerSoundChannel *channel) {
   const Tone *tone = channel->tone;
   unsigned char ticks = channel->ticks++;
 
@@ -247,7 +247,7 @@ ModuleSoundChannel_TickTone(ModuleSoundChannel *channel) {
 
       // volume is reset when (new) sample is given
       unsigned char volume = SoundSampler_GetVolume(sampler);
-      ModuleSoundChannel_SetVolume(channel, volume);
+      TrackerSoundChannel_SetVolume(channel, volume);
     }
 
     // if there is no note keep on playing previous one (do not reset position)
@@ -255,17 +255,17 @@ ModuleSoundChannel_TickTone(ModuleSoundChannel *channel) {
       channel->position = 0;
 
       unsigned int frequency = SoundSampler_GetFrequency(channel->sampler, tone);
-      ModuleSoundChannel_Pitch(channel, frequency);
+      TrackerSoundChannel_Pitch(channel, frequency);
     }
   }
 
-  ModuleSoundChannel_ApplySoundEffect(channel);
+  TrackerSoundChannel_ApplySoundEffect(channel);
   return true;
 }
 
 static inline int*
-ModuleSoundChannel_FillBuffer(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_FillBuffer(
+    TrackerSoundChannel *channel,
     int *buffer, const unsigned int size)
 {
   const SoundSampler *null = NullSoundSampler_GetInstance();
@@ -274,28 +274,28 @@ ModuleSoundChannel_FillBuffer(
 }
 
 static unsigned int
-ModuleSoundChannel_Fill(
+TrackerSoundChannel_Fill(
     void *self, int *buffer,
     const unsigned int size)
 {
-  ModuleSoundChannel *channel = self;
+  TrackerSoundChannel *channel = self;
   unsigned int remaining = size;
 
   while (remaining > 0) {
     if (channel->samplesUntilTick == 0) {
-      if (!ModuleSoundChannel_TickTone(channel)) {
+      if (!TrackerSoundChannel_TickTone(channel)) {
         break; // reached end of track
       }
       channel->samplesUntilTick = channel->samplesPerTick;
     }
 
     if (channel->samplesUntilTick < remaining) {
-      buffer = ModuleSoundChannel_FillBuffer(channel, buffer, channel->samplesUntilTick);
+      buffer = TrackerSoundChannel_FillBuffer(channel, buffer, channel->samplesUntilTick);
       remaining -= channel->samplesUntilTick;
       channel->samplesUntilTick = 0;
     }
     else {
-      buffer = ModuleSoundChannel_FillBuffer(channel, buffer, remaining);
+      buffer = TrackerSoundChannel_FillBuffer(channel, buffer, remaining);
       channel->samplesUntilTick -= remaining;
       remaining = 0;
     }
@@ -305,23 +305,23 @@ ModuleSoundChannel_Fill(
 }
 
 static unsigned int
-ModuleSoundChannel_SetupAndFill(
+TrackerSoundChannel_SetupAndFill(
     void *self, int *buffer,
     const unsigned int size)
 {
-  ModuleSoundChannel *channel = self;
-  channel->base.Fill = ModuleSoundChannel_Fill;
+  TrackerSoundChannel *channel = self;
+  channel->base.Fill = TrackerSoundChannel_Fill;
 
   // set default speed and tempo
-  ModuleSoundChannel_SetSpeed(channel, 6);
-  ModuleSoundChannel_SetTempo(channel, 125);
+  TrackerSoundChannel_SetSpeed(channel, 6);
+  TrackerSoundChannel_SetTempo(channel, 125);
 
-  return ModuleSoundChannel_Fill(self, buffer, size);
+  return TrackerSoundChannel_Fill(self, buffer, size);
 }
 
 SoundChannel*
-ModuleSoundChannel_ForTrack(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_ForTrack(
+    TrackerSoundChannel *channel,
     SoundTrack *track)
 {
   channel->track = track;
@@ -332,7 +332,7 @@ ModuleSoundChannel_ForTrack(
   channel->volume = 1 << SOUND_VOLUME_PRECISION;
 
   channel->base.self = channel;
-  channel->base.Fill = ModuleSoundChannel_SetupAndFill;
+  channel->base.Fill = TrackerSoundChannel_SetupAndFill;
 
   return &channel->base;
 }

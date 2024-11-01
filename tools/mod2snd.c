@@ -24,12 +24,12 @@ int main() {
     ModuleSoundTrack_From(&tracks[i], input, i);
   }
 
-  static ModuleSoundChannel channels[4] = {0};
+  static TrackerSoundChannel channels[4] = {0};
   for (unsigned int i = 0; i < length(channels); i++) {
-    SoundChannel *channel = ModuleSoundChannel_ForTrack(&channels[i], &tracks[i].base);
+    SoundChannel *channel = TrackerSoundChannel_ForTrack(&channels[i], &tracks[i].base);
 
     for (unsigned int j = 0; j < length(samplers); j++) {
-      ModuleSoundChannel_AddSampler(&channels[i], &samplers[j].base);
+      TrackerSoundChannel_AddSampler(&channels[i], &samplers[j].base);
     }
 
     SoundPlayer_AddChannel(player, channel);

@@ -198,7 +198,7 @@ SoundChannel_Fill(SoundChannel *channel, int *buffer, unsigned int size) {
   return channel->Fill(channel->self, buffer, size);
 }
 
-typedef struct ModuleSoundChannel {
+typedef struct TrackerSoundChannel {
   SoundChannel base;
 
   SoundTrack *track;
@@ -214,7 +214,7 @@ typedef struct ModuleSoundChannel {
 
   unsigned int samplesPerTick;
   unsigned int samplesUntilTick;
-} ModuleSoundChannel;
+} TrackerSoundChannel;
 
 // 20.12 fixed point integer (for both increment and position)
 #define SOUND_CHANNEL_PRECISION 12
@@ -222,13 +222,13 @@ typedef struct ModuleSoundChannel {
 #define SOUND_VOLUME_PRECISION 6
 
 SoundChannel*
-ModuleSoundChannel_ForTrack(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_ForTrack(
+    TrackerSoundChannel *channel,
     SoundTrack *track);
 
 void
-ModuleSoundChannel_AddSampler(
-    ModuleSoundChannel *channel,
+TrackerSoundChannel_AddSampler(
+    TrackerSoundChannel *channel,
     const SoundSampler *sampler);
 
 typedef struct SoundPlayer {

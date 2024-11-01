@@ -14,16 +14,16 @@ static void song1(SoundPlayer *player, const SoundSampler *sampler) {
   static AsciiSoundTrack sound2 = {0};
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
-  static ModuleSoundChannel module1 = {0};
-  SoundChannel *channel1 = ModuleSoundChannel_ForTrack(&module1, track1);
+  static TrackerSoundChannel module1 = {0};
+  SoundChannel *channel1 = TrackerSoundChannel_ForTrack(&module1, track1);
 
-  ModuleSoundChannel_AddSampler(&module1, sampler);
+  TrackerSoundChannel_AddSampler(&module1, sampler);
   SoundPlayer_AddChannel(player, channel1);
 
-  static ModuleSoundChannel module2 = {0};
-  SoundChannel *channel2 = ModuleSoundChannel_ForTrack(&module2, track2);
+  static TrackerSoundChannel module2 = {0};
+  SoundChannel *channel2 = TrackerSoundChannel_ForTrack(&module2, track2);
 
-  ModuleSoundChannel_AddSampler(&module2, sampler);
+  TrackerSoundChannel_AddSampler(&module2, sampler);
   SoundPlayer_AddChannel(player, channel2);
 }
 
@@ -37,16 +37,16 @@ unused static void song2(SoundPlayer *player, const SoundSampler *sampler) {
   static AsciiSoundTrack sound2 = {0};
   SoundTrack *track2 = AsciiSoundTrack_FromNotes(&sound2, notes2);
 
-  static ModuleSoundChannel module1 = {0};
-  SoundChannel *channel1 = ModuleSoundChannel_ForTrack(&module1, track1);
+  static TrackerSoundChannel module1 = {0};
+  SoundChannel *channel1 = TrackerSoundChannel_ForTrack(&module1, track1);
 
-  ModuleSoundChannel_AddSampler(&module1, sampler);
+  TrackerSoundChannel_AddSampler(&module1, sampler);
   SoundPlayer_AddChannel(player, channel1);
 
-  static ModuleSoundChannel module2 = {0};
-  SoundChannel *channel2 = ModuleSoundChannel_ForTrack(&module2, track2);
+  static TrackerSoundChannel module2 = {0};
+  SoundChannel *channel2 = TrackerSoundChannel_ForTrack(&module2, track2);
 
-  ModuleSoundChannel_AddSampler(&module2, sampler);
+  TrackerSoundChannel_AddSampler(&module2, sampler);
   SoundPlayer_AddChannel(player, channel2);
 }
 
