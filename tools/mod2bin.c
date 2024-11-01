@@ -31,6 +31,11 @@ int main(int argc, char **argv) {
   for (unsigned int channel = 0; channel < 4; channel++) {
     SoundTrack *track = ModuleSoundTrack_From(&(ModuleSoundTrack) {0}, source, channel);
 
+    if (track == NULL) {
+      Logger_PrintLine(log, "Could not parse mod track.");
+      return 1;
+    }
+
     Writer_Printf(writer, "const Tone %sTones%ld[] = {\n", prefix, channel);
     while (true) {
       const Tone *tone = SoundTrack_NextTone(track);
@@ -50,6 +55,11 @@ int main(int argc, char **argv) {
 
   for (unsigned int sample = 0; sample < 32; sample++) {
     SoundSampler *module = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, sample);
+
+    if (module == NULL) {
+      Logger_PrintLine(log, "Could not parse mod sample.");
+      return 1;
+    }
 
     Binv1SoundSampler sampler = {0};
     Binv1SoundSampler_ConvertFrom(&sampler, module);
