@@ -70,19 +70,22 @@ Binv1SoundSampler_FillBuffer(
   Binv1SoundSampler *sampler = self;
 
   const unsigned int length = sampler->length - 1;
-  unsigned int $position = *position;
 
   while (size-- > 0) {
-    const unsigned int index = (($position) >> SOUND_CHANNEL_PRECISION) & length;
+    const unsigned int index = (*position >> SOUND_CHANNEL_PRECISION) & length;
     int value = sampler->samples[index];
 
     *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
-    $position += increment;
+    *position += increment;
   }
 
-  *position = $position;
-
   return buffer;
+}
+
+static unsigned int
+Binv1SoundSampler_GetLength(void *self) {
+  Binv1SoundSampler *sampler = self;
+  return sampler->length;
 }
 
 static unsigned int
@@ -101,100 +104,6 @@ Binv1SoundSampler_GetVolume(void *self) {
   return volume;
 }
 
-static inline void
-Binv1SoundSampler_ConvertVolumeAndFrequencies(
-    Binv1SoundSampler *sampler,
-    const SoundSampler *other)
-{
-  static unsigned int frequencies[NOTE_COUNT] = {0};
-
-  unsigned char volume = SoundSampler_GetVolume(other);
-  sampler->volume = volume;
-
-  for (enum Note note = 0; note < NOTE_COUNT; note++) {
-    Tone tone = {
-      .octave = 0,
-      .note = note,
-    };
-
-    unsigned int frequency = SoundSampler_GetFrequency(other, &tone);
-    frequencies[note] = frequency;
-  }
-
-  sampler->frequencies = frequencies;
-}
-
-static inline void
-Binv1SoundSampler_ConvertSamples(
-    Binv1SoundSampler *sampler,
-    const SoundSampler *other)
-{
-  static int samples[1024] = {0};
-  for (unsigned int index = 0; index < length(samples); index++) {
-    int sample = SoundSampler_GetSample(other, index);
-    samples[index] = sample;
-  }
-
-  unsigned int length = length(samples);
-  unsigned int shortest = length;
-
-next:
-  while (length > 0) {
-    // check if samples repeat with this length
-    for (unsigned int index = 0; index < length(samples) - length; index++) {
-      if (samples[index] != samples[index + length]) {
-        length >>= 1;
-        goto next;
-      }
-    }
-
-    shortest = length;
-    length >>= 1;
-  }
-
-  sampler->length = shortest;
-  sampler->samples = samples;
-}
-
-SoundSampler*
-Binv1SoundSampler_ConvertFrom(
-    Binv1SoundSampler *sampler,
-    const SoundSampler *other)
-{
-  sampler->base.self = sampler;
-
-  sampler->base.Get  = Binv1SoundSampler_GetSample;
-  sampler->base.Fill = Binv1SoundSampler_FillBuffer;
-  sampler->base.Frequency = Binv1SoundSampler_GetFrequency;
-  sampler->base.Volume = Binv1SoundSampler_GetVolume;
-
-  Binv1SoundSampler_ConvertVolumeAndFrequencies(sampler, other);
-  Binv1SoundSampler_ConvertSamples(sampler, other);
-
-  return &sampler->base;
-}
-
-unsigned int
-Binv1SoundSampler_To(
-    Binv1SoundSampler *sampler,
-    unsigned int *data)
-{
-  unsigned int index = 0;
-
-  data[index++] = sampler->volume;
-  data[index++] = sampler->length;
-
-  for (unsigned int i = 0; i < NOTE_COUNT; i++) {
-    data[index++] = sampler->frequencies[i];
-  }
-
-  for (unsigned int i = 0; i < sampler->length; i++) {
-    data[index++] = sampler->samples[i];
-  }
-
-  return index;
-}
-
 SoundSampler*
 Binv1SoundSampler_From(
     Binv1SoundSampler *sampler,
@@ -204,15 +113,73 @@ Binv1SoundSampler_From(
 
   sampler->base.Get  = Binv1SoundSampler_GetSample;
   sampler->base.Fill = Binv1SoundSampler_FillBuffer;
+  sampler->base.Length = Binv1SoundSampler_GetLength;
   sampler->base.Frequency = Binv1SoundSampler_GetFrequency;
   sampler->base.Volume = Binv1SoundSampler_GetVolume;
 
   sampler->volume = data[0];
-  sampler->length = data[1];
+  sampler->frequencies = &data[1];
 
-  sampler->frequencies = &data[2];
+  sampler->length = data[1 + NOTE_COUNT];
   sampler->samples = (const int *) &data[2 + NOTE_COUNT];
 
   return &sampler->base;
 }
 
+static inline bool
+Binv1SoundSampler_WriteVolumeAndFrequencies(
+    SoundSampler *sampler,
+    const Writer *writer)
+{
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+
+  if (!Writer_WriteUInt32(writer, volume)) {
+    return false;
+  }
+
+  for (enum Note note = 0; note < NOTE_COUNT; note++) {
+    Tone tone = {
+      .octave = 0,
+      .note = note,
+    };
+
+    unsigned int frequency = SoundSampler_GetFrequency(sampler, &tone);
+
+    if (!Writer_WriteUInt32(writer, frequency)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static inline bool
+Binv1SoundSampler_WriteSamples(
+    SoundSampler *sampler,
+    const Writer *writer)
+{
+  unsigned int length = SoundSampler_GetLength(sampler);
+
+  if (!Writer_WriteUInt32(writer, length)) {
+    return false;
+  }
+
+  for (unsigned int index = 0; index < length; index++) {
+    int sample = SoundSampler_GetSample(sampler, index);
+    if (!Writer_WriteInt32(writer, sample)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+Binv1SoundSampler_To(
+    SoundSampler *sampler,
+    const Writer *writer)
+{
+  return true
+    && Binv1SoundSampler_WriteVolumeAndFrequencies(sampler, writer)
+    && Binv1SoundSampler_WriteSamples(sampler, writer);
+}

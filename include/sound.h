@@ -91,9 +91,12 @@ typedef struct Binv1SoundTrack {
   const Tone *tones;
 } Binv1SoundTrack;
 
+// TODO implement Binv1SoundTrackTo(...)
+
 SoundTrack*
 Binv1SoundTrack_From(
     Binv1SoundTrack *track,
+    // TODO use "const Reader*" instead
     const Tone *tones,
     unsigned int length);
 
@@ -108,13 +111,14 @@ typedef struct ModuleSoundTrack {
 SoundTrack*
 ModuleSoundTrack_From(
     ModuleSoundTrack *track,
-    DataSource *source,
+    const Reader *reader,
     unsigned int channel);
 
 typedef struct SoundSampler {
   void *self;
   int (*Get)(void *self, unsigned int index);
   int* (*Fill)(void *self, int *buffer, unsigned int *position, unsigned int increment, unsigned char volume, unsigned int size);
+  unsigned int (*Length)(void *self);
   unsigned int (*Frequency)(void *self, const Tone *tone);
   unsigned char (*Volume)(void *self);
 } SoundSampler;
@@ -127,6 +131,11 @@ SoundSampler_GetSample(const SoundSampler *sampler, unsigned int index) {
 static inline int*
 SoundSampler_FillBuffer(const SoundSampler *sampler, int *buffer, unsigned int *position, unsigned int increment, unsigned char volume, unsigned int size) {
   return sampler->Fill(sampler->self, buffer, position, increment, volume, size);
+}
+
+static inline unsigned int
+SoundSampler_GetLength(const SoundSampler *sampler) {
+  return sampler->Length(sampler->self);
 }
 
 static inline unsigned int
@@ -153,15 +162,10 @@ typedef struct Binv1SoundSampler {
   const int *samples;
 } Binv1SoundSampler;
 
-SoundSampler*
-Binv1SoundSampler_ConvertFrom(
-    Binv1SoundSampler *sampler,
-    const SoundSampler *other);
-
-unsigned int
+bool
 Binv1SoundSampler_To(
-    Binv1SoundSampler *sampler,
-    unsigned int *data);
+    SoundSampler *sampler,
+    const Writer *writer);
 
 SoundSampler*
 Binv1SoundSampler_From(
@@ -177,7 +181,7 @@ typedef struct ModuleSoundSampler {
 SoundSampler*
 ModuleSoundSampler_From(
     ModuleSoundSampler *sampler,
-    DataSource *source,
+    const Reader *reader,
     unsigned int index);
 
 typedef struct WaveSoundSampler {
@@ -188,7 +192,7 @@ typedef struct WaveSoundSampler {
 SoundSampler*
 WaveSoundSampler_From(
     WaveSoundSampler *sampler,
-    DataSource *source);
+    const Reader *reader);
 
 typedef struct SoundChannel {
   void *self;

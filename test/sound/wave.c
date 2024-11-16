@@ -8,7 +8,9 @@ static unsigned char wave16[204];
 test(GetSample_ShouldReturnExpectedDataFor8BitSampleSize) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, wave8, length(wave8));
-  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, source);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -31,7 +33,9 @@ test(GetSample_ShouldReturnExpectedDataFor8BitSampleSize) {
 test(GetSample_ShouldReturnExpectedDataFor16BitSampleSize) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, wave16, length(wave16));
-  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, source);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
 
   char samples[] = {
     0x00, 0xff, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00,
@@ -54,7 +58,9 @@ test(GetSample_ShouldReturnExpectedDataFor16BitSampleSize) {
 test(FillSample_ShouldReturnExpectedSamplesAndWrapAround) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, wave8, length(wave8));
-  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, source);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
 
   char samples[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -78,10 +84,40 @@ test(FillSample_ShouldReturnExpectedSamplesAndWrapAround) {
   assert(next == buffer + 64);
 }
 
+test(GetLength_ShouldReturnExpectedLengthFor8BitSampleSize) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, wave8, length(wave8));
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
+
+  // act
+  unsigned int length = SoundSampler_GetLength(sampler);
+
+  // assert
+  assert(length == 32);
+}
+
+test(GetLength_ShouldReturnExpectedLengthFor16BitSampleSize) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, wave16, length(wave16));
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
+
+  // act
+  unsigned int length = SoundSampler_GetLength(sampler);
+
+  // assert
+  assert(length == 32);
+}
+
 test(GetFrequency_ShouldReturnExpectedFrequenciesForGivenNotesAnd8BitSampleSize) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, wave8, length(wave8));
-  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, source);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
 
   // act
   unsigned int frequency = SoundSampler_GetFrequency(sampler, NULL);
@@ -93,7 +129,9 @@ test(GetFrequency_ShouldReturnExpectedFrequenciesForGivenNotesAnd8BitSampleSize)
 test(GetFrequency_ShouldReturnExpectedFrequenciesForGivenNotesAnd16BitSampleSize) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, wave16, length(wave16));
-  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, source);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = WaveSoundSampler_From(&(WaveSoundSampler) {0}, reader);
 
   // act
   unsigned int frequency = SoundSampler_GetFrequency(sampler, NULL);
@@ -106,6 +144,8 @@ suite(
   GetSample_ShouldReturnExpectedDataFor8BitSampleSize,
   GetSample_ShouldReturnExpectedDataFor16BitSampleSize,
   FillSample_ShouldReturnExpectedSamplesAndWrapAround,
+  GetLength_ShouldReturnExpectedLengthFor8BitSampleSize,
+  GetLength_ShouldReturnExpectedLengthFor16BitSampleSize,
   GetFrequency_ShouldReturnExpectedFrequenciesForGivenNotesAnd8BitSampleSize,
   GetFrequency_ShouldReturnExpectedFrequenciesForGivenNotesAnd16BitSampleSize);
 

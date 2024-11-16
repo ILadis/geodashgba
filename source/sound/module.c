@@ -416,11 +416,9 @@ ModuleSoundTrack_SeekTo(
 SoundTrack*
 ModuleSoundTrack_From(
     ModuleSoundTrack *track,
-    DataSource *source,
+    const Reader *reader,
     unsigned int channel)
 {
-  const Reader *reader = DataSource_AsReader(source);
-
   track->reader = reader;
   track->channel = channel;
   track->position = 0;
@@ -435,6 +433,19 @@ ModuleSoundTrack_From(
   track->base.SeekTo = ModuleSoundTrack_SeekTo;
 
   return &track->base;
+}
+
+static unsigned int
+ModuleSoundSampler_GetLength(void *self) {
+  ModuleSoundSampler *sampler = self;
+  const Reader *reader = sampler->reader;
+
+  unsigned int length = 0;
+  if (!ModuleSoundTrack_LengthOfSample(reader, sampler->index, &length)) {
+    return 0;
+  }
+
+  return length;
 }
 
 static unsigned int
@@ -518,11 +529,9 @@ ModuleSoundSampler_FillBuffer(
 SoundSampler*
 ModuleSoundSampler_From(
     ModuleSoundSampler *sampler,
-    DataSource *source,
+    const Reader *reader,
     unsigned int index)
 {
-  const Reader *reader = DataSource_AsReader(source);
-
   sampler->reader = reader;
   sampler->index = index;
 
@@ -533,6 +542,7 @@ ModuleSoundSampler_From(
   sampler->base.self = sampler;
   sampler->base.Get  = ModuleSoundSampler_GetSample;
   sampler->base.Fill = ModuleSoundSampler_FillBuffer;
+  sampler->base.Length = ModuleSoundSampler_GetLength;
   sampler->base.Frequency = ModuleSoundSampler_GetFrequency;
   sampler->base.Volume = ModuleSoundSampler_GetVolume;
 

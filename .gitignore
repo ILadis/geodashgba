@@ -6,8 +6,8 @@ assets/
 levels/*.bin
 tools/lvl2bin
 tools/lvl2rom
-tools/mod2bin
 tools/mod2snd
+tools/mod2txt
 tools/lsdsk
 tools/ppm2font
 tools/bezlut

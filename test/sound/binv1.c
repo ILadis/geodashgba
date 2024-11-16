@@ -4,56 +4,29 @@
 
 static unsigned char module[3292];
 
-test(GetSample_ShouldReturnExpectedSamplesAndVolumeForConvertedSample) {
-  // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
-  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 0);
-
-  SoundSampler *binv1 = Binv1SoundSampler_ConvertFrom(&(Binv1SoundSampler) {0}, sampler);
-
-  // act
-  for (unsigned int i = 0; i < 32; i++) {
-    int sample1 = SoundSampler_GetSample(sampler, i);
-    int sample2 = SoundSampler_GetSample(binv1, i);
-
-    // assert
-    assert(sample1 == sample2);
-  }
-
-  unsigned char volume = SoundSampler_GetVolume(sampler);
-  assert(volume == 64);
-}
-
-test(GetSample_ShouldReturnExpectedSamplesAndVolumeForSamplerFromData) {
-  // arrange
-  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
-  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 0);
-
-  unsigned int data[1024] = {0};
-  Binv1SoundSampler temp = {0};
-  Binv1SoundSampler_ConvertFrom(&temp, sampler);
-  Binv1SoundSampler_To(&temp, data);
-
-  SoundSampler *binv1 = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, data);
-
-  // act
-  for (unsigned int i = 0; i < 32; i++) {
-    int sample1 = SoundSampler_GetSample(sampler, i);
-    int sample2 = SoundSampler_GetSample(binv1, i);
-
-    // assert
-    assert(sample1 == sample2);
-  }
-
-  unsigned char volume = SoundSampler_GetVolume(sampler);
-  assert(volume == 64);
-}
-
-test(FillSample_ShouldReturnExpectedSamplesForGivenIncrement) {
+test(From_ShouldReturnExpectedVolumeAndLength) {
   // arrange
   const unsigned int samples[] = {
-    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
-    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    16, 98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+  };
+
+  // act
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  unsigned int length = SoundSampler_GetLength(sampler);
+
+  // assert
+  assert(volume == 64);
+  assert(length == 16);
+}
+
+test(FillBuffer_ShouldReturnExpectedSamplesForGivenIncrement) {
+  // arrange
+  const unsigned int samples[] = {
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    16, 98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
   };
 
   SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
@@ -76,11 +49,11 @@ test(FillSample_ShouldReturnExpectedSamplesForGivenIncrement) {
   assert(next == buffer + 6);
 }
 
-test(FillSample_ShouldReturnExpectedSamplesForGivenVolume) {
+test(FillBuffer_ShouldReturnExpectedSamplesForGivenVolume) {
   // arrange
   const unsigned int samples[] = {
-    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
-    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    16, 98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
   };
 
   SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
@@ -100,11 +73,11 @@ test(FillSample_ShouldReturnExpectedSamplesForGivenVolume) {
   assert(next == buffer + 3);
 }
 
-test(FillSample_ShouldReturnExpectedSamplesAndWrapAround) {
+test(FillBuffer_ShouldReturnExpectedSamplesAndWrapAround) {
   // arrange
   const unsigned int samples[] = {
-    64, 16, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
-    98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    16, 98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
   };
 
   SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
@@ -125,37 +98,94 @@ test(FillSample_ShouldReturnExpectedSamplesAndWrapAround) {
   assert(next == buffer + 32);
 }
 
-test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSample) {
+test(GetSample_ShouldReturnExpectedSamplesOfConvertedSampler) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
-  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 0);
+  Reader *reader = DataSource_AsReader(source);
 
-  SoundSampler *binv1 = Binv1SoundSampler_ConvertFrom(&(Binv1SoundSampler) {0}, sampler);
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, reader, 0);
+
+  unsigned int data[1024] = {0};
+  DataSource *target = Buffer_From(&(Buffer) {0}, data, length(data));
+
+  Writer *writer = DataSource_AsWriter(target);
+  Binv1SoundSampler_To(sampler, writer);
+
+  SoundSampler *binv1 = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, data);
 
   // act
-  for (enum Note note = 0; note < NOTE_COUNT; note++) {
-    Tone tone = {
-      .note = note,
-      .octave = 0,
-    };
-
-    unsigned int frequency1 = SoundSampler_GetFrequency(sampler, &tone);
-    unsigned int frequency2 = SoundSampler_GetFrequency(binv1, &tone);
+  for (unsigned int i = 0; i < 32; i++) {
+    int sample1 = SoundSampler_GetSample(sampler, i);
+    int sample2 = SoundSampler_GetSample(binv1, i);
 
     // assert
-    assert(frequency1 == frequency2);
+    assert(sample1 == sample2);
   }
 }
 
-test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesForSamplerFromData) {
+test(GetVolume_ShouldReturnExpectedVolumeOfConvertedSampler) {
   // arrange
   DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
-  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, source, 0);
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, reader, 0);
 
   unsigned int data[1024] = {0};
-  Binv1SoundSampler temp = {0};
-  Binv1SoundSampler_ConvertFrom(&temp, sampler);
-  Binv1SoundSampler_To(&temp, data);
+  DataSource *target = Buffer_From(&(Buffer) {0}, data, length(data));
+
+  Writer *writer = DataSource_AsWriter(target);
+  Binv1SoundSampler_To(sampler, writer);
+
+  SoundSampler *binv1 = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, data);
+
+  // act
+  unsigned char volume1 = SoundSampler_GetVolume(sampler);
+  unsigned char volume2 = SoundSampler_GetVolume(binv1);
+
+  unsigned int length1 = SoundSampler_GetLength(sampler);
+  unsigned int length2 = SoundSampler_GetLength(binv1);
+
+  // assert
+  assert(volume1 == 64);
+  assert(volume1 == volume2);
+}
+
+test(GetLength_ShouldReturnExpectedLengthOfConvertedSampler) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, reader, 0);
+
+  unsigned int data[1024] = {0};
+  DataSource *target = Buffer_From(&(Buffer) {0}, data, length(data));
+
+  Writer *writer = DataSource_AsWriter(target);
+  Binv1SoundSampler_To(sampler, writer);
+
+  SoundSampler *binv1 = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, data);
+
+  // act
+  unsigned int length1 = SoundSampler_GetLength(sampler);
+  unsigned int length2 = SoundSampler_GetLength(binv1);
+
+  // assert
+  assert(length1 == 32);
+  assert(length1 == length2);
+}
+
+test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler) {
+  // arrange
+  DataSource *source = Buffer_From(&(Buffer) {0}, module, length(module));
+  Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = ModuleSoundSampler_From(&(ModuleSoundSampler) {0}, reader, 0);
+
+  unsigned int data[1024] = {0};
+  DataSource *target = Buffer_From(&(Buffer) {0}, data, length(data));
+
+  Writer *writer = DataSource_AsWriter(target);
+  Binv1SoundSampler_To(sampler, writer);
 
   SoundSampler *binv1 = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, data);
 
@@ -175,13 +205,14 @@ test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesForSamplerFromData) 
 }
 
 suite(
-  GetSample_ShouldReturnExpectedSamplesAndVolumeForConvertedSample,
-  GetSample_ShouldReturnExpectedSamplesAndVolumeForSamplerFromData,
-  FillSample_ShouldReturnExpectedSamplesForGivenIncrement,
-  FillSample_ShouldReturnExpectedSamplesForGivenVolume,
-  FillSample_ShouldReturnExpectedSamplesAndWrapAround,
-  GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSample,
-  GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesForSamplerFromData);
+  From_ShouldReturnExpectedVolumeAndLength,
+  FillBuffer_ShouldReturnExpectedSamplesForGivenIncrement,
+  FillBuffer_ShouldReturnExpectedSamplesForGivenVolume,
+  FillBuffer_ShouldReturnExpectedSamplesAndWrapAround,
+  GetSample_ShouldReturnExpectedSamplesOfConvertedSampler,
+  GetVolume_ShouldReturnExpectedVolumeOfConvertedSampler,
+  GetLength_ShouldReturnExpectedLengthOfConvertedSampler,
+  GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler);
 
 static unsigned char module[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,

@@ -40,6 +40,11 @@ NullSoundSampler_FillBuffer(
 }
 
 static unsigned int
+NullSoundSampler_GetLength() {
+  return 0;
+}
+
+static unsigned int
 NullSoundSampler_GetFrequency() {
   return 0;
 }
@@ -55,6 +60,7 @@ NullSoundSampler_GetInstance() {
     .self = NULL,
     .Get = NullSoundSampler_GetSample,
     .Fill = NullSoundSampler_FillBuffer,
+    .Length = NullSoundSampler_GetLength,
     .Frequency = NullSoundSampler_GetFrequency,
     .Volume = NullSoundSampler_GetVolume,
   };
@@ -111,6 +117,11 @@ SineSoundSampler_GetFrequency(
   return alpha;
 }
 
+static unsigned int
+SineSoundSampler_GetLength(unused void *self) {
+  return 0;
+}
+
 static unsigned char
 SineSoundSampler_GetVolume(unused void *self) {
   return 1 << SOUND_VOLUME_PRECISION;
@@ -122,6 +133,7 @@ SineSoundSampler_GetInstance() {
     .self = NULL,
     .Get  = SineSoundSampler_GetSample,
     .Fill = SineSoundSampler_FillBuffer,
+    .Length = SineSoundSampler_GetLength,
     .Frequency = SineSoundSampler_GetFrequency,
     .Volume = SineSoundSampler_GetVolume,
   };

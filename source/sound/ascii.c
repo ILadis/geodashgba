@@ -1,26 +1,26 @@
 
 #include <sound.h>
 
-static const enum Note notes[] = {
-  [ 4] = NOTE_C,
-         NOTE_CSHARP,
-  [ 6] = NOTE_D,
-         NOTE_DSHARP,
-  [ 8] = NOTE_E,
-  [10] = NOTE_F,
-         NOTE_FSHARP,
-  [12] = NOTE_G,
-         NOTE_GSHARP,
-  [ 0] = NOTE_A,
-         NOTE_ASHARP,
-  [ 2] = NOTE_B,
-};
-
 static inline bool
 AsciiSoundTrack_NextNote(
     const AsciiSoundTrack *track,
     Note *note)
 {
+  static const enum Note notes[] = {
+    [ 4] = NOTE_C,
+          NOTE_CSHARP,
+    [ 6] = NOTE_D,
+          NOTE_DSHARP,
+    [ 8] = NOTE_E,
+    [10] = NOTE_F,
+          NOTE_FSHARP,
+    [12] = NOTE_G,
+          NOTE_GSHARP,
+    [ 0] = NOTE_A,
+          NOTE_ASHARP,
+    [ 2] = NOTE_B,
+  };
+
   const Reader *reader = track->reader;
 
   char symbol[2] = {0};
@@ -148,6 +148,20 @@ AsciiSoundTrack_SeekTo(
   return Reader_SeekTo(reader, position * 11);
 }
 
+SoundTrack*
+AsciiSoundTrack_From(
+    AsciiSoundTrack *track,
+    const Reader *reader)
+{
+  track->reader = reader;
+
+  track->base.self = track;
+  track->base.Next = AsciiSoundTrack_NextTone;
+  track->base.SeekTo = AsciiSoundTrack_SeekTo;
+
+  return &track->base;
+}
+
 bool
 AsciiSoundTrack_To(
     SoundTrack *track,
@@ -175,7 +189,7 @@ AsciiSoundTrack_To(
   SoundTrack_SeekTo(track, 0);
 
   do {
-    const Tone *tone = AsciiSoundTrack_NextTone(track);
+    const Tone *tone = SoundTrack_NextTone(track);
     if (tone == NULL) break;
 
     char buffer[] = {
@@ -212,18 +226,4 @@ AsciiSoundTrack_To(
 
   SoundTrack_SeekTo(track, 0);
   return true;
-}
-
-SoundTrack*
-AsciiSoundTrack_From(
-    AsciiSoundTrack *track,
-    const Reader *reader)
-{
-  track->reader = reader;
-
-  track->base.self = track;
-  track->base.Next = AsciiSoundTrack_NextTone;
-  track->base.SeekTo = AsciiSoundTrack_SeekTo;
-
-  return &track->base;
 }

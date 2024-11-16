@@ -180,6 +180,27 @@ WaveSoundSampler_GetSample(
 }
 
 static unsigned int
+WaveSoundSampler_GetLength(void *self) {
+  WaveSoundSampler *wave = self;
+  const Reader *reader = wave->reader;
+
+  unsigned int size = 0;
+  if (!WaveSoundSampler_SampleSize(reader, &size)) {
+    return 0;
+  }
+
+  const char *section = "data";
+  unsigned int length = WaveSoundSampler_GotoSection(reader, section);
+
+  switch (size) {
+    case 1: return length >> 0;
+    case 2: return length >> 1;
+  }
+
+  return 0;
+}
+
+static unsigned int
 WaveSoundSampler_GetFrequency(
     void *self,
     unused const Tone *tone)
@@ -222,10 +243,8 @@ WaveSoundSampler_GetVolume(unused void *self) {
 SoundSampler*
 WaveSoundSampler_From(
     WaveSoundSampler *sampler,
-    DataSource *source)
+    const Reader *reader)
 {
-  const Reader *reader = DataSource_AsReader(source);
-
   sampler->reader = reader;
 
   if (!WaveSoundSampler_VerifySignature(reader)) {
@@ -235,6 +254,7 @@ WaveSoundSampler_From(
   sampler->base.self = sampler;
   sampler->base.Get  = WaveSoundSampler_GetSample;
   sampler->base.Fill = WaveSoundSampler_FillBuffer;
+  sampler->base.Length = WaveSoundSampler_GetLength;
   sampler->base.Frequency = WaveSoundSampler_GetFrequency;
   sampler->base.Volume = WaveSoundSampler_GetVolume;
 
