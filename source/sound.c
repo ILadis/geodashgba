@@ -131,3 +131,23 @@ SoundPlayer_VSync(SoundPlayer *player) {
     player->active = buffer1;
   }
 }
+
+int*
+SoundSampler_SlowFillBuffer(
+    const SoundSampler *sampler,
+    int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size)
+{
+  while (size-- > 0) {
+    const unsigned int index = (*position) >> SOUND_CHANNEL_PRECISION;
+    int value = SoundSampler_GetSample(sampler, index);
+
+    *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
+    *position += increment;
+  }
+
+  return buffer;
+}

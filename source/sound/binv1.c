@@ -48,7 +48,7 @@ Binv1SoundTrack_From(
   return &track->base;
 }
 
-static inline int
+static int
 Binv1SoundSampler_GetSample(void *self, unsigned int index) {
   Binv1SoundSampler *sampler = self;
 

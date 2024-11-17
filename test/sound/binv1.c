@@ -22,6 +22,29 @@ test(From_ShouldReturnExpectedVolumeAndLength) {
   assert(length == 16);
 }
 
+test(From_ShouldReturnExpectedFrequencies) {
+  // arrange
+  const unsigned int samples[] = {
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    16, 98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10
+  };
+
+  // act
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  for (enum Note note = 0; note < NOTE_COUNT; note++) {
+    Tone tone = {
+      .note = note,
+      .octave = 0,
+    };
+
+    unsigned int frequency = SoundSampler_GetFrequency(sampler, &tone);
+
+    // assert
+    assert(frequency == samples[1 + note]);
+  }
+}
+
 test(FillBuffer_ShouldReturnExpectedSamplesForGivenIncrement) {
   // arrange
   const unsigned int samples[] = {
@@ -206,6 +229,7 @@ test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler) 
 
 suite(
   From_ShouldReturnExpectedVolumeAndLength,
+  From_ShouldReturnExpectedFrequencies,
   FillBuffer_ShouldReturnExpectedSamplesForGivenIncrement,
   FillBuffer_ShouldReturnExpectedSamplesForGivenVolume,
   FillBuffer_ShouldReturnExpectedSamplesAndWrapAround,

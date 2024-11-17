@@ -238,11 +238,12 @@ TrackerSoundChannel_TickTone(TrackerSoundChannel *channel) {
     }
 
     // calculate sample index by modulo 32 (since max number of samplers is 31)
-    unsigned int index = tone->sample & length(channel->samplers);
+    const unsigned int limit = length(channel->samplers);
+    const unsigned int index = tone->sample & limit;
     const SoundSampler *sampler = channel->samplers[index];
 
     // FIXME improve check for "no sample" (where sample index == -1)
-    if (sampler != NULL && tone->sample < 32) {
+    if (sampler != NULL && tone->sample < limit) {
       channel->sampler = sampler;
 
       // volume is reset when (new) sample is given

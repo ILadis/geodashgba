@@ -8,16 +8,16 @@ AsciiSoundTrack_NextNote(
 {
   static const enum Note notes[] = {
     [ 4] = NOTE_C,
-          NOTE_CSHARP,
+           NOTE_CSHARP,
     [ 6] = NOTE_D,
-          NOTE_DSHARP,
+           NOTE_DSHARP,
     [ 8] = NOTE_E,
     [10] = NOTE_F,
-          NOTE_FSHARP,
+           NOTE_FSHARP,
     [12] = NOTE_G,
-          NOTE_GSHARP,
+           NOTE_GSHARP,
     [ 0] = NOTE_A,
-          NOTE_ASHARP,
+           NOTE_ASHARP,
     [ 2] = NOTE_B,
   };
 
@@ -168,7 +168,6 @@ AsciiSoundTrack_To(
     const Writer *writer,
     char separator)
 {
-  static char hex[] = "0123456789ABCDEF";
   static const char notes[][2] = {
     [NOTE_C]      = "C-",
     [NOTE_CSHARP] = "C#",
@@ -183,8 +182,6 @@ AsciiSoundTrack_To(
     [NOTE_ASHARP] = "A#",
     [NOTE_B]      = "B-",
   };
-
-  #define hexify(value, index) hex[(value >> (index*4)) & 0xF];
 
   SoundTrack_SeekTo(track, 0);
 
@@ -206,19 +203,19 @@ AsciiSoundTrack_To(
     if (note < length(notes)) {
       buffer[0] = notes[note][0];
       buffer[1] = notes[note][1];
-      buffer[2] = hexify(tone->octave, 0);
+      buffer[2] = hexof(tone->octave, 0);
     }
 
     if (tone->sample < 32) {
-      buffer[4] = hexify(tone->sample, 1);
-      buffer[5] = hexify(tone->sample, 0);
+      buffer[4] = hexof(tone->sample, 1);
+      buffer[5] = hexof(tone->sample, 0);
     }
 
     SoundEffect effect = tone->effect;
     if (effect.type != 0 && effect.param != 0) {
-      buffer[7] = hexify(effect.type, 0);
-      buffer[8] = hexify(effect.param, 1);
-      buffer[9] = hexify(effect.param, 0);
+      buffer[7] = hexof(effect.type, 0);
+      buffer[8] = hexof(effect.param, 1);
+      buffer[9] = hexof(effect.param, 0);
     }
 
     Writer_Write(writer, buffer, length(buffer));
@@ -226,4 +223,149 @@ AsciiSoundTrack_To(
 
   SoundTrack_SeekTo(track, 0);
   return true;
+}
+
+static int
+AsciiSoundSampler_GetSample(void *self, unsigned int index) {
+  AsciiSoundSampler *sampler = self;
+
+  unsigned int length = SoundSampler_GetLength(&sampler->base);
+  unsigned int position = 52 + (index % length) * 2;
+
+  const Reader *reader = sampler->reader;
+  Reader_SeekTo(reader, position);
+
+  unsigned char values[2];
+  if (!Reader_Read(reader, values, length(values))) {
+    return 0;
+  }
+
+  char sample = 0
+    | (hexto(values[0]) << 4)
+    | (hexto(values[1]) << 0);
+
+  return (int) sample;
+}
+
+static int*
+AsciiSoundSampler_FillBuffer(
+    void *self, int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size)
+{
+  AsciiSoundSampler *sampler = self;
+  return SoundSampler_SlowFillBuffer(&sampler->base, buffer, position, increment, volume, size);
+}
+
+static unsigned int
+AsciiSoundSampler_GetLength(void *self) {
+  AsciiSoundSampler *sampler = self;
+
+  const Reader *reader = sampler->reader;
+  Reader_SeekTo(reader, 50);
+
+  unsigned char values[2];
+  if (!Reader_Read(reader, values, length(values))) {
+    return 0;
+  }
+
+  unsigned int length = 0
+    | (hexto(values[0]) << 4)
+    | (hexto(values[1]) << 0);
+
+  return length;
+}
+
+static unsigned int
+AsciiSoundSampler_GetFrequency(void *self, const Tone *tone) {
+  AsciiSoundSampler *sampler = self;
+
+  const Reader *reader = sampler->reader;
+  Reader_SeekTo(reader, 2 + tone->note * 4);
+
+  unsigned char values[4];
+  if (!Reader_Read(reader, values, length(values))) {
+    return 0;
+  }
+
+  unsigned int frequency = 0
+    | (hexto(values[0]) << 12)
+    | (hexto(values[1]) <<  8)
+    | (hexto(values[2]) <<  4)
+    | (hexto(values[3]) <<  0);
+
+  return frequency << tone->octave;
+}
+
+static unsigned char
+AsciiSoundSampler_GetVolume(void *self) {
+  AsciiSoundSampler *sampler = self;
+
+  const Reader *reader = sampler->reader;
+  Reader_SeekTo(reader, 0);
+
+  unsigned char values[2];
+  if (!Reader_Read(reader, values, length(values))) {
+    return 0;
+  }
+
+  unsigned char volume = 0
+    | (hexto(values[0]) << 4)
+    | (hexto(values[1]) << 0);
+
+  return volume;
+}
+
+SoundSampler*
+AsciiSoundSampler_From(
+    AsciiSoundSampler *sampler,
+    const Reader *reader)
+{
+  sampler->reader = reader;
+
+  sampler->base.self = sampler;
+  sampler->base.Get  = AsciiSoundSampler_GetSample;
+  sampler->base.Fill = AsciiSoundSampler_FillBuffer;
+  sampler->base.Length = AsciiSoundSampler_GetLength;
+  sampler->base.Frequency = AsciiSoundSampler_GetFrequency;
+  sampler->base.Volume = AsciiSoundSampler_GetVolume;
+
+  return &sampler->base;
+}
+
+bool
+AsciiSoundSampler_To(
+    SoundSampler *sampler,
+    const Writer *writer)
+{
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  Writer_WriteOne(writer, hexof(volume, 1));
+  Writer_WriteOne(writer, hexof(volume, 0));
+
+  for (enum Note note = 0; note < NOTE_COUNT; note++) {
+    Tone tone = {
+      .octave = 0,
+      .note = note,
+    };
+
+    unsigned int frequency = SoundSampler_GetFrequency(sampler, &tone);
+    Writer_WriteOne(writer, hexof(frequency, 3));
+    Writer_WriteOne(writer, hexof(frequency, 2));
+    Writer_WriteOne(writer, hexof(frequency, 1));
+    Writer_WriteOne(writer, hexof(frequency, 0));
+  }
+
+  unsigned int length = SoundSampler_GetLength(sampler);
+  Writer_WriteOne(writer, hexof(length, 1));
+  Writer_WriteOne(writer, hexof(length, 0));
+
+  for (unsigned int index = 0; index < length; index++) {
+    int sample = SoundSampler_GetSample(sampler, index);
+    Writer_WriteOne(writer, hexof(sample, 1));
+    Writer_WriteOne(writer, hexof(sample, 0));
+  }
+
+  return false;
 }

@@ -67,7 +67,7 @@ utils:
 	@gcc tools/lvl2bin.c $(CFILES) -o tools/lvl2bin -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/lvl2rom.c $(CFILES) -o tools/lvl2rom -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/mod2snd.c $(CFILES) -o tools/mod2snd -lm -Iinclude -DNOGBA -Wall -Wextra
-	@gcc tools/mod2txt.c $(CFILES) -o tools/mod2txt -lm -Iinclude -DNOGBA -Wall -Wextra -g
+	@gcc tools/mod2txt.c $(CFILES) -o tools/mod2txt -lm -Iinclude -DNOGBA -Wall -Wextra
 	@gcc tools/lsdsk.c $(CFILES) -o tools/lsdsk -lm -Iinclude -DNOGBA -Wall -Wextra
 
 assets:

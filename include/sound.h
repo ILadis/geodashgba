@@ -133,6 +133,15 @@ SoundSampler_FillBuffer(const SoundSampler *sampler, int *buffer, unsigned int *
   return sampler->Fill(sampler->self, buffer, position, increment, volume, size);
 }
 
+int*
+SoundSampler_SlowFillBuffer(
+    const SoundSampler *sampler,
+    int *buffer,
+    unsigned int *position,
+    unsigned int increment,
+    unsigned char volume,
+    unsigned int size);
+
 static inline unsigned int
 SoundSampler_GetLength(const SoundSampler *sampler) {
   return sampler->Length(sampler->self);
@@ -153,6 +162,21 @@ NullSoundSampler_GetInstance();
 
 const SoundSampler*
 SineSoundSampler_GetInstance();
+
+typedef struct AsciiSoundSampler {
+  SoundSampler base;
+  const Reader *reader;
+} AsciiSoundSampler;
+
+bool
+AsciiSoundSampler_To(
+    SoundSampler *sampler,
+    const Writer *writer);
+
+SoundSampler*
+AsciiSoundSampler_From(
+    AsciiSoundSampler *sampler,
+    const Reader *reader);
 
 typedef struct Binv1SoundSampler {
   SoundSampler base;

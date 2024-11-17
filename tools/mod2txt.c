@@ -24,19 +24,8 @@ int main() {
     unsigned char volume = SoundSampler_GetVolume(sampler);
     if (volume == 0) continue;
 
-    unsigned int data[1024] = {0};
-
-    DataSource *source = Buffer_From(&(Buffer) {0}, data, length(data));
-    Writer *buffer = DataSource_AsWriter(source);
-
-    Binv1SoundSampler_To(sampler, buffer);
-
-    Reader *reader = DataSource_AsReader(source);
-    unsigned int length = Reader_GetPosition(reader);
-
-    for (unsigned int i = 0; i < length; i++) {
-      Writer_Printf(writer, "%d, ", data[i]);
-    }
+    // TODO consider adding sample index to output
+    AsciiSoundSampler_To(sampler, writer);
     Writer_Printf(writer, "\n");
   }
 

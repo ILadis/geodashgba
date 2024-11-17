@@ -224,15 +224,8 @@ WaveSoundSampler_FillBuffer(
     unsigned char volume,
     unsigned int size)
 {
-  while (size-- > 0) {
-    const unsigned int index = (*position) >> SOUND_CHANNEL_PRECISION;
-    int value = WaveSoundSampler_GetSample(self, index);
-
-    *buffer++ += (value * volume) >> SOUND_VOLUME_PRECISION;
-    *position += increment;
-  }
-
-  return buffer;
+  WaveSoundSampler *wave = self;
+  return SoundSampler_SlowFillBuffer(&wave->base, buffer, position, increment, volume, size);
 }
 
 static unsigned char

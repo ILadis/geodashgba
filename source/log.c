@@ -45,14 +45,10 @@ Logger_GetInstance() {
 
 void
 Logger_PrintHex8(Logger *logger, unsigned char num) {
-  static char digits[] = "0123456789ABCDEF";
   char message[3] = {0};
 
-  int upper = num >> 4;
-  message[0] = digits[upper];
-
-  int lower = num & 0x0f;
-  message[1] = digits[lower];
+  message[0] = hexof(num, 1);
+  message[1] = hexof(num, 0);
 
   Logger_Print(logger, message);
 }
