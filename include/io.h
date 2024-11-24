@@ -190,4 +190,18 @@ Writer_Printf(
     const char *format, ...);
 
 #endif
+
+typedef struct Base16 {
+  struct {
+    Reader *reader;
+    Writer *writer;
+  } delegate;
+  DataSource source;
+} Base16;
+
+DataSource*
+Base16_Of(
+    Base16 *base,
+    DataSource *source);
+
 #endif

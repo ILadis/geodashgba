@@ -312,3 +312,110 @@ Writer_Printf(
 }
 
 #endif
+
+static bool
+Base16_Read(
+    void *self,
+    void *data,
+    unsigned int length)
+{
+  Base16 *base = self;
+  Reader *reader = base->delegate.reader;
+
+  unsigned char *values = data;
+  for (unsigned int index = 0; index < length; index++) {
+    int upper = Reader_ReadOne(reader);
+    int lower = Reader_ReadOne(reader);
+
+    if (lower < 0 || upper < 0) {
+      return false;
+    }
+
+    unsigned char value = (hexto(upper) << 4) | hexto(lower);
+    values[index] = value;
+  }
+
+  return true;
+}
+
+bool
+Base16_Write(
+    void *self,
+    const void *data,
+    unsigned int length)
+{
+  Base16 *base = self;
+  Writer *writer = base->delegate.writer;
+
+  const unsigned char *values = data;
+  for (unsigned int index = 0; index < length; index++) {
+    unsigned char value = values[index];
+
+    unsigned char upper = hexof(value, 1);
+    unsigned char lower = hexof(value, 0);
+
+    if (!Writer_WriteOne(writer, upper) || !Writer_WriteOne(writer, lower)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool
+Base16_SeekTo(
+    void *self,
+    unsigned int position)
+{
+  Base16 *base = self;
+
+  Reader *reader = base->delegate.reader;
+  return Reader_SeekTo(reader, position << 1);
+}
+
+static unsigned int
+Base16_GetLength(void *self) {
+  Base16 *base = self;
+
+  Reader *reader = base->delegate.reader;
+  unsigned int length = Reader_GetLength(reader);
+
+  return length >> 1;
+}
+
+static unsigned int
+Base16_GetPosition(void *self) {
+  Base16 *base = self;
+
+  Reader *reader = base->delegate.reader;
+  unsigned int position = Reader_GetPosition(reader);
+
+  return position >> 1;
+}
+
+DataSource*
+Base16_Of(
+    Base16 *base,
+    DataSource *source)
+{
+  if (source == NULL) {
+    return NULL;
+  }
+
+  base->delegate.reader = DataSource_AsReader(source);
+  base->delegate.writer = DataSource_AsWriter(source);
+
+  Reader *reader = &base->source.reader;
+  reader->self = base;
+  reader->Read = Base16_Read;
+  reader->GetLength = Base16_GetLength;
+  reader->GetPosition = Base16_GetPosition;
+  reader->SeekTo = Base16_SeekTo;
+
+  Writer *writer = &base->source.writer;
+  writer->self = base;
+  writer->Write = Base16_Write;
+  writer->SeekTo = Base16_SeekTo;
+
+  return &base->source;
+}
