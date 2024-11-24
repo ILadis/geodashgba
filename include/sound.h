@@ -180,6 +180,7 @@ AsciiSoundSampler_From(
 
 typedef struct Binv1SoundSampler {
   SoundSampler base;
+  const Reader *reader;
   unsigned char volume;
   const unsigned int *frequencies;
   unsigned int length;
@@ -195,6 +196,11 @@ SoundSampler*
 Binv1SoundSampler_From(
     Binv1SoundSampler *sampler,
     const unsigned int *data);
+
+SoundSampler*
+Binv1SoundSampler_FromReader(
+    Binv1SoundSampler *sampler,
+    const Reader *reader);
 
 typedef struct ModuleSoundSampler {
   SoundSampler base;

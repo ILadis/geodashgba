@@ -227,6 +227,298 @@ test(GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler) 
   }
 }
 
+test(FromReader_ShouldReturnExpectedVolumeAndLength) {
+  // arrange
+  char *values = ""
+      // volume
+      "30000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "20000000"
+      // sample data
+      "00000000" "00000000" "00000000" "00000000"
+      "06000000" "11000000" "1F000000" "27000000"
+      "2C000000" "32000000" "37000000" "3D000000"
+      "42000000" "40000000" "40000000" "41000000"
+      "41000000" "41000000" "44000000" "47000000"
+      "48000000" "3E000000" "27000000" "0E000000"
+      "F8000000" "E1000000" "C6000000" "AD000000"
+      "9A000000" "9D000000" "C7000000" "19000000";
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  // act
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  unsigned char volume = SoundSampler_GetVolume(sampler);
+  unsigned int length = SoundSampler_GetLength(sampler);
+
+  // assert
+  assert(volume == 48);
+  assert(length == 32);
+}
+
+test(FromReader_ShouldReturnExpectedFrequencies) {
+  // arrange
+  char *values = ""
+      // volume
+      "30000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "20000000"
+      // sample data
+      "00000000" "00000000" "00000000" "00000000"
+      "06000000" "11000000" "1F000000" "27000000"
+      "2C000000" "32000000" "37000000" "3D000000"
+      "42000000" "40000000" "40000000" "41000000"
+      "41000000" "41000000" "44000000" "47000000"
+      "48000000" "3E000000" "27000000" "0E000000"
+      "F8000000" "E1000000" "C6000000" "AD000000"
+      "9A000000" "9D000000" "C7000000" "19000000";
+
+  const unsigned int frequencies[] = {2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977};
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  // act
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  for (enum Note note = 0; note < NOTE_COUNT; note++) {
+    Tone tone = {
+      .note = note,
+      .octave = 0,
+    };
+
+    unsigned int frequency = SoundSampler_GetFrequency(sampler, &tone);
+
+    // assert
+    assert(frequency == frequencies[note]);
+  }
+}
+
+test(FromReader_ShouldReturnExpectedSamples) {
+  // arrange
+  char *values = ""
+      // volume
+      "30000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "20000000"
+      // sample data
+      "00000000" "00000000" "00000000" "00000000"
+      "06000000" "11000000" "1F000000" "27000000"
+      "2C000000" "32000000" "37000000" "3D000000"
+      "42000000" "40000000" "40000000" "41000000"
+      "41000000" "41000000" "44000000" "47000000"
+      "48000000" "3E000000" "27000000" "0E000000"
+      "F8FFFFFF" "E1FFFFFF" "C6FFFFFF" "ADFFFFFF"
+      "9AFFFFFF" "9DFFFFFF" "C7FFFFFF" "19000000";
+
+  const int samples[] = {0, 0, 0, 0, 6, 17, 31, 39, 44, 50, 55, 61, 66, 64, 64, 65, 65, 65, 68, 71, 72, 62, 39, 14, -8, -31, -58, -83, -102, -99, -57, 25};
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  // act
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  for (unsigned int i = 0; i < 32; i++) {
+    int sample = SoundSampler_GetSample(sampler, i);
+
+    // assert
+    assert(sample == samples[i]);
+  }
+}
+
+test(FromReader_ShouldReturnExpectedSamplesForGivenIncrement) {
+  // arrange
+  char *values = ""
+      // volume
+      "40000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "10000000"
+      // sample data
+      "62000000" "5C000000" "58000000" "51000000"
+      "4B000000" "45000000" "3F000000" "39000000"
+      "33000000" "2E000000" "28000000" "22000000"
+      "1C000000" "16000000" "10000000" "0A000000";
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  int buffer[6] = {0};
+  unsigned int position = 0;
+  unsigned int increment = (1 << SOUND_CHANNEL_PRECISION) / 2;
+  unsigned char volume = 1 << SOUND_VOLUME_PRECISION;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 98);
+  assert(buffer[1] == 98);
+  assert(buffer[2] == 92);
+  assert(buffer[3] == 92);
+  assert(buffer[4] == 88);
+  assert(buffer[5] == 88);
+  assert(next == buffer + 6);
+}
+
+test(FromReader_ShouldReturnExpectedSamplesForGivenVolume) {
+  // arrange
+  char *values = ""
+      // volume
+      "40000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "10000000"
+      // sample data
+      "62000000" "5C000000" "58000000" "51000000"
+      "4B000000" "45000000" "3F000000" "39000000"
+      "33000000" "2E000000" "28000000" "22000000"
+      "1C000000" "16000000" "10000000" "0A000000";
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  int buffer[3] = {0};
+  unsigned int position = 0;
+  unsigned int increment = 1 << SOUND_CHANNEL_PRECISION;
+  unsigned char volume = (1 << SOUND_VOLUME_PRECISION) / 2;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  assert(buffer[0] == 49);
+  assert(buffer[1] == 46);
+  assert(buffer[2] == 44);
+  assert(next == buffer + 3);
+}
+
+test(FromReader_ShouldReturnExpectedSamplesAndWrapAround) {
+  // arrange
+  char *values = ""
+      // volume
+      "40000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "10000000"
+      // sample data
+      "62000000" "5C000000" "58000000" "51000000"
+      "4B000000" "45000000" "3F000000" "39000000"
+      "33000000" "2E000000" "28000000" "22000000"
+      "1C000000" "16000000" "10000000" "0A000000";
+
+  unsigned int samples[] = {98, 92, 88, 81, 75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10};
+
+  DataSource *raw = Buffer_FromString(&(Buffer){0}, values);
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  const Reader *reader = DataSource_AsReader(source);
+
+  SoundSampler *sampler = Binv1SoundSampler_FromReader(&(Binv1SoundSampler){0}, reader);
+
+  int buffer[32] = {0};
+  unsigned int position = 0;
+  unsigned int increment = 1 << SOUND_CHANNEL_PRECISION;
+  unsigned char volume = 1 << SOUND_VOLUME_PRECISION;
+
+  // act
+  int *next = SoundSampler_FillBuffer(sampler, buffer, &position, increment, volume, length(buffer));
+
+  // assert
+  for (unsigned int i = 0; i < 16; i++) {
+    assert(buffer[i] == buffer[16 + i]);
+    assert(buffer[i] == samples[i]);
+  }
+  assert(next == buffer + 32);
+}
+
+test(To_ShouldProduceExpectedSoundSampler) {
+  // arrange
+  char *values = ""
+      // volume
+      "40000000"
+      // frequencies
+      "39080000" "B7080000" "3C090000" "C7090000"
+      "5F0A0000" "F90A0000" "A10B0000" "540C0000"
+      "110D0000" "D80D0000" "A80E0000" "890F0000"
+      // sample length
+      "20000000"
+      // sample data
+      "00000000" "00000000" "00000000" "00000000"
+      "06000000" "11000000" "1F000000" "27000000"
+      "2C000000" "32000000" "37000000" "3D000000"
+      "42000000" "40000000" "40000000" "41000000"
+      "41000000" "41000000" "44000000" "47000000"
+      "48000000" "3E000000" "27000000" "0E000000"
+      "F8FFFFFF" "E1FFFFFF" "C6FFFFFF" "ADFFFFFF"
+      "9AFFFFFF" "9DFFFFFF" "C7FFFFFF" "19000000";
+
+  unsigned int samples[] = {
+    64, 2105, 2231, 2364, 2503, 2655, 2809, 2977, 3156, 3345, 3544, 3752, 3977,
+    32, 0, 0, 0, 0, 6, 17, 31, 39, 44, 50, 55, 61, 66, 64, 64, 65, 65, 65, 68, 71,
+    72, 62, 39, 14, -8, -31, -58, -83, -102, -99, -57, 25
+  };
+
+  SoundSampler *sampler = Binv1SoundSampler_From(&(Binv1SoundSampler) {0}, samples);
+
+  unsigned char data[512] = {0};
+
+  DataSource *raw = Buffer_From(&(Buffer){0}, data, length(data));
+  DataSource *source = Base16_Of(&(Base16){0}, raw);
+
+  Writer *writer = DataSource_AsWriter(source);
+  Reader *reader = DataSource_AsReader(raw);
+
+  // act
+  Binv1SoundSampler_To(sampler, writer);
+
+  // assert
+  unsigned int length = Reader_GetPosition(reader);
+  assert(length == 368);
+
+  for (unsigned int i = 0; i < length; i++) {
+    assert(data[i] == values[i]);
+  }
+}
+
 suite(
   From_ShouldReturnExpectedVolumeAndLength,
   From_ShouldReturnExpectedFrequencies,
@@ -236,7 +528,14 @@ suite(
   GetSample_ShouldReturnExpectedSamplesOfConvertedSampler,
   GetVolume_ShouldReturnExpectedVolumeOfConvertedSampler,
   GetLength_ShouldReturnExpectedLengthOfConvertedSampler,
-  GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler);
+  GetFrequency_ShouldReturnExpectedFrequenciesForAllNotesOfConvertedSampler,
+  FromReader_ShouldReturnExpectedVolumeAndLength,
+  FromReader_ShouldReturnExpectedFrequencies,
+  FromReader_ShouldReturnExpectedSamples,
+  FromReader_ShouldReturnExpectedSamplesForGivenIncrement,
+  FromReader_ShouldReturnExpectedSamplesForGivenVolume,
+  FromReader_ShouldReturnExpectedSamplesAndWrapAround,
+  To_ShouldProduceExpectedSoundSampler);
 
 static unsigned char module[] = {
   0x4d, 0x61, 0x69, 0x6e, 0x20, 0x54, 0x68, 0x65, 0x6d, 0x65, 0x00, 0x00,
